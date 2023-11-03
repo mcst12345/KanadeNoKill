@@ -1,0 +1,100 @@
+buildscript {
+    repositories {
+    }
+    dependencies {
+    }
+}
+
+plugins {
+    id 'net.minecraftforge.gradle' version '5.+'
+}
+
+
+group = 'kanade'
+version = ''
+
+java {
+    archivesBaseName = '!!!Kanade no Kill'
+    toolchain.languageVersion = JavaLanguageVersion.of(8)
+}
+
+minecraft {
+    mappings channel: 'stable', version: '39-1.12'
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                kanade {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'REGISTRIES'
+
+            property 'forge.logging.console.level', 'debug'
+
+
+            mods {
+                mikulib {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir 'src/generated/resources'
+        }
+        java {
+            exclude 'net/minecraft/**'
+            exclude 'net/minecraftforge/**'
+        }
+    }
+}
+
+repositories {
+    maven {
+        name = "forge"
+        url = "https://files.minecraftforge.net/maven"
+    }
+
+    mavenCentral()
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
+    implementation fileTree(dir: 'libs', includes: ['*jar'])
+    implementation files("${System.getProperty('java.home')}/../lib/tools.jar")
+}
+jar {
+    manifest {
+        attributes([
+                "Author"   : "mcst12345",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+
+        ])
+        attributes([
+                'ForceLoadAsMod'             : 'true',
+                "FMLCorePlugin"              : "kanade.kill.Core",
+                "FMLCorePluginContainsFMLMod": "true"
+        ])
+    }
+    from{
+    }
+}
+
+jar.finalizedBy('reobfJar')
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
