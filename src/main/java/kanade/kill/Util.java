@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Util {
-    private static boolean killing;
+    public static boolean killing;
     public static void Kill(List<Entity> list){
         for(Entity e : list){
             Kill(e);
@@ -44,9 +44,5 @@ public class Util {
             killing = false;
             throw new RuntimeException(t);
         }
-    }
-
-    public static boolean isKilling(){
-        return killing;
     }
 }

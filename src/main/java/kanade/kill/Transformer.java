@@ -19,7 +19,7 @@ public class Transformer implements IClassTransformer {
             for(MethodNode mn : cn.methods){
                 if (mn.name.equals("func_71190_q")) {
                     InsnList list = new InsnList();
-                    list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "kanade/kill/Util", "isKilling", "()Z"));
+                    list.add(new FieldInsnNode(Opcodes.GETSTATIC, "kanade/kill/Util", "killing", "Z"));
                     LabelNode label = new LabelNode();
                     list.add(new JumpInsnNode(Opcodes.IFEQ, label));
                     list.add(new InsnNode(Opcodes.RETURN));
@@ -39,7 +39,7 @@ public class Transformer implements IClassTransformer {
             for(MethodNode mn : cn.methods){
                 if (mn.name.equals("func_71407_l")) {
                     InsnList list = new InsnList();
-                    list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "kanade/kill/Util", "isKilling", "()Z"));
+                    list.add(new FieldInsnNode(Opcodes.GETSTATIC, "kanade/kill/Util", "killing", "Z"));
                     LabelNode label = new LabelNode();
                     list.add(new JumpInsnNode(Opcodes.IFEQ, label));
                     list.add(new InsnNode(Opcodes.RETURN));
