@@ -17,4 +17,9 @@ public class TransformerList<E> extends ArrayList<E> {
         super.set(super.size()-1, (E) Transformer.instance);
         return true;
     }
+
+    @Override
+    public E get(int var1){
+        return super.get(var1-1);
+    }
 }
