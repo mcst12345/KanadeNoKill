@@ -451,8 +451,7 @@ public class Transformer implements IClassTransformer {
                 cr.accept(cn, 0);
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
-                        case "remove":
-                        case "set": {
+                        case "remove": {
                             InsnList list = new InsnList();
                             LabelNode label = new LabelNode();
                             list.add(new VarInsnNode(Opcodes.ALOAD, 0));
@@ -467,14 +466,7 @@ public class Transformer implements IClassTransformer {
                             list.add(label);
                             list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
                             mn.instructions.insert(list);
-                            switch (mn.name) {
-                                case "set":
-                                    System.out.println("Insert return in set.");
-                                    break;
-                                case "remove":
-                                    System.out.println("Insert return in remove.");
-                                    break;
-                            }
+                            System.out.println("Insert return in remove.");
                             break;
                         }
                         case "clear": {
@@ -487,47 +479,114 @@ public class Transformer implements IClassTransformer {
                             LabelNode label4 = new LabelNode();
                             LabelNode label5 = new LabelNode();
                             LabelNode label6 = new LabelNode();
+                            LabelNode label7 = new LabelNode();
+                            LabelNode label8 = new LabelNode();
 
                             list.add(label0);
+                            list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                            list.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/util/NonNullList", "field_191199_b", "Ljava/lang/Object;"));
+                            list.add(new JumpInsnNode(Opcodes.IFNONNULL, label1));
+
+                            list.add(label2);
+                            list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                            list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(Opcodes.H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(Opcodes.H_INVOKESTATIC, "net/minecraft/util/NonNullList", "lambda$clear$0", "(Ljava/lang/Object;)Z", false), Type.getType("(Ljava/lang/Object;)Z")));
+                            list.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/util/AbstractList", "removeIf", "(Ljava/util/function/Predicate;)Z", false));
+                            list.add(new InsnNode(Opcodes.POP));
+                            list.add(new JumpInsnNode(Opcodes.GOTO, label3));
+                            list.add(label1);
+                            list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
                             list.add(new InsnNode(Opcodes.ICONST_0));
                             list.add(new VarInsnNode(Opcodes.ISTORE, 1));
-                            list.add(label1);
+                            list.add(label4);
                             list.add(new FrameNode(Opcodes.F_APPEND, 1, new Object[]{Opcodes.INTEGER}, 0, null));
                             list.add(new VarInsnNode(Opcodes.ILOAD, 1));
                             list.add(new VarInsnNode(Opcodes.ALOAD, 0));
                             list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "size", "()I", false));
-                            list.add(new JumpInsnNode(Opcodes.IF_ICMPGE, label2));
-                            list.add(label3);
+                            list.add(new JumpInsnNode(Opcodes.IF_ICMPGE, label3));
+                            list.add(label5);
                             list.add(new VarInsnNode(Opcodes.ALOAD, 0));
                             list.add(new VarInsnNode(Opcodes.ILOAD, 1));
                             list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "get", "(I)Ljava/lang/Object;", false));
                             list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "kanade/kill/Util", "NoRemove", "(Ljava/lang/Object;)Z", false));
-                            list.add(new JumpInsnNode(Opcodes.IFNE, label4));
-                            list.add(label5);
+                            list.add(new JumpInsnNode(Opcodes.IFNE, label6));
+                            list.add(label7);
                             list.add(new VarInsnNode(Opcodes.ALOAD, 0));
                             list.add(new VarInsnNode(Opcodes.ILOAD, 1));
                             list.add(new VarInsnNode(Opcodes.ALOAD, 0));
                             list.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/util/NonNullList", "field_191199_b", "Ljava/lang/Object;"));
                             list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "set", "(ILjava/lang/Object;)Ljava/lang/Object;", false));
                             list.add(new InsnNode(Opcodes.POP));
-                            list.add(label4);
+                            list.add(label6);
                             list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
                             list.add(new IincInsnNode(1, 1));
-                            list.add(new JumpInsnNode(Opcodes.GOTO, label1));
-                            list.add(label2);
+                            list.add(new JumpInsnNode(Opcodes.GOTO, label4));
+                            list.add(label3);
                             list.add(new FrameNode(Opcodes.F_CHOP, 1, null, 0, null));
                             list.add(new InsnNode(Opcodes.RETURN));
-                            list.add(label6);
+                            list.add(label8);
                             mn.instructions.insert(list);
 
                             mn.localVariables.clear();
-                            mn.localVariables.add(new LocalVariableNode("i", "I", null, label1, label2, 1));
-                            mn.localVariables.add(new LocalVariableNode("this", "Lnet/minecraft/util/NonNullList;", null, label0, label6, 0));
+                            mn.localVariables.add(new LocalVariableNode("i", "I", null, label4, label3, 1));
+                            mn.localVariables.add(new LocalVariableNode("this", "Lnet/minecraft/util/NonNullList;", null, label0, label8, 0));
                             System.out.println("Overwrite clear.");
+                            break;
+                        }
+                        case "set": {
+                            mn.instructions.clear();
+                            InsnList list = new InsnList();
+                            LabelNode label0 = new LabelNode();
+                            LabelNode label1 = new LabelNode();
+                            list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                            list.add(new VarInsnNode(Opcodes.ILOAD, 1));
+                            list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "get", "(I)Ljava/lang/Object;", false));
+                            list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "kanade/kill/Util", "NoRemove", "(Ljava/lang/Object;)Z"));
+                            list.add(new JumpInsnNode(Opcodes.IFEQ, label0));
+                            list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                            list.add(new VarInsnNode(Opcodes.ILOAD, 1));
+                            list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "get", "(I)Ljava/lang/Object;", false));
+                            list.add(new InsnNode(Opcodes.ARETURN));
+                            list.add(label0);
+                            list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+                            list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                            list.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/util/NonNullList", "field_191198_a", "Ljava/util/List;"));
+                            list.add(new VarInsnNode(Opcodes.ILOAD, 1));
+                            list.add(new VarInsnNode(Opcodes.ALOAD, 2));
+                            list.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "set", "(ILjava/lang/Object;)Ljava/lang/Object;", true));
+                            list.add(new InsnNode(Opcodes.ARETURN));
+                            list.add(label1);
+
+                            mn.instructions.add(list);
+                            mn.localVariables.clear();
+                            mn.localVariables.add(new LocalVariableNode("this", "Lnet/minecraft/util/NonNullList;", "Lnet/minecraft/util/NonNullList<TE;>;", label0, label1, 0));
+                            mn.localVariables.add(new LocalVariableNode("p_set_1_", "I", null, label0, label1, 1));
+                            mn.localVariables.add(new LocalVariableNode("p_set_2_", "Ljava/lang/Object;", "TE;", label0, label1, 2));
+
+                            System.out.println("Overwrite set.");
                             break;
                         }
                     }
                 }
+                MethodNode mn = new MethodNode(Opcodes.ACC_PRIVATE | Opcodes.ACC_STATIC | Opcodes.ACC_SYNTHETIC, "lambda$clear$0", "(Ljava/lang/Object;)Z", null, null);
+                LabelNode label0 = new LabelNode();
+                LabelNode label1 = new LabelNode();
+                LabelNode label2 = new LabelNode();
+                LabelNode label3 = new LabelNode();
+                mn.instructions.add(label0);
+                mn.instructions.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                mn.instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "kanade/kill/Util", "NoRemove", "(Ljava/lang/Object;)Z", false));
+                mn.instructions.add(new JumpInsnNode(Opcodes.IFNE, label1));
+                mn.instructions.add(new InsnNode(Opcodes.ICONST_1));
+                mn.instructions.add(new JumpInsnNode(Opcodes.GOTO, label2));
+                mn.instructions.add(label1);
+                mn.instructions.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+                mn.instructions.add(new InsnNode(Opcodes.ICONST_0));
+                mn.instructions.add(label2);
+                mn.instructions.add(new FrameNode(Opcodes.F_SAME1, 0, null, 1, new Object[]{Opcodes.INTEGER}));
+                mn.instructions.add(new InsnNode(Opcodes.IRETURN));
+                mn.instructions.add(label3);
+                mn.localVariables.add(new LocalVariableNode("o", "Ljava/lang/Object;", null, label0, label3, 0));
+                cn.methods.add(mn);
                 ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
                 cn.accept(cw);
                 transformed = cw.toByteArray();
