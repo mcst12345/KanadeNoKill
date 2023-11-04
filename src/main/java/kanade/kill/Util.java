@@ -11,13 +11,14 @@ import java.util.List;
 
 public class Util {
     public static boolean killing;
-    public static void Kill(List<Entity> list){
-        for(Entity e : list){
+    public static void Kill(List<Entity> list) {
+        for (Entity e : list) {
             Kill(e);
         }
     }
+
     @SuppressWarnings("unchecked")
-    public static void Kill(Entity entity){
+    public static synchronized void Kill(Entity entity) {
         try {
             killing = true;
             if (entity == null || entity.world.isRemote) return;

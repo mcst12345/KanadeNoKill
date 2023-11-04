@@ -24,6 +24,7 @@ public class Transformer implements IClassTransformer {
                     list.add(new JumpInsnNode(Opcodes.IFEQ, label));
                     list.add(new InsnNode(Opcodes.RETURN));
                     list.add(label);
+                    list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
                     mn.instructions.insert(list);
                     System.out.println("Insert return in updateTimeLightAndEntities.");
                 }
@@ -44,6 +45,7 @@ public class Transformer implements IClassTransformer {
                     list.add(new JumpInsnNode(Opcodes.IFEQ, label));
                     list.add(new InsnNode(Opcodes.RETURN));
                     list.add(label);
+                    list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
                     mn.instructions.insert(list);
                     System.out.println("Insert return in runTick.");
                 }
