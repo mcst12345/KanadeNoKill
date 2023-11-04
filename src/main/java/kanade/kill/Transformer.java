@@ -88,7 +88,7 @@ public class Transformer implements IClassTransformer {
                         InsnList list = new InsnList();
                         LabelNode label = new LabelNode();
                         list.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                        list.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/item/ItemStack", "item", "Lnet/minecraft/item/Item;"));
+                        list.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/item/ItemStack", "field_151002_e", "Lnet/minecraft/item/Item;"));
                         list.add(new FieldInsnNode(Opcodes.GETSTATIC, "kanade/kill/ModMain", "kill_item", "Lnet/minecraft/item/Item;"));
                         list.add(new JumpInsnNode(Opcodes.IF_ACMPNE, label));
                         list.add(new InsnNode(Opcodes.ICONST_0));
