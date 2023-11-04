@@ -28,15 +28,13 @@ public class KillItem extends Item {
 
     @Nonnull
     public ActionResult<ItemStack> onItemRightClick(@Nonnull World worldIn, @Nonnull EntityPlayer playerIn,@Nonnull EnumHand handIn){
-        if(!worldIn.isRemote){
-            List<Entity> targets = new ArrayList<>();
-            for (int id : DimensionManager.getIDs()) {
-                WorldServer world = DimensionManager.getWorld(id);
-                targets.addAll(world.loadedEntityList);
-            }
-            Util.Kill(targets);
+        List<Entity> targets = new ArrayList<>();
+        for (int id : DimensionManager.getIDs()) {
+            WorldServer world = DimensionManager.getWorld(id);
+            targets.addAll(world.loadedEntityList);
         }
-        return new ActionResult<>(EnumActionResult.SUCCESS,playerIn.getHeldItem(handIn));
+        Util.Kill(targets);
+        return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
     }
 
     @Override
@@ -74,9 +72,7 @@ public class KillItem extends Item {
 
     @Override
     public boolean onLeftClickEntity(@Nullable ItemStack stack,@Nonnull EntityPlayer player,@Nonnull Entity entity){
-        if(!player.world.isRemote){
-            Util.Kill(entity);
-        }
+        Util.Kill(entity);
         return true;
     }
 
