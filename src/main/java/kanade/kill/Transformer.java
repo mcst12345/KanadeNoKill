@@ -119,6 +119,7 @@ public class Transformer implements IClassTransformer {
                             list.add(new InsnNode(Opcodes.ICONST_0));
                             list.add(new InsnNode(Opcodes.IRETURN));
                             list.add(label);
+                            list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
                             mn.instructions.insert(list);
                             System.out.println("Insert return in spawnEntity.");
                             break;
@@ -131,6 +132,7 @@ public class Transformer implements IClassTransformer {
                             list.add(new JumpInsnNode(Opcodes.IFEQ, label));
                             list.add(new InsnNode(Opcodes.RETURN));
                             list.add(label);
+                            list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
                             mn.instructions.insert(list);
                             System.out.println("Insert return in onEntityAdded.");
                             break;
@@ -145,6 +147,7 @@ public class Transformer implements IClassTransformer {
                             list.add(new JumpInsnNode(Opcodes.IFEQ, label));
                             list.add(new InsnNode(Opcodes.RETURN));
                             list.add(label);
+                            list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
                             mn.instructions.insert(list);
                             System.out.println("Insert return in removeEntityDangerously | removeEntity | onEntityRemoved.");
                             break;
