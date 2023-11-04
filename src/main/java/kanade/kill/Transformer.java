@@ -76,7 +76,9 @@ public class Transformer implements IClassTransformer {
                         System.out.println("Insert return in isEmpty.");
                     }
                 }
-                break;
+                ClassWriter cw = new ClassWriter(0);
+                cn.accept(cw);
+                return cw.toByteArray();
             }
         }
         return basicClass;
