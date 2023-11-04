@@ -508,7 +508,7 @@ public class Transformer implements IClassTransformer {
                             list.add(new VarInsnNode(Opcodes.ILOAD, 1));
                             list.add(new VarInsnNode(Opcodes.ALOAD, 0));
                             list.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/util/NonNullList", "field_191199_b", "Ljava/lang/Object;"));
-                            list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "set", "(ILjava/lang/Object;)V", false));
+                            list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "set", "(ILjava/lang/Object;)Ljava/lang/Object;", false));
                             list.add(label4);
                             list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
                             list.add(new IincInsnNode(1, 1));
