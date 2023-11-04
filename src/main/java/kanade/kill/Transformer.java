@@ -59,7 +59,7 @@ public class Transformer implements IClassTransformer {
             ClassNode cn = new ClassNode();
             cr.accept(cn, 0);
             for (MethodNode mn : cn.methods) {
-                if (mn.name.equals("isEmpty")) {
+                if (mn.name.equals("func_190926_b")) {
                     InsnList list = new InsnList();
                     LabelNode label = new LabelNode();
                     list.add(new VarInsnNode(Opcodes.ALOAD, 0));
