@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 public class Transformer implements IClassTransformer {
-    public static final boolean debug = System.getProperty("debug") != null;
+    public static final boolean debug = System.getProperty("Debug") != null;
     public static final Transformer instance = new Transformer();
     private Transformer(){}
 
@@ -20,7 +20,7 @@ public class Transformer implements IClassTransformer {
             return;
         }
         try {
-            Files.write(new File(file).toPath(), clazz);
+            Files.write(new File(file + ".class").toPath(), clazz);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -51,7 +51,7 @@ public class Transformer implements IClassTransformer {
                 ClassWriter cw = new ClassWriter(0);
                 cn.accept(cw);
                 transformed = cw.toByteArray();
-                save(transformed, cn.name + ".class");
+                save(transformed, transformedName);
                 return transformed;
             }
             case "net.minecraft.client.Minecraft": {
@@ -75,7 +75,7 @@ public class Transformer implements IClassTransformer {
                 ClassWriter cw = new ClassWriter(0);
                 cn.accept(cw);
                 transformed = cw.toByteArray();
-                save(transformed, cn.name + ".class");
+                save(transformed, transformedName);
                 return transformed;
             }
             case "net.minecraft.item.ItemStack": {
@@ -102,7 +102,7 @@ public class Transformer implements IClassTransformer {
                 ClassWriter cw = new ClassWriter(0);
                 cn.accept(cw);
                 transformed = cw.toByteArray();
-                save(transformed, cn.name + ".class");
+                save(transformed, transformedName);
                 return transformed;
             }
         }
