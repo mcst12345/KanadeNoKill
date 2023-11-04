@@ -21,7 +21,9 @@ import static kanade.kill.Core.cachedClasses;
 @Mod(modid = "kanade")
 @Mod.EventBusSubscriber
 public class ModMain {
-    public static final Item item;
+    public static final Item kill_item;
+    public static final Item death_item;
+
     static {
         try {
             InputStream is = Empty.class.getResourceAsStream("/kanade/kill/KillItem.class");
@@ -31,6 +33,13 @@ public class ModMain {
             is.close();
             cachedClasses.put("kanade.kill.KillItem", Unsafe.instance.defineClass("kanade.kill.KillItem", clazz, 0, clazz.length, Launch.classLoader, null));
 
+            is = Empty.class.getResourceAsStream("/kanade/kill/DeathItem.class");
+            assert is != null;
+            clazz = new byte[is.available()];
+            is.read(clazz);
+            is.close();
+            cachedClasses.put("kanade.kill.DeathItem", Unsafe.instance.defineClass("kanade.kill.DeathItem", clazz, 0, clazz.length, Launch.classLoader, null));
+
             is = Empty.class.getResourceAsStream("/kanade/kill/LateFields.class");
             assert is != null;
             clazz = new byte[is.available()];
@@ -38,20 +47,23 @@ public class ModMain {
             is.close();
             cachedClasses.put("kanade.kill.LateFields", Unsafe.instance.defineClass("kanade.kill.LateFields", clazz, 0, clazz.length, Launch.classLoader, null));
 
-            item = (Item) cachedClasses.get("kanade.kill.KillItem").newInstance();
+            kill_item = (Item) cachedClasses.get("kanade.kill.KillItem").newInstance();
+            death_item = (Item) cachedClasses.get("kanade.kill.DeathItem").newInstance();
         } catch (InstantiationException | IllegalAccessException | IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     @SubscribeEvent
-    public static void RegItem(RegistryEvent.Register<Item> event){
-        event.getRegistry().register(item);
+    public static void RegItem(RegistryEvent.Register<Item> event) {
+        event.getRegistry().register(kill_item);
+        event.getRegistry().register(death_item);
     }
 
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
-    public static void RegModel(ModelRegistryEvent event){
-        ModelLoader.setCustomModelResourceLocation(item,0,new ModelResourceLocation(Objects.requireNonNull(item.getRegistryName()),"inventory"));
+    public static void RegModel(ModelRegistryEvent event) {
+        ModelLoader.setCustomModelResourceLocation(kill_item, 0, new ModelResourceLocation(Objects.requireNonNull(kill_item.getRegistryName()), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(death_item, 0, new ModelResourceLocation(Objects.requireNonNull(death_item.getRegistryName()), "inventory"));
     }
 }
