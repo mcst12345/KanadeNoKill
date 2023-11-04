@@ -459,7 +459,8 @@ public class Transformer implements IClassTransformer {
                             list.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "net/minecraft/util/NonNullList", "get", "(I)Ljava/lang/Object;", true));
                             list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "kanade/kill/Util", "NoRemove", "(Ljava/lang/Object;)Z"));
                             list.add(new JumpInsnNode(Opcodes.IFEQ, label));
-                            list.add(new InsnNode(Opcodes.POP));
+                            list.add(new VarInsnNode(Opcodes.ILOAD, 1));
+                            list.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "net/minecraft/util/NonNullList", "get", "(I)Ljava/lang/Object;", true));
                             list.add(new InsnNode(Opcodes.ARETURN));
                             list.add(label);
                             list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
