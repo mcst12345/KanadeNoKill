@@ -518,7 +518,7 @@ public class Transformer implements IClassTransformer {
 
                             mn.localVariables.clear();
                             mn.localVariables.add(new LocalVariableNode("i", "I", null, label1, label2, 1));
-                            mn.localVariables.add(new LocalVariableNode("this", "net/minecraft/util/NonNullList", null, label0, label6, 0));
+                            mn.localVariables.add(new LocalVariableNode("this", "Lnet/minecraft/util/NonNullList;", null, label0, label6, 0));
                             System.out.println("Overwrite clear.");
                             break;
                         }
