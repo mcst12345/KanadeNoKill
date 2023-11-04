@@ -99,7 +99,7 @@ public class Transformer implements IClassTransformer {
                         System.out.println("Insert return in isEmpty.");
                     }
                 }
-                ClassWriter cw = new ClassWriter(0);
+                ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
                 cn.accept(cw);
                 transformed = cw.toByteArray();
                 save(transformed, transformedName);
