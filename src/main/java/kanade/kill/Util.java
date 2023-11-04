@@ -64,4 +64,8 @@ public class Util {
     public static boolean isDead(Entity entity) {
         return entity == null || Dead.contains(entity.getUniqueID());
     }
+
+    public static boolean NoRemove(Object item) {
+        return item == ModMain.kill_item || item == ModMain.death_item;
+    }
 }
