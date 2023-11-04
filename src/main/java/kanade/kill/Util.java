@@ -23,6 +23,7 @@ public class Util {
 
     @SuppressWarnings("unchecked")
     public static synchronized void Kill(Entity entity) {
+        if (KillItem.inList(entity)) return;
         try {
             killing = true;
             if (entity == null || entity.world.isRemote) return;
