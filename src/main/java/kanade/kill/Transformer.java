@@ -456,11 +456,11 @@ public class Transformer implements IClassTransformer {
                             InsnList list = new InsnList();
                             LabelNode label = new LabelNode();
                             list.add(new VarInsnNode(Opcodes.ILOAD, 1));
-                            list.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "net/minecraft/util/NonNullList", "get", "(I)Ljava/lang/Object;", true));
+                            list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "get", "(I)Ljava/lang/Object;", false));
                             list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "kanade/kill/Util", "NoRemove", "(Ljava/lang/Object;)Z"));
                             list.add(new JumpInsnNode(Opcodes.IFEQ, label));
                             list.add(new VarInsnNode(Opcodes.ILOAD, 1));
-                            list.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "net/minecraft/util/NonNullList", "get", "(I)Ljava/lang/Object;", true));
+                            list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "get", "(I)Ljava/lang/Object;", false));
                             list.add(new InsnNode(Opcodes.ARETURN));
                             list.add(label);
                             list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
@@ -493,12 +493,12 @@ public class Transformer implements IClassTransformer {
                             list.add(new FrameNode(Opcodes.F_APPEND, 1, new Object[]{Opcodes.INTEGER}, 0, null));
                             list.add(new VarInsnNode(Opcodes.ILOAD, 1));
                             list.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                            list.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "net/minecraft/util/NonNullList", "size", "()I", true));
+                            list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "size", "()I", false));
                             list.add(new JumpInsnNode(Opcodes.IF_ICMPGE, label2));
                             list.add(label3);
                             list.add(new VarInsnNode(Opcodes.ALOAD, 0));
                             list.add(new VarInsnNode(Opcodes.ILOAD, 1));
-                            list.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "net/minecraft/util/NonNullList", "get", "(I)Ljava/lang/Object;", true));
+                            list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "get", "(I)Ljava/lang/Object;", false));
                             list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "kanade/kill/Util", "NoRemove", "(Ljava/lang/Object;)Z", false));
                             list.add(new JumpInsnNode(Opcodes.IFNE, label4));
                             list.add(label5);
@@ -506,7 +506,7 @@ public class Transformer implements IClassTransformer {
                             list.add(new VarInsnNode(Opcodes.ILOAD, 1));
                             list.add(new VarInsnNode(Opcodes.ALOAD, 0));
                             list.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/util/NonNullList", "defaultElement", "Ljava/lang/Object;"));
-                            list.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "net/minecraft/util/NonNullList", "set", "(ILjava/lang/Object;)V", true));
+                            list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "set", "(ILjava/lang/Object;)V", false));
                             list.add(label4);
                             list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
                             list.add(new IincInsnNode(1, 1));
