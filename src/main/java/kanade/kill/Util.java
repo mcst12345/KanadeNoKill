@@ -26,7 +26,7 @@ public class Util {
         if (KillItem.inList(entity)) return;
         try {
             killing = true;
-            if (entity == null || entity.world.isRemote) return;
+            if (entity == null) return;
             World world = entity.world;
             if (world.loadedEntityList.getClass() != ArrayList.class) {
                 Unsafe.instance.putObjectVolatile(world, LateFields.loadedEntityList_offset, new ArrayList<>(world.loadedEntityList));
