@@ -29,13 +29,22 @@ public class ModMain {
             byte[] clazz = new byte[is.available()];
             is.read(clazz);
             is.close();
-            cachedClasses.put("kanade.kill.KillItem", Unsafe.instance.defineClass("kanade.kill.KillItem",clazz,0,clazz.length, Launch.classLoader,null));
+            cachedClasses.put("kanade.kill.KillItem", Unsafe.instance.defineClass("kanade.kill.KillItem", clazz, 0, clazz.length, Launch.classLoader, null));
+
             is = Empty.class.getResourceAsStream("/kanade/kill/LateFields.class");
             assert is != null;
             clazz = new byte[is.available()];
             is.read(clazz);
             is.close();
-            cachedClasses.put("kanade.kill.LateFields",Unsafe.instance.defineClass("kanade.kill.LateFields",clazz,0,clazz.length, Launch.classLoader,null));
+            cachedClasses.put("kanade.kill.LateFields", Unsafe.instance.defineClass("kanade.kill.LateFields", clazz, 0, clazz.length, Launch.classLoader, null));
+
+            is = Empty.class.getResourceAsStream("/kanade/kill/FakeEntityDataManager.class");
+            assert is != null;
+            clazz = new byte[is.available()];
+            is.read(clazz);
+            is.close();
+            cachedClasses.put("kanade.kill.FakeEntityDataManager", Unsafe.instance.defineClass("kanade.kill.FakeEntityDataManager", clazz, 0, clazz.length, Launch.classLoader, null));
+
             item = (Item) cachedClasses.get("kanade.kill.KillItem").newInstance();
         } catch (InstantiationException | IllegalAccessException | IOException e) {
             throw new RuntimeException(e);

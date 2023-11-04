@@ -37,8 +37,7 @@ public class Util {
             entity.isDead = true;
             entity.addedToChunk = false;
             entity.dimension = 114514;
-            entity.world = null;
-            Unsafe.instance.putObjectVolatile(entity, LateFields.dataManager_offset, null);
+            Unsafe.instance.putObjectVolatile(entity, LateFields.dataManager_offset, FakeEntityDataManager.instance);
             killing = false;
         } catch (Throwable t){
             t.printStackTrace();
