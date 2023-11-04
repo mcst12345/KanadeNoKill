@@ -53,6 +53,26 @@ public class Transformer implements IClassTransformer {
             ClassWriter cw = new ClassWriter(0);
             cn.accept(cw);
             return cw.toByteArray();
+        } else if (transformedName.equals("net.minecraft.item.ItemStack")) {
+            System.out.println("Get ItemStack.");
+            ClassReader cr = new ClassReader(basicClass);
+            ClassNode cn = new ClassNode();
+            cr.accept(cn, 0);
+            for (MethodNode mn : cn.methods) {
+                if (mn.name.equals("isEmpty")) {
+                    InsnList list = new InsnList();
+                    LabelNode label = new LabelNode();
+                    list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                    list.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/item/ItemStack", "item", "Lnet/minecraft/item/Item;"));
+                    list.add(new FieldInsnNode(Opcodes.GETSTATIC, "kanade/kill/ModMain", "kill_item", "Lnet/minecraft/item/Item;"));
+                    list.add(new JumpInsnNode(Opcodes.IF_ACMPNE, label));
+                    list.add(new InsnNode(Opcodes.ICONST_0));
+                    list.add(new InsnNode(Opcodes.IRETURN));
+                    list.add(label);
+                    list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+                    System.out.println("Insert return in isEmpty.");
+                }
+            }
         }
         return basicClass;
     }

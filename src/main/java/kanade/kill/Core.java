@@ -63,7 +63,6 @@ public class Core implements IFMLLoadingPlugin {
             throw new RuntimeException(e);
         }
     }
-
     @Override
     public String[] getASMTransformerClass() {
         return new String[0];

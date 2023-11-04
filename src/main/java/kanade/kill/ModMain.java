@@ -23,7 +23,6 @@ import static kanade.kill.Core.cachedClasses;
 public class ModMain {
     public static final Item kill_item;
     public static final Item death_item;
-
     static {
         try {
             InputStream is = Empty.class.getResourceAsStream("/kanade/kill/KillItem.class");

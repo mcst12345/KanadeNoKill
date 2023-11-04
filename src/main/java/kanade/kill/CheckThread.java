@@ -14,7 +14,7 @@ public class CheckThread extends Thread {
         System.out.println("CheckThread started.");
         while (true) {
             Object obj = Unsafe.instance.getObjectVolatile(Launch.classLoader, EarlyFields.transformers_offset);
-            if (!(obj instanceof TransformerList)) {
+            if (obj != Core.lists) {
                 System.out.println("Warn:Someone changed transformers field. Reset it.");
                 Unsafe.instance.putObjectVolatile(Launch.classLoader, EarlyFields.transformers_offset, Core.lists);
             }
