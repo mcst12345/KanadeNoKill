@@ -6,11 +6,29 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+
 public class Transformer implements IClassTransformer {
+    public static final boolean debug = System.getProperty("debug") != null;
     public static final Transformer instance = new Transformer();
     private Transformer(){}
+
+    private static void save(byte[] clazz, String file) {
+        if (!debug) {
+            return;
+        }
+        try {
+            Files.write(new File(file).toPath(), clazz);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
+        byte[] transformed;
         switch (transformedName) {
             case "net.minecraft.server.MinecraftServer": {
                 System.out.println("Get MinecraftServer.");
@@ -32,7 +50,9 @@ public class Transformer implements IClassTransformer {
                 }
                 ClassWriter cw = new ClassWriter(0);
                 cn.accept(cw);
-                return cw.toByteArray();
+                transformed = cw.toByteArray();
+                save(transformed, cn.name + ".class");
+                return transformed;
             }
             case "net.minecraft.client.Minecraft": {
                 System.out.println("Get Minecraft.");
@@ -54,7 +74,9 @@ public class Transformer implements IClassTransformer {
                 }
                 ClassWriter cw = new ClassWriter(0);
                 cn.accept(cw);
-                return cw.toByteArray();
+                transformed = cw.toByteArray();
+                save(transformed, cn.name + ".class");
+                return transformed;
             }
             case "net.minecraft.item.ItemStack": {
                 System.out.println("Get ItemStack.");
@@ -73,12 +95,15 @@ public class Transformer implements IClassTransformer {
                         list.add(new InsnNode(Opcodes.IRETURN));
                         list.add(label);
                         list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+                        mn.instructions.insert(list);
                         System.out.println("Insert return in isEmpty.");
                     }
                 }
                 ClassWriter cw = new ClassWriter(0);
                 cn.accept(cw);
-                return cw.toByteArray();
+                transformed = cw.toByteArray();
+                save(transformed, cn.name + ".class");
+                return transformed;
             }
         }
         return basicClass;
