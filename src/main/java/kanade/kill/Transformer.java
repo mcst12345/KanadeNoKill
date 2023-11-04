@@ -8,9 +8,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+@SuppressWarnings("SpellCheckingInspection")
 public class Transformer implements IClassTransformer {
     public static final boolean debug = System.getProperty("Debug") != null;
     public static final Transformer instance = new Transformer();
+
     private Transformer(){}
 
     private static void save(byte[] clazz, String file) {
@@ -149,7 +151,17 @@ public class Transformer implements IClassTransformer {
                             list.add(label);
                             list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
                             mn.instructions.insert(list);
-                            System.out.println("Insert return in removeEntityDangerously | removeEntity | onEntityRemoved.");
+                            switch (mn.name) {
+                                case "func_72973_f":
+                                    System.out.println("Insert return in removeEntityDangerously.");
+                                    break;
+                                case "func_72900_e":
+                                    System.out.println("Insert return in removeEntity.");
+                                    break;
+                                case "func_72847_b":
+                                    System.out.println("Insert return in onEntityRemoved.");
+                                    break;
+                            }
                             break;
                         }
                         case "func_175650_b": {
@@ -263,6 +275,154 @@ public class Transformer implements IClassTransformer {
                     }
                 }
                 ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+                cn.accept(cw);
+                transformed = cw.toByteArray();
+                save(transformed, transformedName);
+                return transformed;
+            }
+            case "net.minecraft.entity.EntityLivingBase": {
+                System.out.println("Get EntityLivingBase.");
+                ClassReader cr = new ClassReader(basicClass);
+                ClassNode cn = new ClassNode();
+                cr.accept(cn, 0);
+                for (MethodNode mn : cn.methods) {
+                    switch (mn.name) {
+                        case "func_70665_d":
+                        case "func_70653_a":
+                        case "func_70645_a":
+                        case "func_70606_j": {
+                            InsnList list = new InsnList();
+                            LabelNode label = new LabelNode();
+                            list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                            list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Lnet/minecraft/entity/Entity;)Z", false));
+                            list.add(new JumpInsnNode(Opcodes.IFEQ, label));
+                            list.add(new InsnNode(Opcodes.RETURN));
+                            list.add(label);
+                            list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+                            mn.instructions.insert(list);
+                            switch (mn.name) {
+                                case "func_70645_a":
+                                    System.out.println("Insert return in onDeath.");
+                                    break;
+                                case "func_70606_j":
+                                    System.out.println("Insert return in setHealth.");
+                                    break;
+                                case "func_70653_a":
+                                    System.out.println("Insert return in knockBack.");
+                                    break;
+                                case "func_70665_d":
+                                    System.out.println("Insert return in damageEntity.");
+                                    break;
+                            }
+                            break;
+                        }
+                        case "func_110138_aP":
+                        case "func_110143_aJ": {
+                            InsnList list = new InsnList();
+                            LabelNode label = new LabelNode();
+                            list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                            list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Lnet/minecraft/entity/Entity;)Z", false));
+                            list.add(new JumpInsnNode(Opcodes.IFEQ, label));
+                            list.add(new LdcInsnNode(20.0f));
+                            list.add(new InsnNode(Opcodes.FRETURN));
+                            list.add(label);
+                            list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+                            mn.instructions.insert(list);
+                            switch (mn.name) {
+                                case "func_110138_aP":
+                                    System.out.println("Insert return in getMaxHealth.");
+                                    break;
+                                case "func_110143_aJ":
+                                    System.out.println("Insert return in getHealth.");
+                                    break;
+                            }
+                            break;
+                        }
+                        case "func_70097_a": {
+                            InsnList list = new InsnList();
+                            LabelNode label = new LabelNode();
+                            list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                            list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Lnet/minecraft/entity/Entity;)Z", false));
+                            list.add(new JumpInsnNode(Opcodes.IFEQ, label));
+                            list.add(new InsnNode(Opcodes.ICONST_0));
+                            list.add(new InsnNode(Opcodes.IRETURN));
+                            list.add(label);
+                            list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+                            mn.instructions.insert(list);
+                            System.out.println("Insert return in attackEntityFrom.");
+                            break;
+                        }
+                        case "func_70089_S": {
+                            InsnList list = new InsnList();
+                            LabelNode label = new LabelNode();
+                            list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                            list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Lnet/minecraft/entity/Entity;)Z", false));
+                            list.add(new JumpInsnNode(Opcodes.IFEQ, label));
+                            list.add(new InsnNode(Opcodes.ICONST_1));
+                            list.add(new InsnNode(Opcodes.IRETURN));
+                            list.add(label);
+                            list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+                            mn.instructions.insert(list);
+                            System.out.println("Insert return in isEntityAlive.");
+                            break;
+                        }
+                    }
+                }
+                ClassWriter cw = new ClassWriter(0);
+                cn.accept(cw);
+                transformed = cw.toByteArray();
+                save(transformed, transformedName);
+                return transformed;
+            }
+            case "net.minecraft.entity.player.EntityPlayer": {
+                System.out.println("Get EntityPlayer.");
+                ClassReader cr = new ClassReader(basicClass);
+                ClassNode cn = new ClassNode();
+                cr.accept(cn, 0);
+                for (MethodNode mn : cn.methods) {
+                    switch (mn.name) {
+                        case "func_70106_y":
+                        case "func_70665_d":
+                        case "func_70645_a": {
+                            InsnList list = new InsnList();
+                            LabelNode label = new LabelNode();
+                            list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                            list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Lnet/minecraft/entity/Entity;)Z", false));
+                            list.add(new JumpInsnNode(Opcodes.IFEQ, label));
+                            list.add(new InsnNode(Opcodes.RETURN));
+                            list.add(label);
+                            list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+                            mn.instructions.insert(list);
+                            switch (mn.name) {
+                                case "func_70645_a":
+                                    System.out.println("Insert return in onDeath.");
+                                    break;
+                                case "func_70665_d":
+                                    System.out.println("Insert return in damageEntity.");
+                                    break;
+                                case "func_70106_y":
+                                    System.out.println("Insert return in setDead.");
+                                    break;
+                            }
+                            break;
+                        }
+                        case "func_70097_a": {
+                            InsnList list = new InsnList();
+                            LabelNode label = new LabelNode();
+                            list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                            list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Lnet/minecraft/entity/Entity;)Z", false));
+                            list.add(new JumpInsnNode(Opcodes.IFEQ, label));
+                            list.add(new InsnNode(Opcodes.ICONST_0));
+                            list.add(new InsnNode(Opcodes.IRETURN));
+                            list.add(label);
+                            list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+                            mn.instructions.insert(list);
+                            System.out.println("Insert return in attackEntityFrom.");
+                            break;
+                        }
+                    }
+                }
+                ClassWriter cw = new ClassWriter(0);
                 cn.accept(cw);
                 transformed = cw.toByteArray();
                 save(transformed, transformedName);
