@@ -455,8 +455,8 @@ public class Transformer implements IClassTransformer {
                         case "set": {
                             InsnList list = new InsnList();
                             LabelNode label = new LabelNode();
-                            list.add(new VarInsnNode(Opcodes.ILOAD, 1));
                             list.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                            list.add(new VarInsnNode(Opcodes.ILOAD, 1));
                             list.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "get", "(I)Ljava/lang/Object;", false));
                             list.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "kanade/kill/Util", "NoRemove", "(Ljava/lang/Object;)Z"));
                             list.add(new JumpInsnNode(Opcodes.IFEQ, label));
