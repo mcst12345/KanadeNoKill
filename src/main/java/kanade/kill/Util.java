@@ -1,6 +1,8 @@
 package kanade.kill;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -37,7 +39,8 @@ public class Util {
             entity.isDead = true;
             entity.addedToChunk = false;
             entity.dimension = 114514;
-            Unsafe.instance.putObjectVolatile(entity, LateFields.dataManager_offset, FakeEntityDataManager.instance);
+            DataParameter<Float> HEALTH = (DataParameter<Float>) Unsafe.instance.getObjectVolatile(LateFields.HEALTH_base, LateFields.HEALTH_offset);
+            ((EntityDataManager) Unsafe.instance.getObjectVolatile(entity, LateFields.dataManager_offset)).set(HEALTH, 0.0f);
             killing = false;
         } catch (Throwable t){
             t.printStackTrace();
