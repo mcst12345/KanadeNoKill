@@ -1,6 +1,8 @@
 package kanade.kill;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.ClassInheritanceMultiMap;
@@ -39,8 +41,17 @@ public class Util {
             entity.isDead = true;
             entity.addedToChunk = false;
             entity.dimension = 114514;
-            DataParameter<Float> HEALTH = (DataParameter<Float>) Unsafe.instance.getObjectVolatile(LateFields.HEALTH_base, LateFields.HEALTH_offset);
-            ((EntityDataManager) Unsafe.instance.getObjectVolatile(entity, LateFields.dataManager_offset)).set(HEALTH, 0.0f);
+            if (entity instanceof EntityLivingBase) {
+                DataParameter<Float> HEALTH = (DataParameter<Float>) Unsafe.instance.getObjectVolatile(LateFields.HEALTH_base, LateFields.HEALTH_offset);
+                ((EntityDataManager) Unsafe.instance.getObjectVolatile(entity, LateFields.dataManager_offset)).set(HEALTH, 0.0f);
+                if (entity instanceof EntityPlayer) {
+                    if (world.playerEntities.getClass() != ArrayList.class) {
+                        Unsafe.instance.putObjectVolatile(world, LateFields.playerEntities_offset, new ArrayList<>(world.playerEntities));
+                    }
+                    world.playerEntities.remove(entity);
+
+                }
+            }
             killing = false;
         } catch (Throwable t){
             t.printStackTrace();
