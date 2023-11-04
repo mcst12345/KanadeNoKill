@@ -10,10 +10,10 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import scala.concurrent.util.Unsafe;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Util {
+    private static final Set<UUID> Dead = new HashSet<>();
     public static boolean killing;
     public static void Kill(List<Entity> list) {
         for (Entity e : list) {
@@ -23,10 +23,10 @@ public class Util {
 
     @SuppressWarnings("unchecked")
     public static synchronized void Kill(Entity entity) {
-        if (KillItem.inList(entity)) return;
+        if (KillItem.inList(entity) || entity == null) return;
         try {
             killing = true;
-            if (entity == null) return;
+            Dead.add(entity.getUniqueID());
             World world = entity.world;
             if (world.loadedEntityList.getClass() != ArrayList.class) {
                 Unsafe.instance.putObjectVolatile(world, LateFields.loadedEntityList_offset, new ArrayList<>(world.loadedEntityList));
@@ -54,10 +54,14 @@ public class Util {
                 }
             }
             killing = false;
-        } catch (Throwable t){
+        } catch (Throwable t) {
             t.printStackTrace();
             killing = false;
             throw new RuntimeException(t);
         }
+    }
+
+    public static boolean isDead(Entity entity) {
+        return entity == null || Dead.contains(entity.getUniqueID());
     }
 }
