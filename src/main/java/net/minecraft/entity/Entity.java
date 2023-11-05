@@ -93,6 +93,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     public boolean collided;
     public boolean velocityChanged;
     public boolean isDead;
+    public int Death_Time;
     public float width;
     public float height;
     public float prevDistanceWalkedModified;

@@ -40,7 +40,6 @@ public class Transformer implements IClassTransformer {
 
                 System.out.println("Add field.");
                 cn.fields.add(new FieldNode(Opcodes.ACC_PUBLIC, "HatedByLife", "Z", null, null));
-                cn.fields.add(new FieldNode(Opcodes.ACC_PUBLIC, "Death_Time", "I", null, null));
             }
             case "net.minecraft.server.MinecraftServer": {
                 System.out.println("Get MinecraftServer.");
@@ -266,6 +265,10 @@ public class Transformer implements IClassTransformer {
             }
             case "net.minecraft.entity.EntityLivingBase": {
                 System.out.println("Get EntityLivingBase.");
+
+                System.out.println("Add field.");
+                cn.fields.add(new FieldNode(Opcodes.ACC_PUBLIC, "Death_Time", "I", null, null));
+
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
                         case "func_70665_d":
@@ -886,10 +889,10 @@ public class Transformer implements IClassTransformer {
                         }
                         case "field_70725_aQ": {
                             if (fin.getOpcode() == Opcodes.GETFIELD) {
-                                System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":DeathTime to Death_Time");
+                                System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":deathTime to Death_Time");
                                 fin.name = "Death_Time";
                             } else if (goodClass) {
-                                System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":DeathTime to Death_Time");
+                                System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":deathTime to Death_Time");
                                 fin.name = "Death_Time";
                             }
                         }
