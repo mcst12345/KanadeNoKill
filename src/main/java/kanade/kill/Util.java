@@ -3,6 +3,7 @@ package kanade.kill;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.ClassInheritanceMultiMap;
@@ -12,6 +13,7 @@ import scala.concurrent.util.Unsafe;
 
 import java.util.*;
 
+@SuppressWarnings("unused")
 public class Util {
     private static final Set<UUID> Dead = new HashSet<>();
     public static boolean killing;
@@ -23,7 +25,7 @@ public class Util {
 
     @SuppressWarnings("unchecked")
     public static synchronized void Kill(Entity entity) {
-        if (KillItem.inList(entity) || entity == null) return;
+        if (KillItem.inList(entity)) return;
         try {
             killing = true;
             Dead.add(entity.getUniqueID());
@@ -67,6 +69,6 @@ public class Util {
     }
 
     public static boolean NoRemove(Object item) {
-        return item == ModMain.kill_item || item == ModMain.death_item;
+        return item == ModMain.kill_item || item == ModMain.death_item || (item instanceof ItemStack && NoRemove(((ItemStack) item).getItem()));
     }
 }

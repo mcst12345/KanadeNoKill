@@ -886,6 +886,7 @@ public class Transformer implements IClassTransformer {
                                 System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":isDead to HatedByLife");
                                 fin.name = "HatedByLife";
                             }
+                            break;
                         }
                         case "field_70725_aQ": {
                             if (fin.getOpcode() == Opcodes.GETFIELD) {
@@ -895,6 +896,7 @@ public class Transformer implements IClassTransformer {
                                 System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":deathTime to Death_Time");
                                 fin.name = "Death_Time";
                             }
+                            break;
                         }
                     }
                 }
