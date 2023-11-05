@@ -40,6 +40,7 @@ public class Util {
             chunk.markDirty();
 
             entity.isDead = true;
+            entity.HatedByLife = true;
             entity.addedToChunk = false;
             entity.dimension = 114514;
             if (entity instanceof EntityLivingBase) {

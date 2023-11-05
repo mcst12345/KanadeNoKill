@@ -15,13 +15,10 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class KillItem extends Item {
-    private static final Set<Entity> list = new HashSet<>();
+    private static final Set<UUID> list = new HashSet<>();
     public KillItem(){
         this.setRegistryName("kanade:kill");
     }
@@ -76,15 +73,15 @@ public class KillItem extends Item {
         return true;
     }
 
+    public static boolean inList(Entity entity){
+        return list.contains(entity.getUniqueID());
+    }
+
     @Override
     public void onUpdate(@Nullable ItemStack stack,@Nullable World worldIn,@Nonnull Entity entityIn, int itemSlot, boolean isSelected)
     {
         if(entityIn instanceof EntityPlayer){
-            list.add(entityIn);
+            list.add(entityIn.getUniqueID());
         }
-    }
-
-    public static boolean inList(Entity entity){
-        return list.contains(entity);
     }
 }

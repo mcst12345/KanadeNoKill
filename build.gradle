@@ -56,8 +56,6 @@ sourceSets {
             srcDir 'src/generated/resources'
         }
         java {
-            exclude 'net/minecraft/**'
-            exclude 'net/minecraftforge/**'
         }
     }
 }
