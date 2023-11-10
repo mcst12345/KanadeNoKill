@@ -9,12 +9,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.HashMap;
-import java.util.Map;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class Transformer implements IClassTransformer, Opcodes {
-    private static final Map<String, Boolean> cache = new HashMap<>();
     public static final boolean debug = System.getProperty("Debug") != null;
     public static final Transformer instance = new Transformer();
 
@@ -716,18 +713,16 @@ public class Transformer implements IClassTransformer, Opcodes {
             if (res != null) {
                 String path = res.getPath();
 
-                if (cache.containsKey(path)) {
-                    goodClass = cache.get(path);
-                } else {
-
-                    if (path.startsWith("mods", path.lastIndexOf(File.separator) - 4)) {
-                        goodClass = false;
-                        cache.put(path, false);
-                    } else {
-                        cache.put(path, true);
-                    }
+                if (path.contains("!")) {
+                    path = path.substring(0, path.indexOf("!"));
                 }
-            } else {
+                if (path.contains("file:/")) {
+                    path = path.replace("file:/", "");
+                }
+
+                if (path.startsWith("mods", path.lastIndexOf(File.separator) - 4)) {
+                    goodClass = false;
+                }
                 goodClass = false;
             }
         }
