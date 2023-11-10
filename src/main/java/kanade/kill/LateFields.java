@@ -14,6 +14,7 @@ public class LateFields {
     public static final long entityLists_offset;
     public static final long dataManager_offset;
     public static final long playerEntities_offset;
+    public static final long HatedByLife_offset;
     public static final Object HEALTH_base;
     public static final long HEALTH_offset;
 
@@ -30,6 +31,8 @@ public class LateFields {
             field = EntityLivingBase.class.getDeclaredField("field_184632_c");
             HEALTH_base = Unsafe.instance.staticFieldBase(field);
             HEALTH_offset = Unsafe.instance.staticFieldOffset(field);
+            field = Entity.class.getDeclaredField("HatedByLife");
+            HatedByLife_offset = Unsafe.instance.objectFieldOffset(field);
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }

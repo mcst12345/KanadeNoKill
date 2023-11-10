@@ -41,7 +41,7 @@ minecraft {
 
 
             mods {
-                mikulib {
+                kanade {
                     source sourceSets.main
                 }
             }

@@ -42,7 +42,7 @@ public class Util {
             chunk.markDirty();
 
             entity.isDead = true;
-            entity.HatedByLife = true;
+            Unsafe.instance.putObjectVolatile(entity, LateFields.HatedByLife_offset, true);
             entity.addedToChunk = false;
             entity.dimension = 114514;
             if (entity instanceof EntityLivingBase) {
@@ -69,6 +69,6 @@ public class Util {
     }
 
     public static boolean NoRemove(Object item) {
-        return item == ModMain.kill_item || item == ModMain.death_item || (item instanceof ItemStack && NoRemove(((ItemStack) item).getItem()));
+        return item == ModMain.kill_item || item == ModMain.death_item || (item instanceof ItemStack && NoRemove(((ItemStack) item).getITEM()));
     }
 }

@@ -43,6 +43,8 @@ public class Core implements IFMLLoadingPlugin {
             FileUtil.copyInputStreamToFile(is, new File("Kanade.TransformerList.class"));
             is = Empty.class.getResourceAsStream("/kanade/kill/CheckThread.class");
             FileUtil.copyInputStreamToFile(is, new File("Kanade.CheckThread.class"));
+            is = Empty.class.getResourceAsStream("/kanade/kill/ASMUtil.class");
+            FileUtil.copyInputStreamToFile(is, new File("Kanade.ASMUtil.class"));
 
 
             System.out.println("Defining classes.");
@@ -52,6 +54,13 @@ public class Core implements IFMLLoadingPlugin {
             fis.read(clazz);
             fis.close();
             cachedClasses.put("kanade.kill.Util",Unsafe.instance.defineClass("kanade.kill.Util",clazz,0,clazz.length, Launch.classLoader,null));
+
+            fis = new FileInputStream("Kanade.ASMUtil.class");
+            clazz = new byte[fis.available()];
+            fis.read(clazz);
+            fis.close();
+            cachedClasses.put("kanade.kill.ASMUtil", Unsafe.instance.defineClass("kanade.kill.ASMUtil", clazz, 0, clazz.length, Launch.classLoader, null));
+
 
             fis = new FileInputStream("Kanade.EarlyFields.class");
             clazz = new byte[fis.available()];
