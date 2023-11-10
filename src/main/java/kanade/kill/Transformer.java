@@ -9,9 +9,12 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class Transformer implements IClassTransformer, Opcodes {
+    private static final Map<String, Boolean> cache = new HashMap<>();
     public static final boolean debug = System.getProperty("Debug") != null;
     public static final Transformer instance = new Transformer();
 
@@ -624,23 +627,32 @@ public class Transformer implements IClassTransformer, Opcodes {
                         ASMUtil.InsertReturn(mn, Type.BOOLEAN_TYPE, Boolean.FALSE, 0, inList());
                     }
                 }
+                break;
+            }
+            case "net.minecraftforge.common.Minecraft": {
+                System.out.println("Get MinecraftForge.");
+                System.out.println("Add field.");
+                cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_STATIC | ACC_FINAL, "Event_bus", "Lnet/minecraftforge/fml/common/eventhandler/EventBus;", null, null));
             }
         }
 
         boolean goodClass = true;
         if (name.equals(transformedName)) {
             final URL res = Launch.classLoader.findResource(name.replace('.', '/').concat(".class"));
+
             if (res != null) {
                 String path = res.getPath();
-                if (path.contains("!")) {
-                    path = path.substring(0, path.indexOf("!"));
-                }
-                if (path.contains("file:/")) {
-                    path = path.replace("file:/", "");
-                }
-                File file = new File(path);
-                if (file.getParentFile() != null && file.getParentFile().getName().equals("mods")) {
-                    goodClass = false;
+
+                if (cache.containsKey(path)) {
+                    goodClass = cache.get(path);
+                } else {
+
+                    if (path.startsWith("mods", path.lastIndexOf(File.separator) - 4)) {
+                        goodClass = false;
+                        cache.put(path, false);
+                    } else {
+                        cache.put(path, true);
+                    }
                 }
             } else {
                 goodClass = false;
@@ -673,6 +685,17 @@ public class Transformer implements IClassTransformer, Opcodes {
                                 fin.name = "Death_Time";
                             }
                             break;
+                        }
+                        case "EVENT_BUS": {
+                            if (fin.owner.equals("net/minecraftforge/common/MinecraftForge")) {
+                                if (fin.getOpcode() == GETSTATIC) {
+                                    fin.name = "Event_bus";
+                                    System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":EVENT_BUS to Event_bus");
+                                } else if (goodClass) {
+                                    fin.name = "Event_bus";
+                                    System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":EVENT_BUS to Event_bus");
+                                }
+                            }
                         }
                     }
                 }
