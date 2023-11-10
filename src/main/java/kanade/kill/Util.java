@@ -44,7 +44,6 @@ public class Util {
             entity.isDead = true;
             Unsafe.instance.putObjectVolatile(entity, LateFields.HatedByLife_offset, true);
             entity.addedToChunk = false;
-            entity.dimension = 114514;
             if (entity instanceof EntityLivingBase) {
                 DataParameter<Float> HEALTH = (DataParameter<Float>) Unsafe.instance.getObjectVolatile(LateFields.HEALTH_base, LateFields.HEALTH_offset);
                 ((EntityDataManager) Unsafe.instance.getObjectVolatile(entity, LateFields.dataManager_offset)).set(HEALTH, 0.0f);

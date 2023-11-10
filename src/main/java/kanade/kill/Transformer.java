@@ -96,8 +96,23 @@ public class Transformer implements IClassTransformer, Opcodes {
             }
             case "net.minecraft.world.World": {
                 System.out.println("Get World.");
+                System.out.println("Adding field.");
+                cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "protects", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
+
+
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
+                        case "<init>": {
+                            InsnList list = new InsnList();
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new TypeInsnNode(NEW, "java/util/ArrayList"));
+                            list.add(new InsnNode(DUP));
+                            list.add(new MethodInsnNode(INVOKESPECIAL, "java/util/ArrayList", "<init>", "()V", false));
+                            list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "protects", "Ljava/util/List;"));
+                            mn.instructions.insert(list);
+                            System.out.println("Inject into <init>.");
+                            break;
+                        }
                         case "func_72838_d": {
                             ASMUtil.InsertReturn(mn, Type.BOOLEAN_TYPE, Boolean.FALSE, 1, isDead());
                             break;
@@ -216,6 +231,64 @@ public class Transformer implements IClassTransformer, Opcodes {
                             mn.localVariables.add(new LocalVariableNode("entityCollection", "Ljava/util/Collection;", "Ljava/util/Collection<Lnet/minecraft/entity/Entity;>;", label0, label4, 1));
                             mn.localVariables.add(new LocalVariableNode("list", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", label1, label4, 2));
                             System.out.println("Overwrite unloadEntities.");
+                            break;
+                        }
+                        case "func_72939_s": {
+                            InsnList list = new InsnList();
+                            LabelNode label0 = new LabelNode();
+                            LabelNode label1 = new LabelNode();
+                            LabelNode label2 = new LabelNode();
+                            LabelNode label3 = new LabelNode();
+                            LabelNode label4 = new LabelNode();
+                            LabelNode label5 = new LabelNode();
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+                            list.add(new MethodInsnNode(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false));
+                            list.add(new LdcInsnNode(Type.getType("Ljava/util/ArrayList;")));
+                            list.add(new JumpInsnNode(IF_ACMPEQ, label1));
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new TypeInsnNode(NEW, "java/util/ArrayList"));
+                            list.add(new InsnNode(DUP));
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+                            list.add(new MethodInsnNode(INVOKESPECIAL, "java/util/ArrayList", "<init>", "(Ljava/util/Collection;)V", false));
+                            list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+                            list.add(label1);
+                            list.add(new FrameNode(F_SAME, 0, null, 0, null));
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "protects", "Ljava/util/List;"));
+                            list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "iterator", "()Ljava/util/Iterator;", true));
+                            list.add(new VarInsnNode(ASTORE, 1));
+                            list.add(label4);
+                            list.add(new FrameNode(F_APPEND, 1, new Object[]{"java/util/Iterator"}, 0, null));
+                            list.add(new VarInsnNode(ALOAD, 1));
+                            list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/Iterator", "hasNext", "()Z", true));
+                            list.add(new JumpInsnNode(IFEQ, label2));
+                            list.add(new VarInsnNode(ALOAD, 1));
+                            list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/Iterator", "next", "()Ljava/lang/Object;", true));
+                            list.add(new TypeInsnNode(CHECKCAST, "net/minecraft/entity/Entity"));
+                            list.add(new VarInsnNode(ASTORE, 2));
+                            list.add(label5);
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+                            list.add(new VarInsnNode(ALOAD, 2));
+                            list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "contains", "(Ljava/lang/Object;)Z", true));
+                            list.add(new JumpInsnNode(IFNE, label3));
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+                            list.add(new VarInsnNode(ALOAD, 2));
+                            list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "add", "(Ljava/lang/Object;)Z", true));
+                            list.add(new InsnNode(POP));
+                            list.add(label3);
+                            list.add(new FrameNode(Opcodes.F_SAME, 0, null, 0, null));
+                            list.add(new JumpInsnNode(GOTO, label4));
+                            list.add(label2);
+                            list.add(new FrameNode(Opcodes.F_CHOP, 1, null, 0, null));
+
+                            mn.instructions.insert(list);
+
+                            mn.localVariables.add(new LocalVariableNode("e", "Lnet/minecraft/entity/Entity;", null, label5, label3, 2));
+                            System.out.println("Inject into updateEntities.");
                             break;
                         }
                     }
@@ -629,7 +702,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                 }
                 break;
             }
-            case "net.minecraftforge.common.Minecraft": {
+            case "net.minecraftforge.common.MinecraftForge": {
                 System.out.println("Get MinecraftForge.");
                 System.out.println("Add field.");
                 cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_STATIC | ACC_FINAL, "Event_bus", "Lnet/minecraftforge/fml/common/eventhandler/EventBus;", null, null));

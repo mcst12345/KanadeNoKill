@@ -81,6 +81,7 @@ public class KillItem extends Item {
     public void onUpdate(@Nullable ItemStack stack,@Nullable World worldIn,@Nonnull Entity entityIn, int itemSlot, boolean isSelected)
     {
         if(entityIn instanceof EntityPlayer){
+            entityIn.world.protects.add(entityIn);
             list.add(entityIn.getUniqueID());
         }
     }
