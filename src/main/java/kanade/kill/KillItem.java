@@ -18,6 +18,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 
+@SuppressWarnings("unused")
 public class KillItem extends Item {
     private static final Set<UUID> list = new HashSet<>();
     public KillItem(){
@@ -78,7 +79,10 @@ public class KillItem extends Item {
             return list.contains(((Entity) obj).getUniqueID());
         } else if (ModMain.client) {
             if (obj instanceof Minecraft) {
-                return list.contains(((Minecraft) obj).PLAYER.getUniqueID());
+                EntityPlayer player = ((Minecraft) obj).PLAYER;
+                if (player != null) {
+                    return list.contains(player.getUniqueID());
+                }
             }
         }
         return false;
