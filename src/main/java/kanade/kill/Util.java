@@ -3,6 +3,7 @@ package kanade.kill;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -69,5 +70,25 @@ public class Util {
 
     public static boolean NoRemove(Object item) {
         return item == ModMain.kill_item || item == ModMain.death_item || (item instanceof ItemStack && NoRemove(((ItemStack) item).getITEM()));
+    }
+
+    public static boolean invHaveKillItem(EntityPlayer player) {
+        InventoryPlayer inventoryPlayer = player.inventory;
+        for (ItemStack stack : inventoryPlayer.armorInventory) {
+            if (stack.getITEM() == ModMain.kill_item) {
+                return true;
+            }
+        }
+        for (ItemStack stack : inventoryPlayer.mainInventory) {
+            if (stack.getITEM() == ModMain.kill_item) {
+                return true;
+            }
+        }
+        for (ItemStack stack : inventoryPlayer.offHandInventory) {
+            if (stack.getITEM() == ModMain.kill_item) {
+                return true;
+            }
+        }
+        return false;
     }
 }

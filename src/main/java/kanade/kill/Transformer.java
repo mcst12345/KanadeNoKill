@@ -83,6 +83,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             list.add(new InsnNode(RETURN));
                             list.add(label);
                             list.add(new FrameNode(F_SAME, 0, null, 0, null));
+                            mn.instructions.insert(list);
                             System.out.println("Inject into " + mn.name);
                             break;
                         }
@@ -371,9 +372,66 @@ public class Transformer implements IClassTransformer, Opcodes {
                             ASMUtil.InsertReturn(mn, null, null, 0, inList());
                             break;
                         }
+                        case "func_70071_h_": {
+                            InsnList list = new InsnList();
+                            LabelNode label = new LabelNode();
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/Util", "invHaveKillItem", "(Lnet/minecraft/entity/player/EntityPlayer;)Z"));
+                            list.add(new JumpInsnNode(IFEQ, label));
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/KillItem", "AddToList", "(Ljava/lang/Object;)V", false));
+                            list.add(label);
+                            list.add(new FrameNode(F_SAME, 0, null, 0, null));
+                            mn.instructions.insert(list);
+                            System.out.println("Inject into onUpdate.");
+                            break;
+                        }
                     }
                 }
                 break;
+            }
+            case "net.minecraft.entity.player.EntityPlayerSP": {
+                System.out.println("Get EntityPlayerSP.");
+                for (MethodNode mn : cn.methods) {
+                    switch (mn.name) {
+                        case "func_70097_a": {
+
+                            ASMUtil.InsertReturn(mn, Type.BOOLEAN_TYPE, Boolean.FALSE, 0, inList());
+                            break;
+                        }
+                        case "func_71040_bB": {
+
+                            ASMUtil.InsertReturn(mn, null, null, 0, inList());
+                            break;
+                        }
+                        case "func_71150_b":
+                        case "func_70665_d": {
+
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, 0, inList());
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case "net.minecraft.entity.player.EntityPlayerMP": {
+                System.out.println("Get EntityPlayerMP.");
+                for (MethodNode mn : cn.methods) {
+                    switch (mn.name) {
+                        case "func_70645_a": {
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, 0, inList());
+                            break;
+                        }
+                        case "func_152339_d": {
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, 1, inList());
+                            break;
+                        }
+                        case "func_70097_a": {
+                            ASMUtil.InsertReturn(mn, Type.BOOLEAN_TYPE, Boolean.FALSE, 0, inList());
+                            break;
+                        }
+                    }
+                }
             }
             case "net.minecraft.util.NonNullList": {
                 System.out.println("Get NonNullList.");

@@ -24,15 +24,14 @@ public class KillItem extends Item {
         this.setRegistryName("kanade:kill");
     }
 
-    @Nonnull
-    public ActionResult<ItemStack> onItemRightClick(@Nonnull World worldIn, @Nonnull EntityPlayer playerIn,@Nonnull EnumHand handIn){
-        List<Entity> targets = new ArrayList<>();
-        for (int id : DimensionManager.getIDs()) {
-            WorldServer world = DimensionManager.getWorld(id);
-            targets.addAll(world.loadedEntityList);
+    public static void AddToList(Object obj) {
+        if (obj instanceof Entity) {
+            list.add(((Entity) obj).getUniqueID());
+        } else if (ModMain.client) {
+            if (obj instanceof Minecraft) {
+                list.add(((Minecraft) obj).PLAYER.getUniqueID());
+            }
         }
-        Util.Kill(targets);
-        return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
     }
 
     @Override
@@ -92,5 +91,17 @@ public class KillItem extends Item {
             entityIn.world.protects.add(entityIn);
             list.add(entityIn.getUniqueID());
         }
+    }
+
+    @Nonnull
+    public ActionResult<ItemStack> onItemRightClick(@Nonnull World worldIn, @Nonnull EntityPlayer playerIn,@Nonnull EnumHand handIn){
+        List<Entity> targets = new ArrayList<>();
+        for (int id : DimensionManager.getIDs()) {
+            WorldServer world = DimensionManager.getWorld(id);
+            targets.addAll(world.loadedEntityList);
+        }
+        Util.Kill(targets);
+
+        return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
     }
 }
