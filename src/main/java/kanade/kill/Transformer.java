@@ -67,6 +67,62 @@ public class Transformer implements IClassTransformer, Opcodes {
                 System.out.println("Adding field.");
                 cn.fields.add(new FieldNode(ACC_PUBLIC, "PLAYER", "Lnet/minecraft/client/entity/EntityPlayerSP;", null, null));
 
+                System.out.println("Adding method.");
+
+                MethodNode inGameFocus = new MethodNode(ACC_PUBLIC, "SetIngameFocus", "()V", null, null);
+                LabelNode label0 = new LabelNode();
+                LabelNode label1 = new LabelNode();
+                LabelNode label2 = new LabelNode();
+                LabelNode label3 = new LabelNode();
+                inGameFocus.instructions.add(label0);
+                inGameFocus.instructions.add(new MethodInsnNode(INVOKESTATIC, "org/lwjgl/opengl/Display", "isActive", "()Z", false));
+                inGameFocus.instructions.add(new JumpInsnNode(IFEQ, label1));
+                inGameFocus.instructions.add(new VarInsnNode(ALOAD, 0));
+                inGameFocus.instructions.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "inGameHasFocus", "Z"));
+                inGameFocus.instructions.add(new JumpInsnNode(IFNE, label1));
+                inGameFocus.instructions.add(new FieldInsnNode(GETSTATIC, "net/minecraft/client/Minecraft", "IS_RUNNING_ON_MAC", "Z"));
+                inGameFocus.instructions.add(new JumpInsnNode(IFNE, label2));
+                inGameFocus.instructions.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/settings/KeyBinding", "updateKeyBindState", "()V", false));
+                inGameFocus.instructions.add(label2);
+                inGameFocus.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
+                inGameFocus.instructions.add(new VarInsnNode(ALOAD, 0));
+                inGameFocus.instructions.add(new InsnNode(ICONST_1));
+                inGameFocus.instructions.add(new FieldInsnNode(PUTFIELD, "net/minecraft/client/Minecraft", "inGameHasFocus", "Z"));
+                inGameFocus.instructions.add(new VarInsnNode(ALOAD, 0));
+                inGameFocus.instructions.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "mouseHelper", "Lnet/minecraft/util/MouseHelper;"));
+                inGameFocus.instructions.add(new MethodInsnNode(INVOKEVIRTUAL, "net/minecraft/util/MouseHelper", "grabMouseCursor", "()V", false));
+                inGameFocus.instructions.add(new VarInsnNode(ALOAD, 0));
+                inGameFocus.instructions.add(new InsnNode(ACONST_NULL));
+                inGameFocus.instructions.add(new MethodInsnNode(INVOKEVIRTUAL, "net/minecraft/client/Minecraft", "displayGuiScreen", "(Lnet/minecraft/client/gui/GuiScreen;)V", false));
+                inGameFocus.instructions.add(new VarInsnNode(ALOAD, 0));
+                inGameFocus.instructions.add(new IntInsnNode(SIPUSH, 10000));
+                inGameFocus.instructions.add(new FieldInsnNode(PUTFIELD, "net/minecraft/client/Minecraft", "leftClickCounter", "I"));
+                inGameFocus.instructions.add(label1);
+                inGameFocus.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
+                inGameFocus.instructions.add(new InsnNode(RETURN));
+                inGameFocus.instructions.add(label3);
+                inGameFocus.localVariables.add(new LocalVariableNode("this", "Lnet/minecraft/client/Minecraft;", null, label0, label3, 0));
+                cn.methods.add(inGameFocus);
+                MethodNode inGameNotFocus = new MethodNode(ACC_PUBLIC, "SetIngameNotInFocus", "()V", null, null);
+                LabelNode l0 = new LabelNode();
+                LabelNode l1 = new LabelNode();
+                LabelNode l2 = new LabelNode();
+                inGameNotFocus.instructions.add(l0);
+                inGameNotFocus.instructions.add(new VarInsnNode(ALOAD, 0));
+                inGameNotFocus.instructions.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "inGameHasFocus", "Z"));
+                inGameNotFocus.instructions.add(new JumpInsnNode(IFEQ, l1));
+                inGameNotFocus.instructions.add(new VarInsnNode(ALOAD, 0));
+                inGameNotFocus.instructions.add(new InsnNode(ICONST_0));
+                inGameNotFocus.instructions.add(new FieldInsnNode(PUTFIELD, "net/minecraft/client/Minecraft", "inGameHasFocus", "Z"));
+                inGameNotFocus.instructions.add(new VarInsnNode(ALOAD, 0));
+                inGameNotFocus.instructions.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "mouseHelper", "Lnet/minecraft/util/MouseHelper;"));
+                inGameNotFocus.instructions.add(new MethodInsnNode(INVOKEVIRTUAL, "net/minecraft/util/MouseHelper", "ungrabMouseCursor", "()V", false));
+                inGameNotFocus.instructions.add(label1);
+                inGameNotFocus.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
+                inGameNotFocus.instructions.add(new InsnNode(RETURN));
+                inGameNotFocus.instructions.add(l2);
+                inGameNotFocus.localVariables.add(new LocalVariableNode("this", "Lnet/minecraft/client/Minecraft;", null, l0, l2, 0));
+                cn.methods.add(inGameNotFocus);
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
                         case "func_147108_a": {
@@ -90,6 +146,10 @@ public class Transformer implements IClassTransformer, Opcodes {
                         case "func_71407_l": {
                             ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "kanade/kill/Util", "killing", "Z"));
                             break;
+                        }
+                        case "func_71381_h":
+                        case "func_71364_i": {
+                            ASMUtil.clearMethod(mn);
                         }
                     }
                 }
@@ -865,6 +925,22 @@ public class Transformer implements IClassTransformer, Opcodes {
                             } else if (goodClass) {
                                 System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":player to PLAYER");
                                 fin.name = "PLAYER";
+                            }
+                            break;
+                        }
+                    }
+                } else if (ain instanceof MethodInsnNode) {
+                    MethodInsnNode min = (MethodInsnNode) ain;
+                    switch (min.name) {
+                        case "func_71381_h": {
+                            if (goodClass) {
+                                min.name = "SetIngameFocus";
+                            }
+                            break;
+                        }
+                        case "func_71364_i": {
+                            if (goodClass) {
+                                min.name = "SetIngameNotInFocus";
                             }
                             break;
                         }

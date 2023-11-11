@@ -5,6 +5,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Modifier;
 
 public class ASMUtil implements Opcodes {
     public static void InsertReturn(MethodNode mn, @Nullable Object type, @Nullable Object getReturn, int varIndex, AbstractInsnNode shouldReturn) {
@@ -48,5 +49,15 @@ public class ASMUtil implements Opcodes {
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
         System.out.println("Insert return in " + mn.name);
+    }
+
+    public static void clearMethod(MethodNode mn) {
+        mn.instructions.clear();
+        if (!Modifier.isStatic(mn.access)) {
+            mn.localVariables.removeIf(v -> v.index != 0);
+        } else {
+            mn.localVariables.clear();
+        }
+        mn.instructions.add(new InsnNode(RETURN));
     }
 }
