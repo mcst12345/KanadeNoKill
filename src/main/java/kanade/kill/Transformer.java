@@ -17,6 +17,8 @@ public class Transformer implements IClassTransformer, Opcodes {
 
     private Transformer(){}
 
+    private boolean changed;
+
     private static void save(byte[] clazz, String file) {
         if (!debug) {
             return;
@@ -46,8 +48,10 @@ public class Transformer implements IClassTransformer, Opcodes {
         ClassNode cn = new ClassNode();
         cr.accept(cn, 0);
         byte[] transformed;
+        changed = false;
         switch (transformedName) {
             case "net.minecraft.entity.Entity": {
+                changed = true;
                 System.out.println("Get Entity.");
 
                 System.out.println("Add field.");
@@ -55,8 +59,10 @@ public class Transformer implements IClassTransformer, Opcodes {
                 cn.fields.add(new FieldNode(ACC_PUBLIC, "motionX", "D", null, null));
                 cn.fields.add(new FieldNode(ACC_PUBLIC, "motionY", "D", null, null));
                 cn.fields.add(new FieldNode(ACC_PUBLIC, "motionZ", "D", null, null));
+                break;
             }
             case "net.minecraft.server.MinecraftServer": {
+                changed = true;
                 System.out.println("Get MinecraftServer.");
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("func_71217_p")) {
@@ -83,7 +89,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                         list.add(new MethodInsnNode(INVOKEINTERFACE, "java/lang/Runnable", "run", "()V", true));
                         list.add(new JumpInsnNode(GOTO, label2));
                         list.add(label1);
-                        list.add(new VarInsnNode(ALOAD, 1));
+                        list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Util", "tasks", "Ljava/util/List;"));
                         list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "clear", "()V", true));
                         list.add(new FrameNode(F_CHOP, 1, null, 0, null));
                         list.add(label3);
@@ -95,6 +101,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                 break;
             }
             case "net.minecraft.client.Minecraft": {
+                changed = true;
                 System.out.println("Get Minecraft.");
                 System.out.println("Adding field.");
                 cn.fields.add(new FieldNode(ACC_PUBLIC, "PLAYER", "Lnet/minecraft/client/entity/EntityPlayerSP;", null, null));
@@ -192,6 +199,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                 break;
             }
             case "net.minecraft.item.ItemStack": {
+                changed = true;
                 System.out.println("Get ItemStack.");
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("func_190926_b")) {
@@ -212,6 +220,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                 break;
             }
             case "net.minecraft.world.World": {
+                changed = true;
                 System.out.println("Get World.");
                 System.out.println("Adding field.");
                 cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "protects", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
@@ -414,6 +423,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                 break;
             }
             case "net.minecraft.entity.EntityLivingBase": {
+                changed = true;
                 System.out.println("Get EntityLivingBase.");
 
                 System.out.println("Add field.");
@@ -446,6 +456,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                 break;
             }
             case "net.minecraft.entity.player.EntityPlayer": {
+                changed = true;
                 System.out.println("Get EntityPlayer.");
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -487,6 +498,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                 break;
             }
             case "net.minecraft.entity.player.EntityPlayerSP": {
+                changed = true;
                 System.out.println("Get EntityPlayerSP.");
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -511,6 +523,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                 break;
             }
             case "net.minecraft.entity.player.EntityPlayerMP": {
+                changed = true;
                 System.out.println("Get EntityPlayerMP.");
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -530,6 +543,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                 }
             }
             case "net.minecraft.util.NonNullList": {
+                changed = true;
                 System.out.println("Get NonNullList.");
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -672,6 +686,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                 break;
             }
             case "net.minecraft.world.WorldServer": {
+                changed = true;
                 System.out.println("Get WorldServer.");
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -771,6 +786,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                 break;
             }
             case "net.minecraft.world.WorldClient": {
+                changed = true;
                 System.out.println("Get WorldClient.");
 
                 for (MethodNode mn : cn.methods) {
@@ -870,6 +886,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                 break;
             }
             case "net.minecraftforge.common.ForgeHooks": {
+                changed = true;
                 System.out.println("Get ForgeHooks.");
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("onLivingUpdate")) {
@@ -879,6 +896,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                 break;
             }
             case "net.minecraftforge.common.MinecraftForge": {
+                changed = true;
                 System.out.println("Get MinecraftForge.");
                 System.out.println("Add field.");
                 cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_STATIC | ACC_FINAL, "Event_bus", "Lnet/minecraftforge/fml/common/eventhandler/EventBus;", null, null));
@@ -927,9 +945,11 @@ public class Transformer implements IClassTransformer, Opcodes {
                             if (fin.getOpcode() == GETFIELD) {
                                 System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":isDead to HatedByLife.");
                                 fin.name = "HatedByLife";
+                                changed = true;
                             } else if (goodClass) {
                                 System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":isDead to HatedByLife.");
                                 fin.name = "HatedByLife";
+                                changed = true;
                             }
                             break;
                         }
@@ -937,9 +957,11 @@ public class Transformer implements IClassTransformer, Opcodes {
                             if (fin.getOpcode() == GETFIELD) {
                                 System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":deathTime to Death_Time.");
                                 fin.name = "Death_Time";
+                                changed = true;
                             } else if (goodClass) {
                                 System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":deathTime to Death_Time.");
                                 fin.name = "Death_Time";
+                                changed = true;
                             }
                             break;
                         }
@@ -948,9 +970,11 @@ public class Transformer implements IClassTransformer, Opcodes {
                                 if (fin.getOpcode() == GETSTATIC) {
                                     fin.name = "Event_bus";
                                     System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":EVENT_BUS to Event_bus.");
+                                    changed = true;
                                 } else if (goodClass) {
                                     fin.name = "Event_bus";
                                     System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":EVENT_BUS to Event_bus.");
+                                    changed = true;
                                 }
                             }
                             break;
@@ -959,9 +983,11 @@ public class Transformer implements IClassTransformer, Opcodes {
                             if (fin.getOpcode() == GETFIELD) {
                                 System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":player to PLAYER.");
                                 fin.name = "PLAYER";
+                                changed = true;
                             } else if (goodClass) {
                                 System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":player to PLAYER.");
                                 fin.name = "PLAYER";
+                                changed = true;
                             }
                             break;
                         }
@@ -969,9 +995,11 @@ public class Transformer implements IClassTransformer, Opcodes {
                             if (fin.getOpcode() == GETFIELD) {
                                 System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_70181_x to motionY.");
                                 fin.name = "motionY";
+                                changed = true;
                             } else if (goodClass) {
                                 System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_70181_x to motionY.");
                                 fin.name = "motionY";
+                                changed = true;
                             }
                             break;
                         }
@@ -979,9 +1007,11 @@ public class Transformer implements IClassTransformer, Opcodes {
                             if (fin.getOpcode() == GETFIELD) {
                                 System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_70159_w to motionX.");
                                 fin.name = "motionX";
+                                changed = true;
                             } else if (goodClass) {
                                 System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_70159_w to motionX.");
                                 fin.name = "motionX";
+                                changed = true;
                             }
                             break;
                         }
@@ -989,9 +1019,11 @@ public class Transformer implements IClassTransformer, Opcodes {
                             if (fin.getOpcode() == GETFIELD) {
                                 System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_70179_y to motionZ.");
                                 fin.name = "motionZ";
+                                changed = true;
                             } else if (goodClass) {
                                 System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_70179_y to motionZ.");
                                 fin.name = "motionZ";
+                                changed = true;
                             }
                             break;
                         }
@@ -1003,6 +1035,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             if (goodClass) {
                                 System.out.println("Redirecting:INVOKEVIRTUAL:" + transformedName + ":" + mn.name + ":func_71381_h to SetIngameFocus.");
                                 min.name = "SetIngameFocus";
+                                changed = true;
                             }
                             break;
                         }
@@ -1010,6 +1043,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             if (goodClass) {
                                 System.out.println("Redirecting:INVOKEVIRTUAL:" + transformedName + ":" + mn.name + ":func_71364_i to SetIngameNotInFocus.");
                                 min.name = "SetIngameNotInFocus";
+                                changed = true;
                             }
                             break;
                         }
@@ -1018,10 +1052,14 @@ public class Transformer implements IClassTransformer, Opcodes {
             }
         }
 
-        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        cn.accept(cw);
-        transformed = cw.toByteArray();
-        save(transformed, transformedName);
-        return transformed;
+        if (changed) {
+            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+            cn.accept(cw);
+            transformed = cw.toByteArray();
+            save(transformed, transformedName);
+            return transformed;
+        } else {
+            return basicClass;
+        }
     }
 }
