@@ -16,6 +16,7 @@ import java.util.*;
 
 @SuppressWarnings("unused")
 public class Util {
+    public static final List<Runnable> tasks = new ArrayList<>();
     private static final Set<UUID> Dead = new HashSet<>();
     public static boolean killing;
     public static void Kill(List<Entity> list) {

@@ -7,6 +7,7 @@ import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -68,5 +69,12 @@ public class ModMain {
     public static void RegModel(ModelRegistryEvent event) {
         ModelLoader.setCustomModelResourceLocation(kill_item, 0, new ModelResourceLocation(Objects.requireNonNull(kill_item.getRegistryName()), "inventory"));
         ModelLoader.setCustomModelResourceLocation(death_item, 0, new ModelResourceLocation(Objects.requireNonNull(death_item.getRegistryName()), "inventory"));
+    }
+
+    @SubscribeEvent
+    public static void ToolTip(ItemTooltipEvent event) {
+        if (event.getItemStack().getITEM() == kill_item) {
+            event.getToolTip().add("§f");
+        }
     }
 }

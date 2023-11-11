@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/KanadeNoKill.lib.test.iml" filepath="$PROJECT_DIR$/.idea/modules/KanadeNoKill.lib.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/kanade.lib.main.iml" filepath="$PROJECT_DIR$/.idea/modules/kanade.lib.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/kanade.lib.test.iml" filepath="$PROJECT_DIR$/.idea/modules/kanade.lib.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/lib.iml" filepath="$PROJECT_DIR$/.idea/modules/lib.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/lib.main.iml" filepath="$PROJECT_DIR$/.idea/modules/lib.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/lib.test.iml" filepath="$PROJECT_DIR$/.idea/modules/lib.test.iml" />
     </modules>
