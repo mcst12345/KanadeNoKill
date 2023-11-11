@@ -1,5 +1,6 @@
 package kanade.kill;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -73,8 +74,15 @@ public class KillItem extends Item {
         return true;
     }
 
-    public static boolean inList(Entity entity){
-        return list.contains(entity.getUniqueID());
+    public static boolean inList(Object obj) {
+        if (obj instanceof Entity) {
+            return list.contains(((Entity) obj).getUniqueID());
+        } else if (ModMain.client) {
+            if (obj instanceof Minecraft) {
+                return list.contains(((Minecraft) obj).PLAYER.getUniqueID());
+            }
+        }
+        return false;
     }
 
     @Override

@@ -33,7 +33,7 @@ public class Transformer implements IClassTransformer, Opcodes {
     }
 
     private static MethodInsnNode inList() {
-        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Lnet/minecraft/entity/Entity;)Z", false);
+        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Ljava/lang/Object;)Z", false);
     }
 
     private static MethodInsnNode NoRemove() {
@@ -64,9 +64,32 @@ public class Transformer implements IClassTransformer, Opcodes {
             }
             case "net.minecraft.client.Minecraft": {
                 System.out.println("Get Minecraft.");
+                System.out.println("Adding field.");
+                cn.fields.add(new FieldNode(ACC_PUBLIC, "PLAYER", "Lnet/minecraft/client/entity/EntityPlayerSP;", null, null));
+
                 for (MethodNode mn : cn.methods) {
-                    if (mn.name.equals("func_71407_l")) {
-                        ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "kanade/kill/Util", "killing", "Z"));
+                    switch (mn.name) {
+                        case "func_147108_a": {
+                            InsnList list = new InsnList();
+                            LabelNode label = new LabelNode();
+                            list.add(new VarInsnNode(ALOAD, 1));
+                            list.add(new JumpInsnNode(IFNULL, label));
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(inList());
+                            list.add(new JumpInsnNode(IFEQ, label));
+                            list.add(new VarInsnNode(ALOAD, 1));
+                            list.add(new TypeInsnNode(INSTANCEOF, "net/minecraft/client/gui/GuiGameOver"));
+                            list.add(new JumpInsnNode(IFEQ, label));
+                            list.add(new InsnNode(RETURN));
+                            list.add(label);
+                            list.add(new FrameNode(F_SAME, 0, null, 0, null));
+                            System.out.println("Inject into " + mn.name);
+                            break;
+                        }
+                        case "func_71407_l": {
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "kanade/kill/Util", "killing", "Z"));
+                            break;
+                        }
                     }
                 }
                 break;
@@ -238,6 +261,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             LabelNode label3 = new LabelNode();
                             LabelNode label4 = new LabelNode();
                             LabelNode label5 = new LabelNode();
+                            list.add(label0);
                             list.add(new VarInsnNode(ALOAD, 0));
                             list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
                             list.add(new MethodInsnNode(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false));
@@ -703,6 +727,17 @@ public class Transformer implements IClassTransformer, Opcodes {
                 System.out.println("Get MinecraftForge.");
                 System.out.println("Add field.");
                 cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_STATIC | ACC_FINAL, "Event_bus", "Lnet/minecraftforge/fml/common/eventhandler/EventBus;", null, null));
+                for (MethodNode mn : cn.methods) {
+                    if (mn.name.equals("<clinit>")) {
+                        InsnList list = new InsnList();
+                        list.add(new TypeInsnNode(NEW, "net/minecraftforge/fml/common/eventhandler/EventBus"));
+                        list.add(new InsnNode(DUP));
+                        list.add(new MethodInsnNode(INVOKESPECIAL, "net/minecraftforge/fml/common/eventhandler/EventBus", "<init>", "()V", false));
+                        list.add(new FieldInsnNode(PUTSTATIC, "net/minecraftforge/common/MinecraftForge", "Event_bus", "Lnet/minecraftforge/fml/common/eventhandler/EventBus;"));
+                        mn.instructions.insert(list);
+                        System.out.println("Inject into <clinit>.");
+                    }
+                }
             }
         }
 
@@ -723,7 +758,6 @@ public class Transformer implements IClassTransformer, Opcodes {
                 if (path.startsWith("mods", path.lastIndexOf(File.separator) - 4)) {
                     goodClass = false;
                 }
-                goodClass = false;
             }
         }
 
@@ -764,6 +798,17 @@ public class Transformer implements IClassTransformer, Opcodes {
                                     System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":EVENT_BUS to Event_bus");
                                 }
                             }
+                            break;
+                        }
+                        case "field_71439_g": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":player to PLAYER");
+                                fin.name = "PLAYER";
+                            } else if (goodClass) {
+                                System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":player to PLAYER");
+                                fin.name = "PLAYER";
+                            }
+                            break;
                         }
                     }
                 }

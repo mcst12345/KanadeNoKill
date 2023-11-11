@@ -24,6 +24,7 @@ import static kanade.kill.Core.cachedClasses;
 public class ModMain {
     public static final Item kill_item;
     public static final Item death_item;
+    public static final boolean client = System.getProperty("minecraft.client.jar") != null;
     static {
         try {
             InputStream is = Empty.class.getResourceAsStream("/kanade/kill/KillItem.class");
