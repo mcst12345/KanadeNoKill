@@ -233,7 +233,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             list.add(new VarInsnNode(ASTORE, 2));
                             list.add(label1);
                             list.add(new VarInsnNode(ALOAD, 2));
-                            list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Lnet/minecraft/entity/Entity;)Z", false), Type.getType("(Lnet/minecraft/entity/Entity;)Z")));
+                            list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Ljava/lang/Object;)Z", false), Type.getType("(Ljava/lang/Object;)Z")));
                             list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "removeIf", "(Ljava/util/function/Predicate;)Z", true));
                             list.add(new InsnNode(POP));
                             list.add(label2);
@@ -658,7 +658,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             list.add(new VarInsnNode(ASTORE, 2));
                             list.add(label1);
                             list.add(new VarInsnNode(ALOAD, 2));
-                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Lnet/minecraft/entity/Entity;)Z", false));
+                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Ljava/lang/Object;)Z", false));
                             list.add(new JumpInsnNode(IFEQ, label2));
                             list.add(label3);
                             list.add(new VarInsnNode(ALOAD, 2));
@@ -702,7 +702,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             InsnList list = new InsnList();
                             list.add(new VarInsnNode(ALOAD, 0));
                             list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/multiplayer/WorldClient", "field_72997_g", "Ljava/util/List;"));
-                            list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Lnet/minecraft/entity/Entity;)Z", false), Type.getType("(Lnet/minecraft/entity/Entity;)Z")));
+                            list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Ljava/lang/Object;)Z", false), Type.getType("(Ljava/lang/Object;)Z")));
                             list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "removeIf", "(Ljava/util/function/Predicate;)Z", true));
                             list.add(new InsnNode(POP));
                             mn.instructions.insert(list);
