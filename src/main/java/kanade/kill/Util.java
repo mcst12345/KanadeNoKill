@@ -384,7 +384,7 @@ public class Util {
                         System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
                         try {
                             Object o = getStatic(field);
-                            cache.put(System.identityHashCode(o), clone(o), 0);
+                            cache.put(System.identityHashCode(o), clone(o, 0));
                         } catch (Throwable t) {
                             if (t instanceof StackOverflowError) {
                                 System.out.println("Too deep. Ignoring this field.");
@@ -414,7 +414,7 @@ public class Util {
                         System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
                         try {
                             Object object = getStatic(field);
-                            cache.put(System.identityHashCode(object), clone(object), 0);
+                            cache.put(System.identityHashCode(object), clone(object, 0));
                         } catch (Throwable t) {
                             if (t instanceof StackOverflowError) {
                                 System.out.println("Too deep. Ignoring this field.");
@@ -504,7 +504,7 @@ public class Util {
                 break;
             }
             default: {
-                Unsafe.instance.putObjectVolatile(base, offset, clone(obj), 0);
+                Unsafe.instance.putObjectVolatile(base, offset, clone(obj, 0));
                 break;
             }
         }
