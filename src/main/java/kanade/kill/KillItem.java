@@ -1,6 +1,7 @@
 package kanade.kill;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -23,6 +24,7 @@ public class KillItem extends Item {
     private static final Set<UUID> list = new HashSet<>();
     public KillItem(){
         this.setRegistryName("kanade:kill");
+        this.setCreativeTab(CreativeTabs.COMBAT);
     }
 
     public static void AddToList(Object obj) {

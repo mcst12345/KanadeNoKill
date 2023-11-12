@@ -1,7 +1,6 @@
 package kanade.kill;
 
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -51,8 +50,6 @@ public class ModMain {
 
             kill_item = (Item) cachedClasses.get("kanade.kill.KillItem").newInstance();
             death_item = (Item) cachedClasses.get("kanade.kill.DeathItem").newInstance();
-            kill_item.setCreativeTab(CreativeTabs.MISC);
-            death_item.setCreativeTab(CreativeTabs.MISC);
         } catch (InstantiationException | IllegalAccessException | IOException e) {
             throw new RuntimeException(e);
         }

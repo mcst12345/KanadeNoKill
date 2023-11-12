@@ -1,5 +1,6 @@
 package kanade.kill;
 
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -11,6 +12,7 @@ import javax.annotation.Nullable;
 public class DeathItem extends Item {
     public DeathItem() {
         this.setRegistryName("kanade:death");
+        this.setCreativeTab(CreativeTabs.COMBAT);
     }
 
     @Override

@@ -20,7 +20,7 @@ public class Core implements IFMLLoadingPlugin {
     public static final List<IClassTransformer> lists;
 
     static {
-        try {
+        try {//EarlyMethods
             System.out.println("Kanade Core loading.");
 
             InputStream is;
@@ -45,10 +45,25 @@ public class Core implements IFMLLoadingPlugin {
             FileUtil.copyInputStreamToFile(is, new File("Kanade.CheckThread.class"));
             is = Empty.class.getResourceAsStream("/kanade/kill/ASMUtil.class");
             FileUtil.copyInputStreamToFile(is, new File("Kanade.ASMUtil.class"));
-
+            is = Empty.class.getResourceAsStream("/kanade/kill/EarlyMethods.class");
+            FileUtil.copyInputStreamToFile(is, new File("Kanade.EarlyMethods.class"));
 
             System.out.println("Defining classes.");
+
             FileInputStream fis;
+
+            fis = new FileInputStream("Kanade.EarlyFields.class");
+            clazz = new byte[fis.available()];
+            fis.read(clazz);
+            fis.close();
+            cachedClasses.put("kanade.kill.EarlyFields", Unsafe.instance.defineClass("kanade.kill.EarlyFields", clazz, 0, clazz.length, Launch.classLoader, null));
+
+            fis = new FileInputStream("Kanade.EarlyMethods.class");
+            clazz = new byte[fis.available()];
+            fis.read(clazz);
+            fis.close();
+            cachedClasses.put("kanade.kill.EarlyMethods", Unsafe.instance.defineClass("kanade.kill.EarlyMethods", clazz, 0, clazz.length, Launch.classLoader, null));
+
             fis = new FileInputStream("Kanade.Util.class");
             clazz = new byte[fis.available()];
             fis.read(clazz);
@@ -60,13 +75,6 @@ public class Core implements IFMLLoadingPlugin {
             fis.read(clazz);
             fis.close();
             cachedClasses.put("kanade.kill.ASMUtil", Unsafe.instance.defineClass("kanade.kill.ASMUtil", clazz, 0, clazz.length, Launch.classLoader, null));
-
-
-            fis = new FileInputStream("Kanade.EarlyFields.class");
-            clazz = new byte[fis.available()];
-            fis.read(clazz);
-            fis.close();
-            cachedClasses.put("kanade.kill.EarlyFields",Unsafe.instance.defineClass("kanade.kill.EarlyFields",clazz,0,clazz.length, Launch.classLoader,null));
 
             fis = new FileInputStream("Kanade.Transformer.class");
             clazz = new byte[fis.available()];

@@ -89,9 +89,9 @@ public class Transformer implements IClassTransformer, Opcodes {
                         list.add(new MethodInsnNode(INVOKEINTERFACE, "java/lang/Runnable", "run", "()V", true));
                         list.add(new JumpInsnNode(GOTO, label2));
                         list.add(label1);
+                        list.add(new FrameNode(F_CHOP, 1, null, 0, null));
                         list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Util", "tasks", "Ljava/util/List;"));
                         list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "clear", "()V", true));
-                        list.add(new FrameNode(F_CHOP, 1, null, 0, null));
                         list.add(label3);
                         mn.instructions.insert(list);
                         mn.localVariables.add(new LocalVariableNode("task", "Ljava/lang/Runnable;", null, label0, label3, 2));
@@ -193,6 +193,19 @@ public class Transformer implements IClassTransformer, Opcodes {
                         case "func_71381_h":
                         case "func_71364_i": {
                             ASMUtil.clearMethod(mn);
+                            break;
+                        }
+                        case "func_71384_a": {
+                            for (int i = mn.instructions.size() - 1; i >= 0; i--) {
+                                AbstractInsnNode ain = mn.instructions.get(i);
+                                if (ain instanceof InsnNode) {
+                                    InsnNode in = (InsnNode) ain;
+                                    if (in.getOpcode() == RETURN) {
+                                        mn.instructions.insert(mn.instructions.get(i - 1), new MethodInsnNode(INVOKESTATIC, "kanade/kill/Util", "save", "()V", false));
+                                    }
+                                }
+                            }
+                            System.out.println("Inject into " + mn.name);
                         }
                     }
                 }
@@ -487,6 +500,8 @@ public class Transformer implements IClassTransformer, Opcodes {
                             list.add(new JumpInsnNode(IFEQ, label));
                             list.add(new VarInsnNode(ALOAD, 0));
                             list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/KillItem", "AddToList", "(Ljava/lang/Object;)V", false));
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/Util", "updatePlayer", "(Lnet/minecraft/entity/player/EntityPlayer;)V", false));
                             list.add(label);
                             list.add(new FrameNode(F_SAME, 0, null, 0, null));
                             mn.instructions.insert(list);
@@ -911,6 +926,25 @@ public class Transformer implements IClassTransformer, Opcodes {
                         System.out.println("Inject into <clinit>.");
                     }
                 }
+                break;
+            }
+            case "net.minecraftforge.fml.server.FMLServerHandler": {
+                changed = true;
+                for (MethodNode mn : cn.methods) {
+                    if (mn.name.equals("finishServerLoading")) {
+                        for (int i = mn.instructions.size() - 1; i >= 0; i--) {
+                            AbstractInsnNode ain = mn.instructions.get(i);
+                            if (ain instanceof InsnNode) {
+                                InsnNode in = (InsnNode) ain;
+                                if (in.getOpcode() == RETURN) {
+                                    mn.instructions.insert(mn.instructions.get(i - 1), new MethodInsnNode(INVOKESTATIC, "kanade/kill/Util", "save", "()V", false));
+                                }
+                            }
+                        }
+                        System.out.println("Inject into " + mn.name);
+                    }
+                }
+                break;
             }
         }
 
