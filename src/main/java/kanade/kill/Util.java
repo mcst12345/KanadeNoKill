@@ -1,7 +1,6 @@
 package kanade.kill;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockOre;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
@@ -11,8 +10,6 @@ import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemArmor;
-import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -408,10 +405,10 @@ public class Util {
                 System.out.println("Mod:" + container.getModId());
                 Class<?> clazz = modClassLoader.loadClass(container.getMod().getClass().getName());
                 for (Field field : getFields(clazz)) {
-                    if (shouldIgnore(field)) {
-                        continue;
-                    }
                     if (Modifier.isStatic(field.getModifiers())) {
+                        if (shouldIgnore(field)) {
+                            continue;
+                        }
                         System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
                         try {
                             Object object = getStatic(field);
@@ -547,10 +544,10 @@ public class Util {
                 System.out.println("Mod:" + container.getModId());
                 Class<?> clazz = modClassLoader.loadClass(container.getMod().getClass().getName());
                 for (Field field : getFields(clazz)) {
-                    if (shouldIgnore(field)) {
-                        continue;
-                    }
                     if (Modifier.isStatic(field.getModifiers())) {
+                        if (shouldIgnore(field)) {
+                            continue;
+                        }
                         System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
                         Object object = getStatic(field);
                         int hash = System.identityHashCode(object);
@@ -567,7 +564,9 @@ public class Util {
     }
 
     private static boolean shouldIgnore(Field field) {
-        return field.getType() == Item.class || field.getType() == Block.class || field.getType() == Potion.class || field.getType() == Enchantment.class || field.getType() == ItemBlock.class || field.getType() == BlockOre.class || field.getType() == ItemArmor.class || field.getType() == CreativeTabs.class || field.getType() == Logger.class || field.getType() == RegistryNamespaced.class || field.getType() == SimpleNetworkWrapper.class;
+        boolean result = field.getType() == CreativeTabs.class || field.getType() == RegistryNamespaced.class || field.getType() == SimpleNetworkWrapper.class;
+        Object object = getStatic(field);
+        return object instanceof Item || object instanceof Block || object instanceof Potion || object instanceof Enchantment || object instanceof Logger || result;
     }
 
     private static boolean shouldIgnore(Class<?> clazz) {
