@@ -30,14 +30,16 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URLClassLoader;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "raw"})
 public class Util {
     public static final List<Runnable> tasks = new ArrayList<>();
     private static final Set<UUID> Dead = new HashSet<>();
     private static final Map<Integer, Object> cache = new HashMap<>();
     private static Object saved_listeners;
+    private static Object saved_listeners_2;
     public static boolean killing;
     private static URLClassLoader modClassLoader;
     public static void Kill(List<Entity> list) {
@@ -310,6 +312,7 @@ public class Util {
                     break;
                 }
                 default: {
+                    System.out.println("Coping field:" + field.getType());
                     Object obj = Unsafe.instance.getObjectVolatile(o, offset);
                     Unsafe.instance.putObjectVolatile(copy, offset, clone(obj));
                 }
@@ -339,11 +342,31 @@ public class Util {
         if (modClassLoader == null) {
             modClassLoader = (URLClassLoader) Unsafe.instance.getObjectVolatile(Loader.instance(), LateFields.modClassLoader_offset);
         }
-        System.gc();
-        System.out.println("Coping event listeners.");
-        Object EventBus = MinecraftForge.Event_bus;
-        saved_listeners = clone(Unsafe.instance.getObjectVolatile(EventBus, LateFields.listeners_offset));
-        System.gc();
+        System.out.println("Coping event listeners in EventBus.");
+        saved_listeners = clone(Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset));
+        System.out.println("Coping static fields in event listeners.");
+        ConcurrentHashMap map = (ConcurrentHashMap) Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset);
+        map.forEach((key, value) -> {
+            Class<?> clazz = key.getClass();
+            System.out.println("Listener:" + clazz.getName());
+            for (Field field : getAllFields(clazz)) {
+                if (Modifier.isStatic(field.getModifiers())) {
+                    System.out.println("Field:" + field.getName());
+                    try {
+                        Object o = getStatic(field);
+                        cache.put(System.identityHashCode(o), clone(o));
+                    } catch (Throwable t) {
+                        if (t instanceof StackOverflowError) {
+                            System.out.println("Too deep. Ignoring this field.");
+                        } else {
+                            throw new RuntimeException(t);
+                        }
+                    }
+                }
+            }
+        });
+        System.out.println("Coping event listeners in Event.");
+        saved_listeners_2 = clone(Unsafe.instance.getObjectVolatile(LateFields.listeners_base, LateFields.listeners_offset_2));
         System.out.println("Coping static fields in mod instances.");
         try {
             for (ModContainer container : Loader.instance().getActiveModList()) {
@@ -458,8 +481,29 @@ public class Util {
 
     public synchronized static void reset() {
         System.out.println("Resetting cached fields.");
-        System.out.println("Reset event listeners.");
+        System.out.println("Resetting event listeners in EventBus.");
         Unsafe.instance.putObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset, clone(saved_listeners));
+        System.out.println("Resetting static fields in event listeners.");
+        ConcurrentHashMap map = (ConcurrentHashMap) Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset);
+        map.forEach((key, value) -> {
+            Class<?> clazz = key.getClass();
+            System.out.println("Listener:" + clazz.getName());
+            for (Field field : getAllFields(clazz)) {
+                if (Modifier.isStatic(field.getModifiers())) {
+                    System.out.println("Field:" + field.getName());
+                    Object object = getStatic(field);
+                    int hash = System.identityHashCode(object);
+                    if (cache.containsKey(hash)) {
+                        Object newObject = clone(cache.get(hash));
+                        putStatic(field, newObject);
+                        cache.put(System.identityHashCode(newObject), cache.get(hash));
+                        cache.remove(hash);
+                    }
+                }
+            }
+        });
+        System.out.println("Resetting event listeners in Event.");
+        Unsafe.instance.putObjectVolatile(LateFields.listeners_base, LateFields.listeners_offset_2, saved_listeners_2);
         System.out.println("Resetting mod static fields.");
         try {
             for (ModContainer container : Loader.instance().getActiveModList()) {
@@ -477,7 +521,10 @@ public class Util {
                         Object object = getStatic(field);
                         int hash = System.identityHashCode(object);
                         if (cache.containsKey(hash)) {
-                            putStatic(field, clone(cache.get(hash)));
+                            Object newObject = clone(cache.get(hash));
+                            putStatic(field, newObject);
+                            cache.put(System.identityHashCode(newObject), cache.get(hash));
+                            cache.remove(hash);
                         }
                     }
                 }

@@ -6,6 +6,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.EventBus;
 import scala.concurrent.util.Unsafe;
 
@@ -25,6 +26,8 @@ public class LateFields {
     public static final long listeners_offset;
     public static final long listenerOwners_offset;
     public static final long modClassLoader_offset;
+    public static final Object listeners_base;
+    public static final long listeners_offset_2;
     static {
         try {
             Field field = World.class.getDeclaredField("field_72996_f");
@@ -49,6 +52,9 @@ public class LateFields {
             listenerOwners_offset = Unsafe.instance.objectFieldOffset(field);
             field = Loader.class.getDeclaredField("modClassLoader");
             modClassLoader_offset = Unsafe.instance.objectFieldOffset(field);
+            field = Event.class.getDeclaredField("listeners");
+            listeners_base = Unsafe.instance.staticFieldBase(field);
+            listeners_offset_2 = Unsafe.instance.staticFieldOffset(field);
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
