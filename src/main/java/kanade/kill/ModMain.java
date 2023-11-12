@@ -71,7 +71,7 @@ public class ModMain {
     @SubscribeEvent
     public static void ToolTip(ItemTooltipEvent event) {
         if (event.getItemStack().getITEM() == kill_item) {
-            event.getToolTip().add("§f");
+            event.getToolTip().add("§f僕らは命に嫌われている。");
         }
     }
 }

@@ -348,7 +348,7 @@ public class Util {
         ConcurrentHashMap map = (ConcurrentHashMap) Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset);
         map.forEach((key, value) -> {
             Class<?> clazz = key.getClass();
-            if (!clazz == Class.class) {
+            if (!(clazz == Class.class)) {
                 System.out.println("Listener:" + clazz.getName());
                 for (Field field : getAllFields(clazz)) {
                     if (Modifier.isStatic(field.getModifiers())) {
