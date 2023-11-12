@@ -351,6 +351,9 @@ public class Util {
             System.out.println("Listener:" + clazz.getName());
             for (Field field : getAllFields(clazz)) {
                 if (Modifier.isStatic(field.getModifiers())) {
+                    if (shouldIgnore(field)) {
+                        continue;
+                    }
                     System.out.println("Field:" + field.getName());
                     try {
                         Object o = getStatic(field);
@@ -376,7 +379,7 @@ public class Util {
                 System.out.println("Mod:" + container.getModId());
                 Class<?> clazz = modClassLoader.loadClass(container.getMod().getClass().getName());
                 for (Field field : getAllFields(clazz)) {
-                    if (field.getType() == Item.class || field.getType() == Block.class || field.getType() == Potion.class || field.getType() == Enchantment.class || field.getType() == ItemBlock.class || field.getType() == BlockOre.class || field.getType() == ItemArmor.class || field.getType() == CreativeTabs.class || field.getType() == Logger.class) {
+                    if (shouldIgnore(field)) {
                         continue;
                     }
                     if (Modifier.isStatic(field.getModifiers())) {
@@ -490,6 +493,9 @@ public class Util {
             System.out.println("Listener:" + clazz.getName());
             for (Field field : getAllFields(clazz)) {
                 if (Modifier.isStatic(field.getModifiers())) {
+                    if (shouldIgnore(field)) {
+                        continue;
+                    }
                     System.out.println("Field:" + field.getName());
                     Object object = getStatic(field);
                     int hash = System.identityHashCode(object);
@@ -513,7 +519,7 @@ public class Util {
                 System.out.println("Mod:" + container.getModId());
                 Class<?> clazz = modClassLoader.loadClass(container.getMod().getClass().getName());
                 for (Field field : getAllFields(clazz)) {
-                    if (field.getType() == Item.class || field.getType() == Block.class || field.getType() == Potion.class || field.getType() == Enchantment.class || field.getType() == ItemBlock.class || field.getType() == BlockOre.class || field.getType() == ItemArmor.class || field.getType() == CreativeTabs.class || field.getType() == Logger.class) {
+                    if (shouldIgnore(field)) {
                         continue;
                     }
                     if (Modifier.isStatic(field.getModifiers())) {
@@ -532,5 +538,9 @@ public class Util {
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
+    }
+
+    private static boolean shouldIgnore(Field field) {
+        return field.getType() == Item.class || field.getType() == Block.class || field.getType() == Potion.class || field.getType() == Enchantment.class || field.getType() == ItemBlock.class || field.getType() == BlockOre.class || field.getType() == ItemArmor.class || field.getType() == CreativeTabs.class || field.getType() == Logger.class;
     }
 }
