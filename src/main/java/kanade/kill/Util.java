@@ -352,10 +352,6 @@ public class Util {
                 }
                 System.out.println("Mod:" + container.getModId());
                 Class<?> clazz = modClassLoader.loadClass(container.getMod().getClass().getName());
-                try {
-                    clazz.newInstance();
-                } catch (Throwable ignored) {
-                }
                 for (Field field : getAllFields(clazz)) {
                     if (field.getType() == Item.class || field.getType() == Block.class || field.getType() == Potion.class || field.getType() == Enchantment.class || field.getType() == ItemBlock.class || field.getType() == BlockOre.class || field.getType() == ItemArmor.class || field.getType() == CreativeTabs.class || field.getType() == Logger.class) {
                         continue;
@@ -479,9 +475,6 @@ public class Util {
                     if (Modifier.isStatic(field.getModifiers())) {
                         System.out.println("Field:" + field.getName());
                         Object object = getStatic(field);
-                        if (object == null) {
-                            System.out.println(field.get(null));
-                        }
                         int hash = System.identityHashCode(object);
                         if (cache.containsKey(hash)) {
                             putStatic(field, clone(cache.get(hash)));
