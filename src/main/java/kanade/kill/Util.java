@@ -348,21 +348,23 @@ public class Util {
         ConcurrentHashMap map = (ConcurrentHashMap) Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset);
         map.forEach((key, value) -> {
             Class<?> clazz = key.getClass();
-            System.out.println("Listener:" + clazz.getName());
-            for (Field field : getAllFields(clazz)) {
-                if (Modifier.isStatic(field.getModifiers())) {
-                    if (shouldIgnore(field)) {
-                        continue;
-                    }
-                    System.out.println("Field:" + field.getName());
-                    try {
-                        Object o = getStatic(field);
-                        cache.put(System.identityHashCode(o), clone(o));
-                    } catch (Throwable t) {
-                        if (t instanceof StackOverflowError) {
-                            System.out.println("Too deep. Ignoring this field.");
-                        } else {
-                            throw new RuntimeException(t);
+            if (!clazz == Class.class) {
+                System.out.println("Listener:" + clazz.getName());
+                for (Field field : getAllFields(clazz)) {
+                    if (Modifier.isStatic(field.getModifiers())) {
+                        if (shouldIgnore(field)) {
+                            continue;
+                        }
+                        System.out.println("Field:" + field.getName());
+                        try {
+                            Object o = getStatic(field);
+                            cache.put(System.identityHashCode(o), clone(o));
+                        } catch (Throwable t) {
+                            if (t instanceof StackOverflowError) {
+                                System.out.println("Too deep. Ignoring this field.");
+                            } else {
+                                throw new RuntimeException(t);
+                            }
                         }
                     }
                 }
