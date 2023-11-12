@@ -41,7 +41,7 @@ import java.util.logging.Logger;
 public class Util {
     public static final List<Runnable> tasks = new ArrayList<>();
     private static final Set<UUID> Dead = new HashSet<>();
-    private static final Map<Integer, Object> cache = new HashMap<>();
+    private static final Map<Field, Object> cache = new HashMap<>();
     private static Object saved_listeners;
     private static Object saved_listeners_2;
     public static boolean killing;
@@ -325,7 +325,7 @@ public class Util {
                     break;
                 }
                 default: {
-                    System.out.println("Coping field:" + field.getType());
+                    System.out.println("Coping field:" + field.getName() + ":" + field.getType().getName());
                     Object obj = Unsafe.instance.getObjectVolatile(o, offset);
                     Unsafe.instance.putObjectVolatile(copy, offset, clone(obj, depth + 1));
                 }
@@ -385,7 +385,7 @@ public class Util {
                         System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
                         try {
                             Object o = getStatic(field);
-                            cache.put(System.identityHashCode(o), clone(o, 0));
+                            cache.put(field, clone(o, 0));
                         } catch (Throwable t) {
                             if (t instanceof StackOverflowError) {
                                 System.out.println("Too deep. Ignoring this field.");
@@ -415,7 +415,8 @@ public class Util {
                         System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
                         try {
                             Object object = getStatic(field);
-                            cache.put(System.identityHashCode(object), clone(object, 0));
+
+                            cache.put(field, clone(object, 0));
                         } catch (Throwable t) {
                             if (t instanceof StackOverflowError) {
                                 System.out.println("Too deep. Ignoring this field.");
@@ -468,7 +469,6 @@ public class Util {
     }
 
     public synchronized static void putStatic(Field field, Object obj) {
-        System.out.println(obj);
         Object base = Unsafe.instance.staticFieldBase(field);
         long offset = Unsafe.instance.staticFieldOffset(field);
         switch (field.getType().getName()) {
@@ -528,13 +528,9 @@ public class Util {
                         }
                         System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
                         Object object = getStatic(field);
-                        int hash = System.identityHashCode(object);
-                        if (cache.containsKey(hash)) {
+                        if (cache.containsKey(field)) {
                             System.out.println("Replacing.");
-                            Object newObject = clone(cache.get(hash), 0);
-                            putStatic(field, newObject);
-                            cache.put(System.identityHashCode(newObject), cache.get(hash));
-                            cache.remove(hash);
+                            putStatic(field, clone(cache.get(field), 0));
                         }
                     }
                 }
@@ -558,12 +554,9 @@ public class Util {
                         System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
                         Object object = getStatic(field);
                         int hash = System.identityHashCode(object);
-                        if (cache.containsKey(hash)) {
+                        if (cache.containsKey(field)) {
                             System.out.println("Replacing.");
-                            Object newObject = clone(cache.get(hash), 0);
-                            putStatic(field, newObject);
-                            cache.put(System.identityHashCode(newObject), cache.get(hash));
-                            cache.remove(hash);
+                            putStatic(field, clone(cache.get(field), 0));
                         }
                     }
                 }
