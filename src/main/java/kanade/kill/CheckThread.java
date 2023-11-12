@@ -5,6 +5,7 @@ import scala.concurrent.util.Unsafe;
 
 public class CheckThread extends Thread {
     public CheckThread() {
+        this.setPriority(9);
         this.setDaemon(true);
         this.setName("CheckThread");
     }
