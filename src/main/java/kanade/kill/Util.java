@@ -26,6 +26,7 @@ import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
+import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import scala.concurrent.util.Unsafe;
 
 import java.lang.reflect.Array;
@@ -147,7 +148,7 @@ public class Util {
         if (o instanceof Class) {
             return o;
         }
-        if (depth > 100) {
+        if (depth > 10000) {
             System.out.println("Too deep.");
             return o;
         }
@@ -573,7 +574,7 @@ public class Util {
     }
 
     private static boolean shouldIgnore(Field field) {
-        return field.getType() == Item.class || field.getType() == Block.class || field.getType() == Potion.class || field.getType() == Enchantment.class || field.getType() == ItemBlock.class || field.getType() == BlockOre.class || field.getType() == ItemArmor.class || field.getType() == CreativeTabs.class || field.getType() == Logger.class || field.getType() == RegistryNamespaced.class;
+        return field.getType() == Item.class || field.getType() == Block.class || field.getType() == Potion.class || field.getType() == Enchantment.class || field.getType() == ItemBlock.class || field.getType() == BlockOre.class || field.getType() == ItemArmor.class || field.getType() == CreativeTabs.class || field.getType() == Logger.class || field.getType() == RegistryNamespaced.class || field.getType() == SimpleNetworkWrapper.class;
     }
 
     private static boolean shouldIgnore(Class<?> clazz) {
