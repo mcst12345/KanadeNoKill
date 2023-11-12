@@ -18,8 +18,11 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.ClassInheritanceMultiMap;
+import net.minecraft.util.registry.RegistryNamespaced;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.ForgeInternalHandler;
+import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
@@ -134,10 +137,19 @@ public class Util {
         }
     }
 
-    public static Object clone(Object o) {
+    private static int depth;
+
+    public static Object clone(Object o, int depth) {
         if (o == null) {
             System.out.println("Warn:object is null.");
             return null;
+        }
+        if (o instanceof Class) {
+            return o;
+        }
+        if (depth > 100) {
+            System.out.println("Too deep.");
+            return o;
         }
         Object copy;
         long offset;
@@ -314,7 +326,7 @@ public class Util {
                 default: {
                     System.out.println("Coping field:" + field.getType());
                     Object obj = Unsafe.instance.getObjectVolatile(o, offset);
-                    Unsafe.instance.putObjectVolatile(copy, offset, clone(obj));
+                    Unsafe.instance.putObjectVolatile(copy, offset, clone(obj, depth + 1));
                 }
             }
         }
@@ -338,27 +350,41 @@ public class Util {
         }
     }
 
+    public static List<Field> getFields(Class<?> clazz) {
+        try {
+            List<Field> list = new ArrayList<>();
+            if (clazz == null) {
+                return list;
+            }
+            Collections.addAll(list, (Field[]) EarlyMethods.getDeclaredFields0.invoke(clazz, false));
+            return list;
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw new RuntimeException(t);
+        }
+    }
+
     public synchronized static void save() {
         if (modClassLoader == null) {
             modClassLoader = (URLClassLoader) Unsafe.instance.getObjectVolatile(Loader.instance(), LateFields.modClassLoader_offset);
         }
         System.out.println("Coping event listeners in EventBus.");
-        saved_listeners = clone(Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset));
+        saved_listeners = clone(Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset), 0);
         System.out.println("Coping static fields in event listeners.");
         ConcurrentHashMap map = (ConcurrentHashMap) Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset);
         map.forEach((key, value) -> {
             Class<?> clazz = key.getClass();
-            if (!(clazz == Class.class)) {
+            if (!(clazz == Class.class) && !shouldIgnore(clazz)) {
                 System.out.println("Listener:" + clazz.getName());
-                for (Field field : getAllFields(clazz)) {
+                for (Field field : getFields(clazz)) {
                     if (Modifier.isStatic(field.getModifiers())) {
                         if (shouldIgnore(field)) {
                             continue;
                         }
-                        System.out.println("Field:" + field.getName());
+                        System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
                         try {
                             Object o = getStatic(field);
-                            cache.put(System.identityHashCode(o), clone(o));
+                            cache.put(System.identityHashCode(o), clone(o), 0);
                         } catch (Throwable t) {
                             if (t instanceof StackOverflowError) {
                                 System.out.println("Too deep. Ignoring this field.");
@@ -371,7 +397,7 @@ public class Util {
             }
         });
         System.out.println("Coping event listeners in Event.");
-        saved_listeners_2 = clone(Unsafe.instance.getObjectVolatile(LateFields.listeners_base, LateFields.listeners_offset_2));
+        saved_listeners_2 = clone(Unsafe.instance.getObjectVolatile(LateFields.listeners_base, LateFields.listeners_offset_2), 0);
         System.out.println("Coping static fields in mod instances.");
         try {
             for (ModContainer container : Loader.instance().getActiveModList()) {
@@ -380,15 +406,15 @@ public class Util {
                 }
                 System.out.println("Mod:" + container.getModId());
                 Class<?> clazz = modClassLoader.loadClass(container.getMod().getClass().getName());
-                for (Field field : getAllFields(clazz)) {
+                for (Field field : getFields(clazz)) {
                     if (shouldIgnore(field)) {
                         continue;
                     }
                     if (Modifier.isStatic(field.getModifiers())) {
-                        System.out.println("Field:" + field.getName());
+                        System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
                         try {
                             Object object = getStatic(field);
-                            cache.put(System.identityHashCode(object), clone(object));
+                            cache.put(System.identityHashCode(object), clone(object), 0);
                         } catch (Throwable t) {
                             if (t instanceof StackOverflowError) {
                                 System.out.println("Too deep. Ignoring this field.");
@@ -478,7 +504,7 @@ public class Util {
                 break;
             }
             default: {
-                Unsafe.instance.putObjectVolatile(base, offset, clone(obj));
+                Unsafe.instance.putObjectVolatile(base, offset, clone(obj), 0);
                 break;
             }
         }
@@ -487,25 +513,28 @@ public class Util {
     public synchronized static void reset() {
         System.out.println("Resetting cached fields.");
         System.out.println("Resetting event listeners in EventBus.");
-        Unsafe.instance.putObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset, clone(saved_listeners));
+        Unsafe.instance.putObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset, clone(saved_listeners, 0));
         System.out.println("Resetting static fields in event listeners.");
         ConcurrentHashMap map = (ConcurrentHashMap) Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset);
         map.forEach((key, value) -> {
             Class<?> clazz = key.getClass();
             System.out.println("Listener:" + clazz.getName());
-            for (Field field : getAllFields(clazz)) {
-                if (Modifier.isStatic(field.getModifiers())) {
-                    if (shouldIgnore(field)) {
-                        continue;
-                    }
-                    System.out.println("Field:" + field.getName());
-                    Object object = getStatic(field);
-                    int hash = System.identityHashCode(object);
-                    if (cache.containsKey(hash)) {
-                        Object newObject = clone(cache.get(hash));
-                        putStatic(field, newObject);
-                        cache.put(System.identityHashCode(newObject), cache.get(hash));
-                        cache.remove(hash);
+            if (!(clazz == Class.class) && !shouldIgnore(clazz)) {
+                for (Field field : getFields(clazz)) {
+                    if (Modifier.isStatic(field.getModifiers())) {
+                        if (shouldIgnore(field)) {
+                            continue;
+                        }
+                        System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
+                        Object object = getStatic(field);
+                        int hash = System.identityHashCode(object);
+                        if (cache.containsKey(hash)) {
+                            System.out.println("Replacing.");
+                            Object newObject = clone(cache.get(hash), 0);
+                            putStatic(field, newObject);
+                            cache.put(System.identityHashCode(newObject), cache.get(hash));
+                            cache.remove(hash);
+                        }
                     }
                 }
             }
@@ -520,16 +549,17 @@ public class Util {
                 }
                 System.out.println("Mod:" + container.getModId());
                 Class<?> clazz = modClassLoader.loadClass(container.getMod().getClass().getName());
-                for (Field field : getAllFields(clazz)) {
+                for (Field field : getFields(clazz)) {
                     if (shouldIgnore(field)) {
                         continue;
                     }
                     if (Modifier.isStatic(field.getModifiers())) {
-                        System.out.println("Field:" + field.getName());
+                        System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
                         Object object = getStatic(field);
                         int hash = System.identityHashCode(object);
                         if (cache.containsKey(hash)) {
-                            Object newObject = clone(cache.get(hash));
+                            System.out.println("Replacing.");
+                            Object newObject = clone(cache.get(hash), 0);
                             putStatic(field, newObject);
                             cache.put(System.identityHashCode(newObject), cache.get(hash));
                             cache.remove(hash);
@@ -543,6 +573,10 @@ public class Util {
     }
 
     private static boolean shouldIgnore(Field field) {
-        return field.getType() == Item.class || field.getType() == Block.class || field.getType() == Potion.class || field.getType() == Enchantment.class || field.getType() == ItemBlock.class || field.getType() == BlockOre.class || field.getType() == ItemArmor.class || field.getType() == CreativeTabs.class || field.getType() == Logger.class;
+        return field.getType() == Item.class || field.getType() == Block.class || field.getType() == Potion.class || field.getType() == Enchantment.class || field.getType() == ItemBlock.class || field.getType() == BlockOre.class || field.getType() == ItemArmor.class || field.getType() == CreativeTabs.class || field.getType() == Logger.class || field.getType() == RegistryNamespaced.class;
+    }
+
+    private static boolean shouldIgnore(Class<?> clazz) {
+        return clazz == ForgeInternalHandler.class || clazz == ForgeModContainer.class;
     }
 }
