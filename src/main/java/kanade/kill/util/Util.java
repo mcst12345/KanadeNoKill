@@ -26,7 +26,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.registry.RegistryNamespaced;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.ForgeInternalHandler;
 import net.minecraftforge.common.ForgeModContainer;
@@ -47,6 +46,7 @@ public class Util {
     public static final List<Runnable> tasks = new ArrayList<>();
     private static final Set<UUID> Dead = new HashSet<>();
     private static final Map<Field, Object> cache = new HashMap<>();
+    private static final Map<Field, Object> cache2 = new HashMap<>();
     private static Object saved_listeners;
     private static Object saved_listeners_2;
     public static boolean killing;
@@ -145,7 +145,6 @@ public class Util {
     }
 
     private static int depth;
-    private static WorldServer[] backup = new WorldServer[0];
 
     public static List<Field> getAllFields(Class<?> clazz) {
         try {
@@ -437,10 +436,26 @@ public class Util {
                         }
                     }
                 }
-                System.gc();
             }
         } catch (Throwable t) {
             throw new RuntimeException(t);
+        }
+        System.out.println("Saving fields which the transformer found.");
+        for (FieldInfo fieldinfo : Transformer.getFields()) {
+            Field field = fieldinfo.toField();
+            if (field == null) {
+                continue;
+            }
+            System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
+            try {
+                cache2.put(field, clone(getStatic(field), 0));
+            } catch (Throwable t) {
+                if (t instanceof StackOverflowError) {
+                    System.out.println("Too deep. Ignoring this field.");
+                } else {
+                    throw new RuntimeException(t);
+                }
+            }
         }
     }
 
@@ -601,7 +616,6 @@ public class Util {
                         }
                         System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
                         Object object = getStatic(field);
-                        int hash = System.identityHashCode(object);
                         if (cache.containsKey(field)) {
                             System.out.println("Replacing.");
                             putStatic(field, clone(cache.get(field), 0));
@@ -612,22 +626,12 @@ public class Util {
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
-    }
 
-    public static void CheckWorlds(MinecraftServer server) {
-        System.out.println("Checking worlds.");
-        boolean flag = true;
-        for (WorldServer world : server.worlds) {
-            if (world != null && world.getClass() != WorldServer.class) {
-                System.out.println("Find bad world.");
-                flag = false;
-                server.worlds = backup;
-            } else {
-                System.out.println("pass.");
-            }
-        }
-        if (flag) {
-            backup = server.worlds;
-        }
+        System.out.println("Resetting fields which the transformer found.");
+        cache2.forEach((field, object) -> {
+            System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
+            System.out.println("Replacing.");
+            putStatic(field, clone(object, 0));
+        });
     }
 }

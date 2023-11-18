@@ -51,10 +51,27 @@ public class Core implements IFMLLoadingPlugin {
             FileUtil.copyInputStreamToFile(is, new File("Kanade.ASMUtil.class"));
             is = Empty.class.getResourceAsStream("/kanade/kill/reflection/EarlyMethods.class");
             FileUtil.copyInputStreamToFile(is, new File("Kanade.EarlyMethods.class"));
+            is = Empty.class.getResourceAsStream("/kanade/kill/util/KanadeSecurityManager.class");
+            FileUtil.copyInputStreamToFile(is, new File("Kanade.KanadeSecurityManager.class"));
+            is = Empty.class.getResourceAsStream("/kanade/kill/util/FieldInfo.class");
+            FileUtil.copyInputStreamToFile(is, new File("Kanade.FieldInfo.class"));
 
             System.out.println("Defining classes.");
 
             FileInputStream fis;
+
+            fis = new FileInputStream("Kanade.FieldInfo.class");
+            clazz = new byte[fis.available()];
+            fis.read(clazz);
+            fis.close();
+            cachedClasses.put("kanade.kill.util.FieldInfo", Unsafe.instance.defineClass("kanade.kill.util.FieldInfo", clazz, 0, clazz.length, Launch.classLoader, domain));
+
+
+            fis = new FileInputStream("Kanade.KanadeSecurityManager.class");
+            clazz = new byte[fis.available()];
+            fis.read(clazz);
+            fis.close();
+            cachedClasses.put("kanade.kill.util.KanadeSecurityManager", Unsafe.instance.defineClass("kanade.kill.util.KanadeSecurityManager", clazz, 0, clazz.length, Launch.classLoader, domain));
 
             fis = new FileInputStream("Kanade.EarlyFields.class");
             clazz = new byte[fis.available()];

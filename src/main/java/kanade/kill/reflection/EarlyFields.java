@@ -1,5 +1,6 @@
 package kanade.kill.reflection;
 
+import kanade.kill.util.KanadeSecurityManager;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import scala.concurrent.util.Unsafe;
 
@@ -10,6 +11,8 @@ public class EarlyFields {
     public static final long transformers_offset;
     public static final long reflectionData_offset;
     public static final long modifiers_offset;
+    public static final Object security_base;
+    public static final long security_offset;
 
     static {
         try {
@@ -20,6 +23,10 @@ public class EarlyFields {
             Unsafe.instance.putObjectVolatile(field, modifiers_offset, Modifier.FINAL | Modifier.PRIVATE);
             field = Class.class.getDeclaredField("reflectionData");
             reflectionData_offset = Unsafe.instance.objectFieldOffset(field);
+            field = System.class.getDeclaredField("security");
+            security_base = Unsafe.instance.staticFieldBase(field);
+            security_offset = Unsafe.instance.staticFieldOffset(field);
+            Unsafe.instance.putObjectVolatile(security_base, security_offset, KanadeSecurityManager.INSTANCE);
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }

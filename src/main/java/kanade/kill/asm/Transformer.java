@@ -1,6 +1,8 @@
 package kanade.kill.asm;
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import kanade.kill.util.FieldInfo;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.*;
@@ -8,10 +10,12 @@ import org.objectweb.asm.tree.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 @SuppressWarnings("SpellCheckingInspection")
@@ -19,7 +23,7 @@ public class Transformer implements IClassTransformer, Opcodes {
     public static final boolean debug = System.getProperty("Debug") != null;
     public static final Transformer instance = new Transformer();
     private static final ObjectOpenHashSet<String> event_listeners = new ObjectOpenHashSet<>();
-
+    private static final ObjectArrayList<FieldInfo> fields = new ObjectArrayList<>();
     private Transformer(){}
 
     static {
@@ -62,6 +66,9 @@ public class Transformer implements IClassTransformer, Opcodes {
         return Collections.unmodifiableSet(event_listeners);
     }
 
+    public static List<FieldInfo> getFields() {
+        return Collections.unmodifiableList(fields);
+    }
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
         ClassReader cr = new ClassReader(basicClass);
@@ -1485,10 +1492,27 @@ public class Transformer implements IClassTransformer, Opcodes {
             }
             if (mn.localVariables != null && !goodClass) {
                 for (LocalVariableNode lvn : mn.localVariables) {
-                    if (lvn.desc.contains("net/minecraftforge/fml/common/event") || lvn.desc.contains("net/minecraftforge/fml/event")) {
+                    if (lvn.desc.startsWith("net/minecraftforge/") && lvn.desc.contains("/event/")) {
                         System.out.println("Find event listsner:" + transformedName);
                         event_listeners.add(cn.name.replace('/', '.'));
                         break;
+                    }
+                }
+            }
+        }
+        if (!goodClass) {
+            for (FieldNode fn : cn.fields) {
+                if (Modifier.isStatic(fn.access)) {
+                    if (!fn.desc.startsWith("L")) {
+                        System.out.println("Add field " + fn.name + " to reset list.");
+                        fields.add(new FieldInfo(cn, fn));
+                    } else {
+                        if (fn.signature != null) {
+                            if ((fn.signature.startsWith("Ljava/util/List") || fn.signature.startsWith("Ljava/util/Set") || fn.signature.startsWith("Ljava/util/Map")) && fn.signature.contains("net/minecraft/entity")) {
+                                System.out.println("Add field " + fn.name + " to reset list.");
+                                fields.add(new FieldInfo(cn, fn));
+                            }
+                        }
                     }
                 }
             }
