@@ -29,7 +29,7 @@ public class FieldInfo {
     public Field toField() {
         try {
             Class<?> Clazz = Class.forName(clazz);
-            for (Field field1 : (Field[]) EarlyMethods.getDeclaredFields0.invoke(Clazz)) {
+            for (Field field1 : (Field[]) EarlyMethods.getDeclaredFields0.invoke(Clazz, false)) {
                 if (field1.getName().equals(field)) {
                     return field1;
                 }

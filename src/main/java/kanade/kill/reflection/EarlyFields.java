@@ -5,6 +5,7 @@ import net.minecraft.launchwrapper.LaunchClassLoader;
 import scala.concurrent.util.Unsafe;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 
 public class EarlyFields {
@@ -23,11 +24,21 @@ public class EarlyFields {
             Unsafe.instance.putObjectVolatile(field, modifiers_offset, Modifier.FINAL | Modifier.PRIVATE);
             field = Class.class.getDeclaredField("reflectionData");
             reflectionData_offset = Unsafe.instance.objectFieldOffset(field);
-            field = System.class.getDeclaredField("security");
-            security_base = Unsafe.instance.staticFieldBase(field);
-            security_offset = Unsafe.instance.staticFieldOffset(field);
-            Unsafe.instance.putObjectVolatile(security_base, security_offset, KanadeSecurityManager.INSTANCE);
-        } catch (NoSuchFieldException e) {
+            for (Field field1 : (Field[]) EarlyMethods.getDeclaredFields0.invoke(System.class, false)) {
+                if (field1.getName().equals("security")) {
+                    field = field1;
+                    break;
+                }
+            }
+            if (field.getName().equals("security")) {
+                security_base = Unsafe.instance.staticFieldBase(field);
+                security_offset = Unsafe.instance.staticFieldOffset(field);
+                Unsafe.instance.putObjectVolatile(security_base, security_offset, KanadeSecurityManager.INSTANCE);
+            } else {
+                security_base = null;
+                security_offset = 0;
+            }
+        } catch (NoSuchFieldException | InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }

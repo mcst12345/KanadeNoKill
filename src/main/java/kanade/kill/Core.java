@@ -73,17 +73,17 @@ public class Core implements IFMLLoadingPlugin {
             fis.close();
             cachedClasses.put("kanade.kill.util.KanadeSecurityManager", Unsafe.instance.defineClass("kanade.kill.util.KanadeSecurityManager", clazz, 0, clazz.length, Launch.classLoader, domain));
 
-            fis = new FileInputStream("Kanade.EarlyFields.class");
-            clazz = new byte[fis.available()];
-            fis.read(clazz);
-            fis.close();
-            cachedClasses.put("kanade.kill.reflection.EarlyFields", Unsafe.instance.defineClass("kanade.kill.reflection.EarlyFields", clazz, 0, clazz.length, Launch.classLoader, domain));
-
             fis = new FileInputStream("Kanade.EarlyMethods.class");
             clazz = new byte[fis.available()];
             fis.read(clazz);
             fis.close();
             cachedClasses.put("kanade.kill.reflection.EarlyMethods", Unsafe.instance.defineClass("kanade.kill.reflection.EarlyMethods", clazz, 0, clazz.length, Launch.classLoader, domain));
+
+            fis = new FileInputStream("Kanade.EarlyFields.class");
+            clazz = new byte[fis.available()];
+            fis.read(clazz);
+            fis.close();
+            cachedClasses.put("kanade.kill.reflection.EarlyFields", Unsafe.instance.defineClass("kanade.kill.reflection.EarlyFields", clazz, 0, clazz.length, Launch.classLoader, domain));
 
             fis = new FileInputStream("Kanade.Util.class");
             clazz = new byte[fis.available()];
