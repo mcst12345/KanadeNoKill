@@ -1,4 +1,4 @@
-package kanade.kill;
+package kanade.kill.util;
 
 import java.io.*;
 import java.nio.channels.FileChannel;

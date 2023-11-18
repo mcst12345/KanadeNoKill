@@ -13,8 +13,10 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import scala.concurrent.util.Unsafe;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.ProtectionDomain;
 import java.util.Objects;
 
 import static kanade.kill.Core.cachedClasses;
@@ -27,31 +29,36 @@ public class ModMain {
     public static final boolean client = System.getProperty("minecraft.client.jar") != null;
     static {
         try {
-            InputStream is = Empty.class.getResourceAsStream("/kanade/kill/KillItem.class");
+            ProtectionDomain domain = Launch.class.getProtectionDomain();
+            InputStream is = Empty.class.getResourceAsStream("/kanade/kill/item/KillItem.class");
             assert is != null;
             byte[] clazz = new byte[is.available()];
             is.read(clazz);
             is.close();
-            cachedClasses.put("kanade.kill.KillItem", Unsafe.instance.defineClass("kanade.kill.KillItem", clazz, 0, clazz.length, Launch.classLoader, null));
+            cachedClasses.put("kanade.kill.item.KillItem", Unsafe.instance.defineClass("kanade.kill.item.KillItem", clazz, 0, clazz.length, Launch.classLoader, domain));
 
-            is = Empty.class.getResourceAsStream("/kanade/kill/DeathItem.class");
+            is = Empty.class.getResourceAsStream("/kanade/kill/item/DeathItem.class");
             assert is != null;
             clazz = new byte[is.available()];
             is.read(clazz);
             is.close();
-            cachedClasses.put("kanade.kill.DeathItem", Unsafe.instance.defineClass("kanade.kill.DeathItem", clazz, 0, clazz.length, Launch.classLoader, null));
+            cachedClasses.put("kanade.kill.item.DeathItem", Unsafe.instance.defineClass("kanade.kill.item.DeathItem", clazz, 0, clazz.length, Launch.classLoader, domain));
 
-            is = Empty.class.getResourceAsStream("/kanade/kill/LateFields.class");
+            is = Empty.class.getResourceAsStream("/kanade/kill/reflection/LateFields.class");
             assert is != null;
             clazz = new byte[is.available()];
             is.read(clazz);
             is.close();
-            cachedClasses.put("kanade.kill.LateFields", Unsafe.instance.defineClass("kanade.kill.LateFields", clazz, 0, clazz.length, Launch.classLoader, null));
+            cachedClasses.put("kanade.kill.reflection.LateFields", Unsafe.instance.defineClass("kanade.kill.reflection.LateFields", clazz, 0, clazz.length, Launch.classLoader, domain));
 
-            kill_item = (Item) cachedClasses.get("kanade.kill.KillItem").newInstance();
-            death_item = (Item) cachedClasses.get("kanade.kill.DeathItem").newInstance();
+            kill_item = (Item) cachedClasses.get("kanade.kill.item.KillItem").newInstance();
+            death_item = (Item) cachedClasses.get("kanade.kill.item.DeathItem").newInstance();
         } catch (InstantiationException | IllegalAccessException | IOException e) {
             throw new RuntimeException(e);
+        }
+
+        if (client) {
+            JOptionPane.showMessageDialog(null, "Kanade's Kill会使游戏启动时间大幅延长，具体取决于你安装的mod数量。");
         }
     }
 

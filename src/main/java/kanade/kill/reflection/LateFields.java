@@ -1,8 +1,9 @@
-package kanade.kill;
+package kanade.kill.reflection;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
@@ -28,6 +29,9 @@ public class LateFields {
     public static final long modClassLoader_offset;
     public static final Object listeners_base;
     public static final long listeners_offset_2;
+    public static final int WorldServerArrayBase = Unsafe.instance.arrayBaseOffset(WorldServer[].class);
+    public static final int WorldServerArrayScale = Unsafe.instance.arrayIndexScale(WorldServer[].class);
+
     static {
         try {
             Field field = World.class.getDeclaredField("field_72996_f");

@@ -1,4 +1,4 @@
-package kanade.kill;
+package kanade.kill.reflection;
 
 import java.lang.reflect.Method;
 

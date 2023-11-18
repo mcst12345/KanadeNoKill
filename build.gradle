@@ -92,6 +92,9 @@ jar {
 }
 
 jar.finalizedBy('reobfJar')
+build.doFirst {
+    clean
+}
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'

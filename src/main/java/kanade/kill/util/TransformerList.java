@@ -1,4 +1,6 @@
-package kanade.kill;
+package kanade.kill.util;
+
+import kanade.kill.asm.Transformer;
 
 import java.util.ArrayList;
 import java.util.Collection;

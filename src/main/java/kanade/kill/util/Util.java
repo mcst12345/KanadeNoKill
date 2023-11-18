@@ -1,5 +1,12 @@
-package kanade.kill;
+package kanade.kill.util;
 
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import kanade.kill.ModMain;
+import kanade.kill.asm.Transformer;
+import kanade.kill.item.KillItem;
+import kanade.kill.reflection.EarlyMethods;
+import kanade.kill.reflection.LateFields;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
@@ -14,9 +21,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.potion.Potion;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.registry.RegistryNamespaced;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.ForgeInternalHandler;
 import net.minecraftforge.common.ForgeModContainer;
@@ -29,9 +38,7 @@ import scala.concurrent.util.Unsafe;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.net.URLClassLoader;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 @SuppressWarnings({"unused", "raw"})
@@ -42,7 +49,8 @@ public class Util {
     private static Object saved_listeners;
     private static Object saved_listeners_2;
     public static boolean killing;
-    private static URLClassLoader modClassLoader;
+    private static final Object2LongOpenHashMap<Field> offsetCache = new Object2LongOpenHashMap<>();
+    private static final Object2ObjectOpenHashMap<Field, Object> baseCache = new Object2ObjectOpenHashMap<>();
     public static void Kill(List<Entity> list) {
         for (Entity e : list) {
             Kill(e);
@@ -136,6 +144,38 @@ public class Util {
     }
 
     private static int depth;
+    private static WorldServer[] backup = new WorldServer[0];
+
+    public static List<Field> getAllFields(Class<?> clazz) {
+        try {
+            List<Field> list = new ArrayList<>();
+            if (clazz == null) {
+                return list;
+            }
+            while (clazz != Object.class) {
+                Collections.addAll(list, (Field[]) EarlyMethods.getDeclaredFields0.invoke(clazz, false));
+                clazz = clazz.getSuperclass();
+            }
+            return list;
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw new RuntimeException(t);
+        }
+    }
+
+    public static List<Field> getFields(Class<?> clazz) {
+        try {
+            List<Field> list = new ArrayList<>();
+            if (clazz == null) {
+                return list;
+            }
+            Collections.addAll(list, (Field[]) EarlyMethods.getDeclaredFields0.invoke(clazz, false));
+            return list;
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw new RuntimeException(t);
+        }
+    }
 
     public static Object clone(Object o, int depth) {
         if (o == null) {
@@ -287,7 +327,12 @@ public class Util {
             if (Modifier.isStatic(field.getModifiers())) {
                 continue;
             }
-            offset = Unsafe.instance.objectFieldOffset(field);
+            if (offsetCache.containsKey(field)) {
+                offset = offsetCache.getLong(field);
+            } else {
+                offset = Unsafe.instance.objectFieldOffset(field);
+                offsetCache.put(field, offset);
+            }
             switch (field.getType().getName()) {
                 case "int": {
                     Unsafe.instance.putIntVolatile(copy, offset, Unsafe.instance.getIntVolatile(o, offset));
@@ -331,45 +376,11 @@ public class Util {
         return copy;
     }
 
-    public static List<Field> getAllFields(Class<?> clazz) {
-        try {
-            List<Field> list = new ArrayList<>();
-            if (clazz == null) {
-                return list;
-            }
-            while (clazz != Object.class) {
-                Collections.addAll(list, (Field[]) EarlyMethods.getDeclaredFields0.invoke(clazz, false));
-                clazz = clazz.getSuperclass();
-            }
-            return list;
-        } catch (Throwable t) {
-            t.printStackTrace();
-            throw new RuntimeException(t);
-        }
-    }
-
-    public static List<Field> getFields(Class<?> clazz) {
-        try {
-            List<Field> list = new ArrayList<>();
-            if (clazz == null) {
-                return list;
-            }
-            Collections.addAll(list, (Field[]) EarlyMethods.getDeclaredFields0.invoke(clazz, false));
-            return list;
-        } catch (Throwable t) {
-            t.printStackTrace();
-            throw new RuntimeException(t);
-        }
-    }
-
     public synchronized static void save() {
-        if (modClassLoader == null) {
-            modClassLoader = (URLClassLoader) Unsafe.instance.getObjectVolatile(Loader.instance(), LateFields.modClassLoader_offset);
-        }
         System.out.println("Coping event listeners in EventBus.");
         saved_listeners = clone(Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset), 0);
         System.out.println("Coping static fields in event listeners.");
-        ConcurrentHashMap map = (ConcurrentHashMap) Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset);
+        /*ConcurrentHashMap<Object, ArrayList<IEventListener>> map = (ConcurrentHashMap<Object, ArrayList<IEventListener>>) Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset);
         map.forEach((key, value) -> {
             Class<?> clazz = key.getClass();
             if (!(clazz == Class.class) && !shouldIgnore(clazz)) {
@@ -393,7 +404,34 @@ public class Util {
                     }
                 }
             }
-        });
+        });*/
+        for (String s : Transformer.getEventListeners()) {
+            try {
+                Class<?> clazz = Class.forName(s);
+
+                System.out.println("Listener:" + s);
+                for (Field field : getFields(clazz)) {
+                    if (Modifier.isStatic(field.getModifiers())) {
+                        if (shouldIgnore(field)) {
+                            continue;
+                        }
+                        System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
+                        try {
+                            Object o = getStatic(field);
+                            cache.put(field, clone(o, 0));
+                        } catch (Throwable t) {
+                            if (t instanceof StackOverflowError) {
+                                System.out.println("Too deep. Ignoring this field.");
+                            } else {
+                                throw new RuntimeException(t);
+                            }
+                        }
+                    }
+                }
+            } catch (ClassNotFoundException ignored) {
+            }
+        }
+
         System.out.println("Coping event listeners in Event.");
         saved_listeners_2 = clone(Unsafe.instance.getObjectVolatile(LateFields.listeners_base, LateFields.listeners_offset_2), 0);
         System.out.println("Coping static fields in mod instances.");
@@ -403,7 +441,7 @@ public class Util {
                     continue;
                 }
                 System.out.println("Mod:" + container.getModId());
-                Class<?> clazz = modClassLoader.loadClass(container.getMod().getClass().getName());
+                Class<?> clazz = container.getMod().getClass();
                 for (Field field : getFields(clazz)) {
                     if (Modifier.isStatic(field.getModifiers())) {
                         if (shouldIgnore(field)) {
@@ -431,8 +469,20 @@ public class Util {
     }
 
     public synchronized static Object getStatic(Field field) {
-        Object base = Unsafe.instance.staticFieldBase(field);
-        long offset = Unsafe.instance.staticFieldOffset(field);
+        Object base;
+        if (baseCache.containsKey(field)) {
+            base = baseCache.get(field);
+        } else {
+            base = Unsafe.instance.staticFieldBase(field);
+            baseCache.put(field, base);
+        }
+        long offset;
+        if (offsetCache.containsKey(field)) {
+            offset = offsetCache.getLong(field);
+        } else {
+            offset = Unsafe.instance.staticFieldOffset(field);
+            offsetCache.put(field, offset);
+        }
         switch (field.getType().getName()) {
             case "int": {
                 return Unsafe.instance.getIntVolatile(base, offset);
@@ -466,8 +516,20 @@ public class Util {
     }
 
     public synchronized static void putStatic(Field field, Object obj) {
-        Object base = Unsafe.instance.staticFieldBase(field);
-        long offset = Unsafe.instance.staticFieldOffset(field);
+        Object base;
+        if (baseCache.containsKey(field)) {
+            base = baseCache.get(field);
+        } else {
+            base = Unsafe.instance.staticFieldBase(field);
+            baseCache.put(field, base);
+        }
+        long offset;
+        if (offsetCache.containsKey(field)) {
+            offset = offsetCache.getLong(field);
+        } else {
+            offset = Unsafe.instance.staticFieldOffset(field);
+            offsetCache.put(field, offset);
+        }
         switch (field.getType().getName()) {
             case "int": {
                 Unsafe.instance.putIntVolatile(base, offset, (int) obj);
@@ -508,12 +570,22 @@ public class Util {
         }
     }
 
+    private static boolean shouldIgnore(Field field) {
+        boolean result = field.getType() == CreativeTabs.class || field.getType() == RegistryNamespaced.class || field.getType() == SimpleNetworkWrapper.class;
+        Object object = getStatic(field);
+        return object instanceof Item || object instanceof Block || object instanceof Potion || object instanceof Enchantment || object instanceof Logger || result;
+    }
+
+    private static boolean shouldIgnore(Class<?> clazz) {
+        return clazz == ForgeInternalHandler.class || clazz == ForgeModContainer.class;
+    }
+
     public synchronized static void reset() {
         System.out.println("Resetting cached fields.");
         System.out.println("Resetting event listeners in EventBus.");
         Unsafe.instance.putObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset, clone(saved_listeners, 0));
         System.out.println("Resetting static fields in event listeners.");
-        ConcurrentHashMap map = (ConcurrentHashMap) Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset);
+        /*ConcurrentHashMap<Object, ArrayList<IEventListener>> map = (ConcurrentHashMap<Object, ArrayList<IEventListener>>) Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset);
         map.forEach((key, value) -> {
             Class<?> clazz = key.getClass();
             System.out.println("Listener:" + clazz.getName());
@@ -532,7 +604,30 @@ public class Util {
                     }
                 }
             }
-        });
+        });*/
+
+        for (String s : Transformer.getEventListeners()) {
+            try {
+                Class<?> clazz = Class.forName(s);
+
+                System.out.println("Listener:" + s);
+                for (Field field : getFields(clazz)) {
+                    if (Modifier.isStatic(field.getModifiers())) {
+                        if (shouldIgnore(field)) {
+                            continue;
+                        }
+                        System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
+                        Object object = getStatic(field);
+                        if (cache.containsKey(field)) {
+                            System.out.println("Replacing.");
+                            putStatic(field, clone(cache.get(field), 0));
+                        }
+                    }
+                }
+            } catch (ClassNotFoundException ignored) {
+            }
+        }
+
         System.out.println("Resetting event listeners in Event.");
         Unsafe.instance.putObjectVolatile(LateFields.listeners_base, LateFields.listeners_offset_2, saved_listeners_2);
         System.out.println("Resetting mod static fields.");
@@ -542,7 +637,7 @@ public class Util {
                     continue;
                 }
                 System.out.println("Mod:" + container.getModId());
-                Class<?> clazz = modClassLoader.loadClass(container.getMod().getClass().getName());
+                Class<?> clazz = container.getMod().getClass();
                 for (Field field : getFields(clazz)) {
                     if (Modifier.isStatic(field.getModifiers())) {
                         if (shouldIgnore(field)) {
@@ -563,13 +658,20 @@ public class Util {
         }
     }
 
-    private static boolean shouldIgnore(Field field) {
-        boolean result = field.getType() == CreativeTabs.class || field.getType() == RegistryNamespaced.class || field.getType() == SimpleNetworkWrapper.class;
-        Object object = getStatic(field);
-        return object instanceof Item || object instanceof Block || object instanceof Potion || object instanceof Enchantment || object instanceof Logger || result;
-    }
-
-    private static boolean shouldIgnore(Class<?> clazz) {
-        return clazz == ForgeInternalHandler.class || clazz == ForgeModContainer.class;
+    public static void CheckWorlds(MinecraftServer server) {
+        System.out.println("Checking worlds.");
+        boolean flag = true;
+        for (WorldServer world : server.worlds) {
+            if (world != null && world.getClass() != WorldServer.class) {
+                System.out.println("Find bad world.");
+                flag = false;
+                server.worlds = backup;
+            } else {
+                System.out.println("pass.");
+            }
+        }
+        if (flag) {
+            backup = server.worlds;
+        }
     }
 }

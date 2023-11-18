@@ -1,5 +1,6 @@
-package kanade.kill;
+package kanade.kill.asm;
 
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.*;
@@ -9,37 +10,56 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Set;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class Transformer implements IClassTransformer, Opcodes {
     public static final boolean debug = System.getProperty("Debug") != null;
     public static final Transformer instance = new Transformer();
+    private static final ObjectOpenHashSet<String> event_listeners = new ObjectOpenHashSet<>();
 
     private Transformer(){}
 
-    private boolean changed;
-
+    static {
+        File file = new File("transformedClasses");
+        try {
+            if (!file.exists()) {
+                Files.createDirectory(file.toPath());
+            } else if (!file.isDirectory()) {
+                Files.delete(file.toPath());
+                Files.createDirectory(file.toPath());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
     private static void save(byte[] clazz, String file) {
         if (!debug) {
             return;
         }
         try {
-            Files.write(new File(file + ".class").toPath(), clazz);
+            Files.write(new File("transformedClasses" + File.separator + file + ".class").toPath(), clazz);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     private static MethodInsnNode isDead() {
-        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/Util", "isDead", "(Lnet/minecraft/entity/Entity;)Z", false);
+        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "isDead", "(Lnet/minecraft/entity/Entity;)Z", false);
     }
 
     private static MethodInsnNode inList() {
-        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Ljava/lang/Object;)Z", false);
+        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/item/KillItem", "inList", "(Ljava/lang/Object;)Z", false);
     }
 
     private static MethodInsnNode NoRemove() {
-        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/Util", "NoRemove", "(Ljava/lang/Object;)Z");
+        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "NoRemove", "(Ljava/lang/Object;)Z");
+    }
+
+    public static Set<String> getEventListeners() {
+        return Collections.unmodifiableSet(event_listeners);
     }
 
     @Override
@@ -48,8 +68,60 @@ public class Transformer implements IClassTransformer, Opcodes {
         ClassNode cn = new ClassNode();
         cr.accept(cn, 0);
         byte[] transformed;
-        changed = false;
+        boolean changed = false, compute_all = false;
+        boolean goodClass = true;
+        if (name.equals(transformedName)) {
+            final URL res = Launch.classLoader.findResource(name.replace('.', '/').concat(".class"));
+
+            if (res != null) {
+                String path = res.getPath();
+
+                if (path.contains("!")) {
+                    path = path.substring(0, path.indexOf("!"));
+                }
+                if (path.contains("file:/")) {
+                    path = path.replace("file:/", "");
+                }
+
+                if (path.startsWith("mods", path.lastIndexOf(File.separator) - 4)) {
+                    goodClass = false;
+                }
+            } else {
+                goodClass = false;
+            }
+        }
         switch (transformedName) {
+            case "net.minecraftforge.common.DimensionManager": {
+                changed = true;
+                System.out.println("Get DimensionManager.");
+
+                for (MethodNode mn : cn.methods) {
+                    if (mn.name.equals("setWorld")) {
+                        AbstractInsnNode index = null;
+                        Iterator<AbstractInsnNode> iterator = mn.instructions.iterator();
+                        while (iterator.hasNext()) {
+                            AbstractInsnNode ain = iterator.next();
+                            if (ain instanceof InsnNode && ain.getOpcode() == RETURN) {
+                                index = ain;
+                                break;
+                            }
+                        }
+                        if (index == null) {
+                            throw new IllegalStateException("The fuck?");
+                        }
+                        InsnList list = new InsnList();
+                        list.add(new VarInsnNode(ALOAD, 2));
+                        list.add(new VarInsnNode(ALOAD, 3));
+                        list.add(new InsnNode(ICONST_0));
+                        list.add(new TypeInsnNode(ANEWARRAY, "net/minecraft/world/WorldServer"));
+                        list.add(new MethodInsnNode(INVOKEVIRTUAL, "java/util/ArrayList", "toArray", "([Ljava/lang/Object;)[Ljava/lang/Object;", false));
+                        list.add(new TypeInsnNode(CHECKCAST, "[Lnet/minecraft/world/WorldServer;"));
+                        list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/server/MinecraftServer", "backup", "[Lnet/minecraft/world/WorldServer;"));
+                        mn.instructions.insertBefore(index, list);
+                    }
+                }
+                break;
+            }
             case "net.minecraft.entity.Entity": {
                 changed = true;
                 System.out.println("Get Entity.");
@@ -63,39 +135,163 @@ public class Transformer implements IClassTransformer, Opcodes {
             }
             case "net.minecraft.server.MinecraftServer": {
                 changed = true;
+                compute_all = true;
                 System.out.println("Get MinecraftServer.");
+                System.out.println("Adding field.");
+                cn.fields.add(new FieldNode(ACC_PUBLIC, "backup", "[Lnet/minecraft/world/WorldServer;", null, null));
                 for (MethodNode mn : cn.methods) {
-                    if (mn.name.equals("func_71217_p")) {
-                        ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "kanade/kill/Util", "killing", "Z"));
-                        InsnList list = new InsnList();
-                        LabelNode label0 = new LabelNode();
-                        LabelNode label1 = new LabelNode();
-                        LabelNode label2 = new LabelNode();
-                        LabelNode label3 = new LabelNode();
-                        list.add(label0);
-                        list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Util", "tasks", "Ljava/util/List;"));
-                        list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "iterator", "()Ljava/util/Iterator;", true));
-                        list.add(new VarInsnNode(ASTORE, 1));
-                        list.add(label2);
-                        list.add(new FrameNode(F_APPEND, 1, new Object[]{"java/util/Iterator"}, 0, null));
-                        list.add(new VarInsnNode(ALOAD, 1));
-                        list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/Iterator", "hasNext", "()Z", true));
-                        list.add(new JumpInsnNode(IFEQ, label1));
-                        list.add(new VarInsnNode(ALOAD, 1));
-                        list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/Iterator", "next", "()Ljava/lang/Object;", true));
-                        list.add(new TypeInsnNode(CHECKCAST, "java/lang/Runnable"));
-                        list.add(new VarInsnNode(ASTORE, 2));
-                        list.add(new VarInsnNode(ALOAD, 2));
-                        list.add(new MethodInsnNode(INVOKEINTERFACE, "java/lang/Runnable", "run", "()V", true));
-                        list.add(new JumpInsnNode(GOTO, label2));
-                        list.add(label1);
-                        list.add(new FrameNode(F_CHOP, 1, null, 0, null));
-                        list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Util", "tasks", "Ljava/util/List;"));
-                        list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "clear", "()V", true));
-                        list.add(label3);
-                        mn.instructions.insert(list);
-                        mn.localVariables.add(new LocalVariableNode("task", "Ljava/lang/Runnable;", null, label0, label3, 2));
+                    switch (mn.name) {
+                        case "<init>": {
+                            InsnList list = new InsnList();
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new InsnNode(ICONST_0));
+                            list.add(new TypeInsnNode(ANEWARRAY, "net/minecraft/world/WorldServer"));
+                            list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/server/MinecraftServer", "backup", "[Lnet/minecraft/world/WorldServer;"));
+                            mn.instructions.insert(list);
+                            System.out.println("Inject into <init>.");
+                            break;
+                        }
+                        case "func_71217_p": {
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "kanade/kill/util/Util", "killing", "Z"));
+                            InsnList list = new InsnList();
+                            LabelNode label0 = new LabelNode();
+                            LabelNode label1 = new LabelNode();
+                            LabelNode label2 = new LabelNode();
+                            LabelNode label3 = new LabelNode();
+                            list.add(label0);
+                            list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/util/Util", "tasks", "Ljava/util/List;"));
+                            list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "iterator", "()Ljava/util/Iterator;", true));
+                            list.add(new VarInsnNode(ASTORE, 1));
+                            list.add(label2);
+                            list.add(new FrameNode(F_APPEND, 1, new Object[]{"java/util/Iterator"}, 0, null));
+                            list.add(new VarInsnNode(ALOAD, 1));
+                            list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/Iterator", "hasNext", "()Z", true));
+                            list.add(new JumpInsnNode(IFEQ, label1));
+                            list.add(new VarInsnNode(ALOAD, 1));
+                            list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/Iterator", "next", "()Ljava/lang/Object;", true));
+                            list.add(new TypeInsnNode(CHECKCAST, "java/lang/Runnable"));
+                            list.add(new VarInsnNode(ASTORE, 2));
+                            list.add(new VarInsnNode(ALOAD, 2));
+                            list.add(new MethodInsnNode(INVOKEINTERFACE, "java/lang/Runnable", "run", "()V", true));
+                            list.add(new JumpInsnNode(GOTO, label2));
+                            list.add(label1);
+                            list.add(new FrameNode(F_CHOP, 1, null, 0, null));
+                            list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/util/Util", "tasks", "Ljava/util/List;"));
+                            list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "clear", "()V", true));
+                            list.add(label3);
+                            mn.instructions.insert(list);
+                            mn.localVariables.add(new LocalVariableNode("task", "Ljava/lang/Runnable;", null, label0, label3, 2));
+                            System.out.println("Inject into tick().");
+                            break;
+                        }
+                        case "run": {
+                            Iterator<AbstractInsnNode> iterator = mn.instructions.iterator();
+                            int index = -1;
+                            while (iterator.hasNext()) {
+                                AbstractInsnNode ain = iterator.next();
+                                if (ain instanceof FieldInsnNode) {
+                                    if (ain.getOpcode() == GETFIELD && ((FieldInsnNode) ain).name.equals("field_71317_u") && index == -1) {
+                                        index = mn.instructions.indexOf(ain) + 2;
+                                    }
+                                } else if (ain instanceof VarInsnNode) {
+                                    VarInsnNode vin = (VarInsnNode) ain;
+                                    if (((vin.getOpcode() == LSTORE || vin.getOpcode() == LLOAD) && vin.var != 1) || vin.var == 11) {
+                                        vin.var++;
+                                    }
+                                }
+                            }
 
+                            LabelNode k_end = null;
+
+                            for (LocalVariableNode lvn : mn.localVariables) {
+                                if (lvn.name.equals("k")) {
+                                    k_end = lvn.end;
+                                    lvn.index++;
+                                    break;
+                                }
+                            }
+                            if (k_end == null) {
+                                throw new IllegalStateException("The fuck?");
+                            }
+                            InsnList list = new InsnList();
+                            LabelNode l = new LabelNode();
+                            LabelNode label = new LabelNode();
+                            LabelNode label0 = new LabelNode();
+                            LabelNode label1 = new LabelNode();
+                            LabelNode label2 = new LabelNode();
+                            LabelNode label3 = new LabelNode();
+                            LabelNode label4 = new LabelNode();
+                            LabelNode label5 = new LabelNode();
+                            LabelNode label6 = new LabelNode();
+                            LabelNode label7 = new LabelNode();
+                            LabelNode label8 = new LabelNode();
+                            LabelNode label9 = new LabelNode();
+
+                            list.add(l);
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/server/MinecraftServer", "field_71305_c", "[Lnet/minecraft/world/WorldServer;"));
+                            list.add(new InsnNode(ARRAYLENGTH));
+                            list.add(new JumpInsnNode(IFEQ, label8));
+                            list.add(label);
+                            list.add(new InsnNode(ICONST_1));
+                            list.add(new VarInsnNode(ISTORE, 3));
+                            list.add(label0);
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/server/MinecraftServer", "field_71305_c", "[Lnet/minecraft/world/WorldServer;"));
+                            list.add(new VarInsnNode(ASTORE, 4));
+                            list.add(new VarInsnNode(ALOAD, 4));
+                            list.add(new InsnNode(ARRAYLENGTH));
+                            list.add(new VarInsnNode(ISTORE, 5));
+                            list.add(new InsnNode(ICONST_0));
+                            list.add(new VarInsnNode(ISTORE, 6));
+                            list.add(label1);
+                            list.add(new VarInsnNode(ILOAD, 6));
+                            list.add(new VarInsnNode(ILOAD, 5));
+                            list.add(new JumpInsnNode(IF_ICMPGE, label2));
+                            list.add(new VarInsnNode(ALOAD, 4));
+                            list.add(new VarInsnNode(ILOAD, 6));
+                            list.add(new InsnNode(AALOAD));
+                            list.add(new VarInsnNode(ASTORE, 7));
+                            list.add(label3);
+                            list.add(new VarInsnNode(ALOAD, 7));
+                            list.add(new MethodInsnNode(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false));
+                            list.add(new LdcInsnNode(Type.getType("Lnet/minecraft/world/WorldServer;")));
+                            list.add(new JumpInsnNode(IF_ACMPEQ, label4));
+                            list.add(label5);
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/server/MinecraftServer", "backup", "[Lnet/minecraft/world/WorldServer;"));
+                            list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/server/MinecraftServer", "field_71305_c", "[Lnet/minecraft/world/WorldServer;"));
+                            list.add(label6);
+                            list.add(new InsnNode(ICONST_0));
+                            list.add(new VarInsnNode(ISTORE, 3));
+                            list.add(label7);
+                            list.add(new JumpInsnNode(GOTO, label2));
+                            list.add(label4);
+                            list.add(new IincInsnNode(6, 1));
+                            list.add(new JumpInsnNode(GOTO, label1));
+                            list.add(label2);
+                            list.add(new FrameNode(F_CHOP, 3, null, 0, null));
+                            list.add(new VarInsnNode(ILOAD, 3));
+                            list.add(new JumpInsnNode(IFEQ, label8));
+                            list.add(label9);
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/server/MinecraftServer", "field_71305_c", "[Lnet/minecraft/world/WorldServer;"));
+                            list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/server/MinecraftServer", "backup", "[Lnet/minecraft/world/WorldServer;"));
+                            list.add(label8);
+
+                            if (index == -1) {
+                                throw new IllegalStateException("The Fuck?");
+                            }
+
+                            mn.instructions.insertBefore(mn.instructions.get(index), list);
+
+                            mn.localVariables.add(new LocalVariableNode("server", "Lnet/minecraft/world/WorldServer;", null, label3, label4, 7));
+                            mn.localVariables.add(new LocalVariableNode("flag", "Z", null, label, k_end, 3));
+                            System.out.println("Inject into run().");
+                            break;
+                        }
                     }
                 }
                 break;
@@ -105,6 +301,11 @@ public class Transformer implements IClassTransformer, Opcodes {
                 System.out.println("Get Minecraft.");
                 System.out.println("Adding field.");
                 cn.fields.add(new FieldNode(ACC_PUBLIC, "PLAYER", "Lnet/minecraft/client/entity/EntityPlayerSP;", null, null));
+                cn.fields.add(new FieldNode(ACC_PUBLIC, "profiler", "Lnet/minecraft/profiler/Profiler;", null, null));
+                cn.fields.add(new FieldNode(ACC_PUBLIC, "entityRenderer", "Lnet/minecraft/client/renderer/EntityRenderer;", null, null));
+                cn.fields.add(new FieldNode(ACC_PUBLIC, "renderManager", "Lnet/minecraft/client/renderer/entity/RenderManager;", null, null));
+                cn.fields.add(new FieldNode(ACC_PUBLIC, "mouseHelper", "Lnet/minecraft/util/MouseHelper;", null, null));
+                cn.fields.add(new FieldNode(ACC_PUBLIC, "world", "Lnet/minecraft/client/multiplayer/WorldClient;", null, null));
 
                 System.out.println("Adding method.");
 
@@ -187,7 +388,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             break;
                         }
                         case "func_71407_l": {
-                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "kanade/kill/Util", "killing", "Z"));
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "kanade/kill/util/Util", "killing", "Z"));
                             break;
                         }
                         case "func_71381_h":
@@ -201,7 +402,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                                 if (ain instanceof InsnNode) {
                                     InsnNode in = (InsnNode) ain;
                                     if (in.getOpcode() == RETURN) {
-                                        mn.instructions.insert(mn.instructions.get(i - 1), new MethodInsnNode(INVOKESTATIC, "kanade/kill/Util", "save", "()V", false));
+                                        mn.instructions.insert(mn.instructions.get(i - 1), new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "save", "()V", false));
                                     }
                                 }
                             }
@@ -286,7 +487,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             list.add(new VarInsnNode(ASTORE, 2));
                             list.add(label1);
                             list.add(new VarInsnNode(ALOAD, 2));
-                            list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/Util", "isDead", "(Lnet/minecraft/entity/Entity;)Z", false), Type.getType("(Lnet/minecraft/entity/Entity;)Z")));
+                            list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/util/Util", "isDead", "(Lnet/minecraft/entity/Entity;)Z", false), Type.getType("(Lnet/minecraft/entity/Entity;)Z")));
                             list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "removeIf", "(Ljava/util/function/Predicate;)Z", true));
                             list.add(new InsnNode(POP));
                             list.add(label2);
@@ -352,7 +553,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             list.add(new VarInsnNode(ASTORE, 2));
                             list.add(label1);
                             list.add(new VarInsnNode(ALOAD, 2));
-                            list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Ljava/lang/Object;)Z", false), Type.getType("(Ljava/lang/Object;)Z")));
+                            list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/item/KillItem", "inList", "(Ljava/lang/Object;)Z", false), Type.getType("(Ljava/lang/Object;)Z")));
                             list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "removeIf", "(Ljava/util/function/Predicate;)Z", true));
                             list.add(new InsnNode(POP));
                             list.add(label2);
@@ -496,12 +697,12 @@ public class Transformer implements IClassTransformer, Opcodes {
                             InsnList list = new InsnList();
                             LabelNode label = new LabelNode();
                             list.add(new VarInsnNode(ALOAD, 0));
-                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/Util", "invHaveKillItem", "(Lnet/minecraft/entity/player/EntityPlayer;)Z"));
+                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "invHaveKillItem", "(Lnet/minecraft/entity/player/EntityPlayer;)Z"));
                             list.add(new JumpInsnNode(IFEQ, label));
                             list.add(new VarInsnNode(ALOAD, 0));
-                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/KillItem", "AddToList", "(Ljava/lang/Object;)V", false));
+                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/item/KillItem", "AddToList", "(Ljava/lang/Object;)V", false));
                             list.add(new VarInsnNode(ALOAD, 0));
-                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/Util", "updatePlayer", "(Lnet/minecraft/entity/player/EntityPlayer;)V", false));
+                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "updatePlayer", "(Lnet/minecraft/entity/player/EntityPlayer;)V", false));
                             list.add(label);
                             list.add(new FrameNode(F_SAME, 0, null, 0, null));
                             mn.instructions.insert(list);
@@ -568,7 +769,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             list.add(new VarInsnNode(ALOAD, 0));
                             list.add(new VarInsnNode(ILOAD, 1));
                             list.add(new MethodInsnNode(INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "get", "(I)Ljava/lang/Object;", false));
-                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/Util", "NoRemove", "(Ljava/lang/Object;)Z"));
+                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "NoRemove", "(Ljava/lang/Object;)Z"));
                             list.add(new JumpInsnNode(IFEQ, label));
                             list.add(new VarInsnNode(ALOAD, 0));
                             list.add(new VarInsnNode(ILOAD, 1));
@@ -617,7 +818,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             list.add(new VarInsnNode(ALOAD, 0));
                             list.add(new VarInsnNode(ILOAD, 1));
                             list.add(new MethodInsnNode(INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "get", "(I)Ljava/lang/Object;", false));
-                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/Util", "NoRemove", "(Ljava/lang/Object;)Z", false));
+                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "NoRemove", "(Ljava/lang/Object;)Z", false));
                             list.add(new JumpInsnNode(IFNE, label6));
                             list.add(label7);
                             list.add(new VarInsnNode(ALOAD, 0));
@@ -649,7 +850,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             list.add(new VarInsnNode(ALOAD, 0));
                             list.add(new VarInsnNode(ILOAD, 1));
                             list.add(new MethodInsnNode(INVOKEVIRTUAL, "net/minecraft/util/NonNullList", "get", "(I)Ljava/lang/Object;", false));
-                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/Util", "NoRemove", "(Ljava/lang/Object;)Z"));
+                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "NoRemove", "(Ljava/lang/Object;)Z"));
                             list.add(new JumpInsnNode(IFEQ, label0));
                             list.add(new VarInsnNode(ALOAD, 0));
                             list.add(new VarInsnNode(ILOAD, 1));
@@ -683,7 +884,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                 LabelNode label3 = new LabelNode();
                 mn.instructions.add(label0);
                 mn.instructions.add(new VarInsnNode(ALOAD, 0));
-                mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/Util", "NoRemove", "(Ljava/lang/Object;)Z", false));
+                mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "NoRemove", "(Ljava/lang/Object;)Z", false));
                 mn.instructions.add(new JumpInsnNode(IFNE, label1));
                 mn.instructions.add(new InsnNode(ICONST_1));
                 mn.instructions.add(new JumpInsnNode(GOTO, label2));
@@ -729,7 +930,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             list.add(new VarInsnNode(ASTORE, 2));
                             list.add(label1);
                             list.add(new VarInsnNode(ALOAD, 2));
-                            list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/Util", "isDead", "(Lnet/minecraft/entity/Entity;)Z", false), Type.getType("(Lnet/minecraft/entity/Entity;)Z")));
+                            list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/util/Util", "isDead", "(Lnet/minecraft/entity/Entity;)Z", false), Type.getType("(Lnet/minecraft/entity/Entity;)Z")));
                             list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "removeIf", "(Ljava/util/function/Predicate;)Z", true));
                             list.add(new InsnNode(POP));
                             list.add(label2);
@@ -844,7 +1045,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             list.add(new VarInsnNode(ASTORE, 2));
                             list.add(label1);
                             list.add(new VarInsnNode(ALOAD, 2));
-                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Ljava/lang/Object;)Z", false));
+                            list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/item/KillItem", "inList", "(Ljava/lang/Object;)Z", false));
                             list.add(new JumpInsnNode(IFEQ, label2));
                             list.add(label3);
                             list.add(new VarInsnNode(ALOAD, 2));
@@ -888,7 +1089,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             InsnList list = new InsnList();
                             list.add(new VarInsnNode(ALOAD, 0));
                             list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/multiplayer/WorldClient", "field_72997_g", "Ljava/util/List;"));
-                            list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/KillItem", "inList", "(Ljava/lang/Object;)Z", false), Type.getType("(Ljava/lang/Object;)Z")));
+                            list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/item/KillItem", "inList", "(Ljava/lang/Object;)Z", false), Type.getType("(Ljava/lang/Object;)Z")));
                             list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "removeIf", "(Ljava/util/function/Predicate;)Z", true));
                             list.add(new InsnNode(POP));
                             mn.instructions.insert(list);
@@ -908,6 +1109,14 @@ public class Transformer implements IClassTransformer, Opcodes {
                         ASMUtil.InsertReturn(mn, Type.BOOLEAN_TYPE, Boolean.FALSE, 0, inList());
                     }
                 }
+                break;
+            }
+            case "net.minecraft.client.renderer.RenderGlobal": {
+                changed = true;
+                System.out.println("Get RenderGlobal");
+                System.out.println("Add field.");
+                cn.fields.add(new FieldNode(ACC_PUBLIC, "renderManager", "Lnet/minecraft/client/renderer/entity/RenderManager;", null, null));
+
                 break;
             }
             case "net.minecraftforge.common.MinecraftForge": {
@@ -937,7 +1146,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                             if (ain instanceof InsnNode) {
                                 InsnNode in = (InsnNode) ain;
                                 if (in.getOpcode() == RETURN) {
-                                    mn.instructions.insert(mn.instructions.get(i - 1), new MethodInsnNode(INVOKESTATIC, "kanade/kill/Util", "save", "()V", false));
+                                    mn.instructions.insert(mn.instructions.get(i - 1), new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "save", "()V", false));
                                 }
                             }
                         }
@@ -946,27 +1155,13 @@ public class Transformer implements IClassTransformer, Opcodes {
                 }
                 break;
             }
-        }
-
-        boolean goodClass = true;
-        if (name.equals(transformedName)) {
-            final URL res = Launch.classLoader.findResource(name.replace('.', '/').concat(".class"));
-
-            if (res != null) {
-                String path = res.getPath();
-
-                if (path.contains("!")) {
-                    path = path.substring(0, path.indexOf("!"));
-                }
-                if (path.contains("file:/")) {
-                    path = path.replace("file:/", "");
-                }
-
-                if (path.startsWith("mods", path.lastIndexOf(File.separator) - 4)) {
-                    goodClass = false;
-                }
+            case "net.minecraftforge.fml.client.FMLClientHandler": {
+                changed = true;
+                cn.fields.add(new FieldNode(ACC_PRIVATE | ACC_STATIC | ACC_FINAL, "instance", "Lnet/minecraftforge/fml/client/FMLClientHandler;", null, null));
             }
         }
+
+
 
         System.out.println("Examine class:" + transformedName);
 
@@ -1061,6 +1256,91 @@ public class Transformer implements IClassTransformer, Opcodes {
                             }
                             break;
                         }
+                        case "field_71424_I": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71424_I to profiler.");
+                                fin.name = "profiler";
+                                changed = true;
+                            } else if (goodClass) {
+                                System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71424_I to profiler.");
+                                fin.name = "profiler";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_71460_t": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71460_t to entityRenderer.");
+                                fin.name = "entityRenderer";
+                                changed = true;
+                            } else if (goodClass) {
+                                System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71460_t to entityRenderer.");
+                                fin.name = "entityRenderer";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_175616_W": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_175616_W to renderManager.");
+                                fin.name = "renderManager";
+                                changed = true;
+                            } else if (goodClass) {
+                                System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_175616_W to renderManager.");
+                                fin.name = "renderManager";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_175010_j": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_175010_j to renderManager.");
+                                fin.name = "renderManager";
+                                changed = true;
+                            } else if (goodClass) {
+                                System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_175010_j to renderManager.");
+                                fin.name = "renderManager";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_71417_B": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71417_B to mouseHelper.");
+                                fin.name = "mouseHelper";
+                                changed = true;
+                            } else if (goodClass) {
+                                System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71417_B to mouseHelper.");
+                                fin.name = "mouseHelper";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_71441_e": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71441_e to world.");
+                                fin.name = "world";
+                                changed = true;
+                            } else if (goodClass) {
+                                System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71441_e to world.");
+                                fin.name = "world";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "INSTANCE": {
+                            if (fin.owner.equals("net/minecraftforge/fml/client/FMLClientHandler")) {
+                                if (fin.getOpcode() == GETSTATIC) {
+                                    System.out.println("Redirecting:GETSTATIC:" + transformedName + ":" + mn.name + ":INSTANCE to instance.");
+                                    fin.name = "instance";
+                                    changed = true;
+                                } else if (goodClass) {
+                                    System.out.println("Redirecting:PUTSTATIC:" + transformedName + ":" + mn.name + ":INSTANCE to instance.");
+                                    fin.name = "instance";
+                                    changed = true;
+                                }
+                            }
+                        }
                     }
                 } else if (ain instanceof MethodInsnNode) {
                     MethodInsnNode min = (MethodInsnNode) ain;
@@ -1084,10 +1364,19 @@ public class Transformer implements IClassTransformer, Opcodes {
                     }
                 }
             }
+            if (mn.localVariables != null && !goodClass) {
+                for (LocalVariableNode lvn : mn.localVariables) {
+                    if (lvn.desc.contains("net/minecraftforge/fml/common/event") || lvn.desc.contains("net/minecraftforge/fml/event")) {
+                        System.out.println("Find event listsner:" + transformedName);
+                        event_listeners.add(cn.name.replace('/', '.'));
+                        break;
+                    }
+                }
+            }
         }
 
         if (changed) {
-            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+            ClassWriter cw = new ClassWriter(compute_all ? ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS);
             cn.accept(cw);
             transformed = cw.toByteArray();
             save(transformed, transformedName);
@@ -1095,5 +1384,6 @@ public class Transformer implements IClassTransformer, Opcodes {
         } else {
             return basicClass;
         }
+
     }
 }

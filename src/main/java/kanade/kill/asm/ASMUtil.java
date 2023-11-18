@@ -1,4 +1,4 @@
-package kanade.kill;
+package kanade.kill.asm;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;

@@ -1,5 +1,7 @@
-package kanade.kill;
+package kanade.kill.item;
 
+import kanade.kill.ModMain;
+import kanade.kill.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;

@@ -1,4 +1,4 @@
-package kanade.kill;
+package kanade.kill.reflection;
 
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import scala.concurrent.util.Unsafe;
