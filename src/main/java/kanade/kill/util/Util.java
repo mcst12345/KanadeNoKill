@@ -443,7 +443,7 @@ public class Util {
         System.out.println("Saving fields which the transformer found.");
         for (FieldInfo fieldinfo : Transformer.getFields()) {
             Field field = fieldinfo.toField();
-            if (field == null) {
+            if (field == null || cache.containsKey(field)) {
                 continue;
             }
             System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
