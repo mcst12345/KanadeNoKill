@@ -16,4 +16,8 @@ public class Entity {
     public UUID getUniqueID() {
         return null;
     }
+
+    public boolean isCreatureType(EnumCreatureType type, boolean forSpawnCount) {
+        return false;
+    }
 }

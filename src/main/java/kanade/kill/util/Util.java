@@ -8,6 +8,7 @@ import kanade.kill.item.KillItem;
 import kanade.kill.reflection.EarlyMethods;
 import kanade.kill.reflection.LateFields;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
@@ -380,31 +381,6 @@ public class Util {
         System.out.println("Coping event listeners in EventBus.");
         saved_listeners = clone(Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset), 0);
         System.out.println("Coping static fields in event listeners.");
-        /*ConcurrentHashMap<Object, ArrayList<IEventListener>> map = (ConcurrentHashMap<Object, ArrayList<IEventListener>>) Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset);
-        map.forEach((key, value) -> {
-            Class<?> clazz = key.getClass();
-            if (!(clazz == Class.class) && !shouldIgnore(clazz)) {
-                System.out.println("Listener:" + clazz.getName());
-                for (Field field : getFields(clazz)) {
-                    if (Modifier.isStatic(field.getModifiers())) {
-                        if (shouldIgnore(field)) {
-                            continue;
-                        }
-                        System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
-                        try {
-                            Object o = getStatic(field);
-                            cache.put(field, clone(o, 0));
-                        } catch (Throwable t) {
-                            if (t instanceof StackOverflowError) {
-                                System.out.println("Too deep. Ignoring this field.");
-                            } else {
-                                throw new RuntimeException(t);
-                            }
-                        }
-                    }
-                }
-            }
-        });*/
         for (String s : Transformer.getEventListeners()) {
             try {
                 Class<?> clazz = Class.forName(s);
@@ -573,7 +549,7 @@ public class Util {
     private static boolean shouldIgnore(Field field) {
         boolean result = field.getType() == CreativeTabs.class || field.getType() == RegistryNamespaced.class || field.getType() == SimpleNetworkWrapper.class;
         Object object = getStatic(field);
-        return object instanceof Item || object instanceof Block || object instanceof Potion || object instanceof Enchantment || object instanceof Logger || result;
+        return result || object instanceof Item || object instanceof Block || object instanceof Potion || object instanceof Enchantment || object instanceof Logger || object instanceof MinecraftServer || (ModMain.client && (object instanceof Minecraft));
     }
 
     private static boolean shouldIgnore(Class<?> clazz) {
@@ -585,26 +561,6 @@ public class Util {
         System.out.println("Resetting event listeners in EventBus.");
         Unsafe.instance.putObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset, clone(saved_listeners, 0));
         System.out.println("Resetting static fields in event listeners.");
-        /*ConcurrentHashMap<Object, ArrayList<IEventListener>> map = (ConcurrentHashMap<Object, ArrayList<IEventListener>>) Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset);
-        map.forEach((key, value) -> {
-            Class<?> clazz = key.getClass();
-            System.out.println("Listener:" + clazz.getName());
-            if (!(clazz == Class.class) && !shouldIgnore(clazz)) {
-                for (Field field : getFields(clazz)) {
-                    if (Modifier.isStatic(field.getModifiers())) {
-                        if (shouldIgnore(field)) {
-                            continue;
-                        }
-                        System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
-                        Object object = getStatic(field);
-                        if (cache.containsKey(field)) {
-                            System.out.println("Replacing.");
-                            putStatic(field, clone(cache.get(field), 0));
-                        }
-                    }
-                }
-            }
-        });*/
 
         for (String s : Transformer.getEventListeners()) {
             try {
