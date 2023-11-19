@@ -30,17 +30,17 @@ public class GuiThread extends Thread {
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
         if (!ModMain.client) {
             return;
         }
         while (true) {
             if (death != null) {
                 if (!death.close) {
-                    System.out.println("Displaying Death Gui.");
                     Minecraft mc = Minecraft.getMinecraft();
                     Object gui = Unsafe.instance.getObjectVolatile(mc, LateFields.currentScreen_offset);
                     if (gui == null || gui.getClass() != GuiDeath.class) {
+                        System.out.println("Displaying Death Gui.");
                         if (gui instanceof GuiScreen) {
                             ((GuiScreen) gui).onGuiClosed();
                         }
