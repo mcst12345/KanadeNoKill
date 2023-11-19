@@ -69,6 +69,8 @@ public class ModMain {
             kill_item = (Item) cachedClasses.get("kanade.kill.item.KillItem").newInstance();
             death_item = (Item) cachedClasses.get("kanade.kill.item.DeathItem").newInstance();
 
+            System.out.println("Replacing exception handlers.");
+
             ThreadGroup group = Thread.currentThread().getThreadGroup();
             Thread[] threads = new Thread[group.activeCount()];
             group.enumerate(threads);
