@@ -1,6 +1,7 @@
 package kanade.kill;
 
 import kanade.kill.reflection.EarlyFields;
+import kanade.kill.util.ExceptionHandler;
 import kanade.kill.util.FileUtil;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.Launch;
@@ -55,17 +56,24 @@ public class Core implements IFMLLoadingPlugin {
             FileUtil.copyInputStreamToFile(is, new File("Kanade.KanadeSecurityManager.class"));
             is = Empty.class.getResourceAsStream("/kanade/kill/util/FieldInfo.class");
             FileUtil.copyInputStreamToFile(is, new File("Kanade.FieldInfo.class"));
+            is = Empty.class.getResourceAsStream("/kanade/kill/util/ExceptionHandler.class");
+            FileUtil.copyInputStreamToFile(is, new File("Kanade.ExceptionHandler.class"));
 
             System.out.println("Defining classes.");
 
             FileInputStream fis;
+
+            fis = new FileInputStream("Kanade.ExceptionHandler.class");
+            clazz = new byte[fis.available()];
+            fis.read(clazz);
+            fis.close();
+            cachedClasses.put("kanade.kill.util.ExceptionHandler", Unsafe.instance.defineClass("kanade.kill.util.ExceptionHandler", clazz, 0, clazz.length, Launch.classLoader, domain));
 
             fis = new FileInputStream("Kanade.FieldInfo.class");
             clazz = new byte[fis.available()];
             fis.read(clazz);
             fis.close();
             cachedClasses.put("kanade.kill.util.FieldInfo", Unsafe.instance.defineClass("kanade.kill.util.FieldInfo", clazz, 0, clazz.length, Launch.classLoader, domain));
-
 
             fis = new FileInputStream("Kanade.KanadeSecurityManager.class");
             clazz = new byte[fis.available()];
@@ -124,6 +132,9 @@ public class Core implements IFMLLoadingPlugin {
             System.out.println("Constructing check thread.");
             Thread check = (Thread) cachedClasses.get("kanade.kill.util.CheckThread").newInstance();
             check.start();
+
+            System.out.println("Replacing exception handler.");
+            Unsafe.instance.putObjectVolatile(Thread.currentThread(), EarlyFields.uncaughtExceptionHandler_offset, ExceptionHandler.instance);
 
             System.out.println("Core loading completed.");
         } catch (Throwable e) {

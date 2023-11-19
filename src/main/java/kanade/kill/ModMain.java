@@ -1,5 +1,7 @@
 package kanade.kill;
 
+import kanade.kill.reflection.EarlyFields;
+import kanade.kill.util.ExceptionHandler;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
 import net.minecraft.launchwrapper.Launch;
@@ -29,6 +31,8 @@ public class ModMain {
     public static final boolean client = System.getProperty("minecraft.client.jar") != null;
     static {
         try {
+            System.out.println("Defining classes.");
+
             ProtectionDomain domain = Launch.class.getProtectionDomain();
             InputStream is = Empty.class.getResourceAsStream("/kanade/kill/item/KillItem.class");
             assert is != null;
@@ -60,8 +64,17 @@ public class ModMain {
                 cachedClasses.put("kanade.kill.util.GuiThread", Unsafe.instance.defineClass("kanade.kill.util.GuiThread", clazz, 0, clazz.length, Launch.classLoader, domain));
             }
 
+            System.out.println("Constructing items.");
+
             kill_item = (Item) cachedClasses.get("kanade.kill.item.KillItem").newInstance();
             death_item = (Item) cachedClasses.get("kanade.kill.item.DeathItem").newInstance();
+
+            ThreadGroup group = Thread.currentThread().getThreadGroup();
+            Thread[] threads = new Thread[group.activeCount()];
+            group.enumerate(threads);
+            for (Thread thread : threads) {
+                Unsafe.instance.putObjectVolatile(thread, EarlyFields.uncaughtExceptionHandler_offset, ExceptionHandler.instance);
+            }
         } catch (InstantiationException | IllegalAccessException | IOException e) {
             throw new RuntimeException(e);
         }

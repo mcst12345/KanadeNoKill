@@ -14,6 +14,7 @@ public class EarlyFields {
     public static final long modifiers_offset;
     public static final Object security_base;
     public static final long security_offset;
+    public static final long uncaughtExceptionHandler_offset;
 
     static {
         try {
@@ -37,6 +38,17 @@ public class EarlyFields {
             } else {
                 security_base = null;
                 security_offset = 0;
+            }
+            for (Field field1 : (Field[]) EarlyMethods.getDeclaredFields0.invoke(Thread.class, false)) {
+                if (field1.getName().equals("uncaughtExceptionHandler")) {
+                    field = field1;
+                    break;
+                }
+            }
+            if (field.getName().equals("uncaughtExceptionHandler")) {
+                uncaughtExceptionHandler_offset = Unsafe.instance.objectFieldOffset(field);
+            } else {
+                uncaughtExceptionHandler_offset = 0;
             }
         } catch (NoSuchFieldException | InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);
