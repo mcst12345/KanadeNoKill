@@ -1,9 +1,10 @@
 package kanade.kill.reflection;
 
+import kanade.kill.ModMain;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
@@ -29,8 +30,7 @@ public class LateFields {
     public static final long modClassLoader_offset;
     public static final Object listeners_base;
     public static final long listeners_offset_2;
-    public static final int WorldServerArrayBase = Unsafe.instance.arrayBaseOffset(WorldServer[].class);
-    public static final int WorldServerArrayScale = Unsafe.instance.arrayIndexScale(WorldServer[].class);
+    public static final long currentScreen_offset;
 
     static {
         try {
@@ -59,6 +59,12 @@ public class LateFields {
             field = Event.class.getDeclaredField("listeners");
             listeners_base = Unsafe.instance.staticFieldBase(field);
             listeners_offset_2 = Unsafe.instance.staticFieldOffset(field);
+            if (ModMain.client) {
+                field = Minecraft.class.getDeclaredField("field_71462_r");
+                currentScreen_offset = Unsafe.instance.objectFieldOffset(field);
+            } else {
+                currentScreen_offset = 0;
+            }
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }

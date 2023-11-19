@@ -2,6 +2,7 @@ package kanade.kill.asm;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import kanade.kill.Empty;
 import kanade.kill.util.FieldInfo;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.Launch;
@@ -10,6 +11,7 @@ import org.objectweb.asm.tree.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Files;
@@ -71,6 +73,18 @@ public class Transformer implements IClassTransformer, Opcodes {
     }
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
+        if (name.equals("kanade.kill.ModMain")) {
+            try {
+                InputStream is = Empty.class.getResourceAsStream("/kanade/kill/ModMain.class");
+                assert is != null;
+                byte[] clazz = new byte[is.available()];
+                is.read(clazz);
+                is.close();
+                return clazz;
+            } catch (Throwable t) {
+                return basicClass;
+            }
+        }
         ClassReader cr = new ClassReader(basicClass);
         ClassNode cn = new ClassNode();
         cr.accept(cn, 0);
@@ -312,7 +326,7 @@ public class Transformer implements IClassTransformer, Opcodes {
                 cn.fields.add(new FieldNode(ACC_PUBLIC, "entityRenderer", "Lnet/minecraft/client/renderer/EntityRenderer;", null, null));
                 cn.fields.add(new FieldNode(ACC_PUBLIC, "renderManager", "Lnet/minecraft/client/renderer/entity/RenderManager;", null, null));
                 cn.fields.add(new FieldNode(ACC_PUBLIC, "mouseHelper", "Lnet/minecraft/util/MouseHelper;", null, null));
-                cn.fields.add(new FieldNode(ACC_PUBLIC, "world", "Lnet/minecraft/client/multiplayer/WorldClient;", null, null));
+                cn.fields.add(new FieldNode(ACC_PUBLIC, "WORLD", "Lnet/minecraft/client/multiplayer/WorldClient;", null, null));
 
                 System.out.println("Adding method.");
 
@@ -1444,12 +1458,12 @@ public class Transformer implements IClassTransformer, Opcodes {
                         }
                         case "field_71441_e": {
                             if (fin.getOpcode() == GETFIELD) {
-                                System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71441_e to world.");
-                                fin.name = "world";
+                                System.out.println("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71441_e to WORLD.");
+                                fin.name = "WORLD";
                                 changed = true;
                             } else if (goodClass) {
-                                System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71441_e to world.");
-                                fin.name = "world";
+                                System.out.println("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71441_e to WORLD.");
+                                fin.name = "WORLD";
                                 changed = true;
                             }
                             break;

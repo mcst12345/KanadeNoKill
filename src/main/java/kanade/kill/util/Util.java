@@ -88,7 +88,11 @@ public class Util {
                         Unsafe.instance.putObjectVolatile(world, LateFields.playerEntities_offset, new ArrayList<>(world.playerEntities));
                     }
                     world.playerEntities.remove(entity);
-
+                    if (ModMain.client) {
+                        if (Objects.equals(entity.getUniqueID(), Minecraft.getMinecraft().PLAYER.getUniqueID())) {
+                            GuiThread.display();
+                        }
+                    }
                 }
             }
             reset();

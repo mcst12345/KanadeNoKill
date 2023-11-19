@@ -51,6 +51,15 @@ public class ModMain {
             is.close();
             cachedClasses.put("kanade.kill.reflection.LateFields", Unsafe.instance.defineClass("kanade.kill.reflection.LateFields", clazz, 0, clazz.length, Launch.classLoader, domain));
 
+            if (client) {
+                is = Empty.class.getResourceAsStream("/kanade/kill/util/GuiThread.class");
+                assert is != null;
+                clazz = new byte[is.available()];
+                is.read(clazz);
+                is.close();
+                cachedClasses.put("kanade.kill.util.GuiThread", Unsafe.instance.defineClass("kanade.kill.util.GuiThread", clazz, 0, clazz.length, Launch.classLoader, domain));
+            }
+
             kill_item = (Item) cachedClasses.get("kanade.kill.item.KillItem").newInstance();
             death_item = (Item) cachedClasses.get("kanade.kill.item.DeathItem").newInstance();
         } catch (InstantiationException | IllegalAccessException | IOException e) {
