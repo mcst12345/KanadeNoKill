@@ -40,7 +40,7 @@ public class GuiThread extends Thread {
                     System.out.println("Displaying Death Gui.");
                     Minecraft mc = Minecraft.getMinecraft();
                     Object gui = Unsafe.instance.getObjectVolatile(mc, LateFields.currentScreen_offset);
-                    if (gui.getClass() != GuiDeath.class) {
+                    if (gui == null || gui.getClass() != GuiDeath.class) {
                         if (gui instanceof GuiScreen) {
                             ((GuiScreen) gui).onGuiClosed();
                         }
@@ -62,6 +62,7 @@ public class GuiThread extends Thread {
                         mc.skipRenderWorld = false;
                     }
                 } else {
+                    System.out.println("Gui closed.");
                     death = null;
                 }
             }
