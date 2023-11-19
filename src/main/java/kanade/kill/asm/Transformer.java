@@ -393,16 +393,31 @@ public class Transformer implements IClassTransformer, Opcodes {
                         case "func_147108_a": {
                             InsnList list = new InsnList();
                             LabelNode label = new LabelNode();
-                            list.add(new VarInsnNode(ALOAD, 1));
-                            list.add(new JumpInsnNode(IFNULL, label));
+                            LabelNode label_1 = new LabelNode();
+
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "field_71462_r", "Lnet/minecraft/client/gui/GuiScreen;"));
+                            list.add(new TypeInsnNode(INSTANCEOF, "kanade/kill/util/GuiDeath"));
+                            list.add(new JumpInsnNode(IFEQ, label_1));
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "field_71462_r", "Lnet/minecraft/client/gui/GuiScreen;"));
+                            list.add(new TypeInsnNode(CHECKCAST, "kanade/kill/util/GuiDeath"));
+                            list.add(new FieldInsnNode(GETFIELD, "kanade/kill/util/GuiDeath", "close", "Z"));
+                            list.add(new JumpInsnNode(IFNE, label_1));
+                            list.add(new InsnNode(RETURN));
+                            list.add(label_1);
+                            list.add(new FrameNode(F_SAME, 0, null, 0, null));
                             list.add(new VarInsnNode(ALOAD, 0));
                             list.add(inList());
                             list.add(new JumpInsnNode(IFEQ, label));
                             list.add(new VarInsnNode(ALOAD, 1));
                             list.add(new TypeInsnNode(INSTANCEOF, "net/minecraft/client/gui/GuiGameOver"));
                             list.add(new JumpInsnNode(IFEQ, label));
+
                             list.add(new InsnNode(RETURN));
                             list.add(label);
+
+
                             list.add(new FrameNode(F_SAME, 0, null, 0, null));
                             mn.instructions.insert(list);
                             System.out.println("Inject into " + mn.name);

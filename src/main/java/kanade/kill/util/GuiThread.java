@@ -44,7 +44,10 @@ public class GuiThread extends Thread {
                         if (gui instanceof GuiScreen) {
                             ((GuiScreen) gui).onGuiClosed();
                         }
-                        death = new GuiDeath();
+                        ScaledResolution scaledresolution = new ScaledResolution(mc);
+                        int i = scaledresolution.getScaledWidth();
+                        int j = scaledresolution.getScaledHeight();
+                        death.setWorldAndResolution(mc, i, j);
                         Unsafe.instance.putObjectVolatile(mc, LateFields.currentScreen_offset, death);
                         mc.SetIngameNotInFocus();
                         KeyBinding.unPressAllKeys();
@@ -55,10 +58,6 @@ public class GuiThread extends Thread {
                         while (Keyboard.next()) {
                         }
 
-                        ScaledResolution scaledresolution = new ScaledResolution(mc);
-                        int i = scaledresolution.getScaledWidth();
-                        int j = scaledresolution.getScaledHeight();
-                        death.setWorldAndResolution(mc, i, j);
                         mc.skipRenderWorld = false;
                     }
                 } else {
