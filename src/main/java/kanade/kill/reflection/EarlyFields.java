@@ -15,6 +15,7 @@ public class EarlyFields {
     public static final Object security_base;
     public static final long security_offset;
     public static final long uncaughtExceptionHandler_offset;
+    public static final long renameTransformer_offset;
 
     static {
         try {
@@ -50,6 +51,8 @@ public class EarlyFields {
             } else {
                 uncaughtExceptionHandler_offset = 0;
             }
+            field = LaunchClassLoader.class.getDeclaredField("renameTransformer");
+            renameTransformer_offset = Unsafe.instance.objectFieldOffset(field);
         } catch (NoSuchFieldException | InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }

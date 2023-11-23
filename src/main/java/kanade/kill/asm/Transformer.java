@@ -3,29 +3,33 @@ package kanade.kill.asm;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import kanade.kill.Empty;
+import kanade.kill.reflection.EarlyFields;
 import kanade.kill.util.FieldInfo;
+import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.*;
+import scala.concurrent.util.Unsafe;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.instrument.ClassFileTransformer;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.security.ProtectionDomain;
+import java.util.*;
 
 @SuppressWarnings("SpellCheckingInspection")
-public class Transformer implements IClassTransformer, Opcodes {
+public class Transformer implements IClassTransformer, Opcodes, ClassFileTransformer {
+    private static final IClassNameTransformer classNameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(Launch.classLoader, EarlyFields.renameTransformer_offset);
     public static final boolean debug = System.getProperty("Debug") != null;
     public static final Transformer instance = new Transformer();
     private static final ObjectOpenHashSet<String> event_listeners = new ObjectOpenHashSet<>();
     private static final ObjectArrayList<FieldInfo> fields = new ObjectArrayList<>();
+    private static final Set<String> transformedClasses = new HashSet<>();
     private Transformer(){}
 
     static {
@@ -73,6 +77,10 @@ public class Transformer implements IClassTransformer, Opcodes {
     }
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
+        if(transformedClasses.contains(transformedName)){
+            System.out.println("Class "+transformedName+" is already transformed.");
+            return basicClass;
+        }
         if (name.equals("kanade.kill.ModMain")) {
             try {
                 InputStream is = Empty.class.getResourceAsStream("/kanade/kill/ModMain.class");
@@ -1552,10 +1560,18 @@ public class Transformer implements IClassTransformer, Opcodes {
             cn.accept(cw);
             transformed = cw.toByteArray();
             save(transformed, transformedName);
+            transformedClasses.add(transformedName);
             return transformed;
         } else {
+            transformedClasses.add(transformedName);
             return basicClass;
         }
 
+    }
+
+    @Override
+    public byte[] transform(ClassLoader classLoader, String s, Class<?> aClass, ProtectionDomain protectionDomain, byte[] bytes) {
+        s = s.replace('/','.');
+        return transform(s,classNameTransformer.remapClassName(s),bytes);
     }
 }
