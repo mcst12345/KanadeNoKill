@@ -61,7 +61,7 @@ public class ModMain {
                 clazz = new byte[is.available()];
                 is.read(clazz);
                 is.close();
-                cachedClasses.put("kanade.kill.util.GuiThread", Unsafe.instance.defineClass("kanade.kill.util.GuiThread", clazz, 0, clazz.length, Launch.classLoader, domain));
+                cachedClasses.put("kanade.kill.thread.GuiThread", Unsafe.instance.defineClass("kanade.kill.thread.GuiThread", clazz, 0, clazz.length, Launch.classLoader, domain));
             }
 
             System.out.println("Constructing items.");

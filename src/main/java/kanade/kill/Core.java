@@ -2,17 +2,18 @@ package kanade.kill;
 
 import kanade.kill.reflection.EarlyFields;
 import kanade.kill.util.ExceptionHandler;
-import kanade.kill.util.FileUtil;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import scala.concurrent.util.Unsafe;
 
 import javax.annotation.Nullable;
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -23,122 +24,79 @@ public class Core implements IFMLLoadingPlugin {
     static final Map<String, Class<?>> cachedClasses = new ConcurrentHashMap<>();
     public static List<IClassTransformer> lists;
 
+    public static Logger LOGGER = LogManager.getLogger("Kanade");
+
     static {
         try {//EarlyMethods
-            System.out.println("Kanade Core loading.");
+            Core.LOGGER.info("Kanade Core loading.");
 
-            InputStream is;
-            byte[] clazz;
+            final List<String> classes = new ArrayList<>();
             ProtectionDomain domain = Launch.class.getProtectionDomain();
 
-            is = Empty.class.getResourceAsStream("/kanade/kill/util/FileUtil.class");
-            assert is != null;
-            clazz = new byte[is.available()];
-            is.read(clazz);
-            cachedClasses.put("kanade.kill.util.FileUtil", Unsafe.instance.defineClass("kanade.kill.util.FileUtil", clazz, 0, clazz.length, Launch.classLoader, domain));
+            classes.add("kanade.kill.reflection.EarlyMethods");
+            classes.add("kanade.kill.reflection.ReflectionUtil");
+            classes.add("kanade.kill.reflection.EarlyFields");
+            classes.add("kanade.kill.asm.ASMUtil");
+            classes.add("kanade.kill.asm.injections.DimensionManager");
+            classes.add("kanade.kill.asm.injections.Entity");
+            classes.add("kanade.kill.asm.injections.EntityLivingBase");
+            classes.add("kanade.kill.asm.injections.EntityPlayer");
+            classes.add("kanade.kill.asm.injections.FMLClientHandler");
+            classes.add("kanade.kill.asm.injections.ItemStack");
+            classes.add("kanade.kill.asm.injections.Minecraft");
+            classes.add("kanade.kill.asm.injections.MinecraftForge");
+            classes.add("kanade.kill.asm.injections.MinecraftServer");
+            classes.add("kanade.kill.asm.injections.NonNullList");
+            classes.add("kanade.kill.asm.injections.RenderGlobal");
+            classes.add("kanade.kill.asm.injections.World");
+            classes.add("kanade.kill.asm.injections.WorldClient");
+            classes.add("kanade.kill.asm.injections.WorldServer");
+            classes.add("kanade.kill.asm.Transformer");
+            classes.add("kanade.kill.util.TransformerList");
+            classes.add("kanade.kill.thread.TransformersCheckThread");
+            classes.add("kanade.kill.thread.ClassLoaderCheckThread");
+            classes.add("kanade.kill.classload.KanadeClassLoader");
+            classes.add("kanade.kill.util.FieldInfo");
+            classes.add("kanade.kill.util.KanadeSecurityManager");
+            classes.add("kanade.kill.util.ExceptionHandler");
+            classes.add("kanade.kill.AgentMain");
+            classes.add("kanade.kill.Attach");
 
-            System.out.println("Extracting files.");
-            is = Empty.class.getResourceAsStream("/kanade/kill/util/Util.class");
-            FileUtil.copyInputStreamToFile(is, new File("Kanade.Util.class"));
-            is = Empty.class.getResourceAsStream("/kanade/kill/reflection/EarlyFields.class");
-            FileUtil.copyInputStreamToFile(is, new File("Kanade.EarlyFields.class"));
-            is = Empty.class.getResourceAsStream("/kanade/kill/asm/Transformer.class");
-            FileUtil.copyInputStreamToFile(is, new File("Kanade.Transformer.class"));
-            is = Empty.class.getResourceAsStream("/kanade/kill/util/TransformerList.class");
-            FileUtil.copyInputStreamToFile(is, new File("Kanade.TransformerList.class"));
-            is = Empty.class.getResourceAsStream("/kanade/kill/util/CheckThread.class");
-            FileUtil.copyInputStreamToFile(is, new File("Kanade.CheckThread.class"));
-            is = Empty.class.getResourceAsStream("/kanade/kill/asm/ASMUtil.class");
-            FileUtil.copyInputStreamToFile(is, new File("Kanade.ASMUtil.class"));
-            is = Empty.class.getResourceAsStream("/kanade/kill/reflection/EarlyMethods.class");
-            FileUtil.copyInputStreamToFile(is, new File("Kanade.EarlyMethods.class"));
-            is = Empty.class.getResourceAsStream("/kanade/kill/util/KanadeSecurityManager.class");
-            FileUtil.copyInputStreamToFile(is, new File("Kanade.KanadeSecurityManager.class"));
-            is = Empty.class.getResourceAsStream("/kanade/kill/util/FieldInfo.class");
-            FileUtil.copyInputStreamToFile(is, new File("Kanade.FieldInfo.class"));
-            is = Empty.class.getResourceAsStream("/kanade/kill/util/ExceptionHandler.class");
-            FileUtil.copyInputStreamToFile(is, new File("Kanade.ExceptionHandler.class"));
 
-            System.out.println("Defining classes.");
+            for (String s : classes) {
+                Core.LOGGER.info("Defining class:" + s);
+                try (InputStream is = Empty.class.getResourceAsStream('/' + s.replace('.', '/') + ".class")) {
+                    assert is != null;
+                    //6 lines below are from Apache common io.
+                    final ByteArrayOutputStream output = new ByteArrayOutputStream();
+                    final byte[] buffer = new byte[8024];
+                    int n;
+                    while (-1 != (n = is.read(buffer))) {
+                        output.write(buffer, 0, n);
+                    }
+                    byte[] bytes = output.toByteArray();
+                    cachedClasses.put(s, Unsafe.instance.defineClass(s, bytes, 0, bytes.length, Launch.classLoader, domain));
+                }
 
-            FileInputStream fis;
+            }
 
-            fis = new FileInputStream("Kanade.ExceptionHandler.class");
-            clazz = new byte[fis.available()];
-            fis.read(clazz);
-            fis.close();
-            cachedClasses.put("kanade.kill.util.ExceptionHandler", Unsafe.instance.defineClass("kanade.kill.util.ExceptionHandler", clazz, 0, clazz.length, Launch.classLoader, domain));
 
-            fis = new FileInputStream("Kanade.FieldInfo.class");
-            clazz = new byte[fis.available()];
-            fis.read(clazz);
-            fis.close();
-            cachedClasses.put("kanade.kill.util.FieldInfo", Unsafe.instance.defineClass("kanade.kill.util.FieldInfo", clazz, 0, clazz.length, Launch.classLoader, domain));
-
-            fis = new FileInputStream("Kanade.KanadeSecurityManager.class");
-            clazz = new byte[fis.available()];
-            fis.read(clazz);
-            fis.close();
-            cachedClasses.put("kanade.kill.util.KanadeSecurityManager", Unsafe.instance.defineClass("kanade.kill.util.KanadeSecurityManager", clazz, 0, clazz.length, Launch.classLoader, domain));
-
-            fis = new FileInputStream("Kanade.EarlyMethods.class");
-            clazz = new byte[fis.available()];
-            fis.read(clazz);
-            fis.close();
-            cachedClasses.put("kanade.kill.reflection.EarlyMethods", Unsafe.instance.defineClass("kanade.kill.reflection.EarlyMethods", clazz, 0, clazz.length, Launch.classLoader, domain));
-
-            fis = new FileInputStream("Kanade.EarlyFields.class");
-            clazz = new byte[fis.available()];
-            fis.read(clazz);
-            fis.close();
-            cachedClasses.put("kanade.kill.reflection.EarlyFields", Unsafe.instance.defineClass("kanade.kill.reflection.EarlyFields", clazz, 0, clazz.length, Launch.classLoader, domain));
-
-            fis = new FileInputStream("Kanade.Util.class");
-            clazz = new byte[fis.available()];
-            fis.read(clazz);
-            fis.close();
-            cachedClasses.put("kanade.kill.util.Util", Unsafe.instance.defineClass("kanade.kill.util.Util", clazz, 0, clazz.length, Launch.classLoader, domain));
-
-            fis = new FileInputStream("Kanade.ASMUtil.class");
-            clazz = new byte[fis.available()];
-            fis.read(clazz);
-            fis.close();
-            cachedClasses.put("kanade.kill.asm.ASMUtil", Unsafe.instance.defineClass("kanade.kill.asm.ASMUtil", clazz, 0, clazz.length, Launch.classLoader, domain));
-
-            fis = new FileInputStream("Kanade.Transformer.class");
-            clazz = new byte[fis.available()];
-            fis.read(clazz);
-            fis.close();
-            cachedClasses.put("kanade.kill.asm.Transformer", Unsafe.instance.defineClass("kanade.kill.asm.Transformer", clazz, 0, clazz.length, Launch.classLoader, domain));
-
-            fis = new FileInputStream("Kanade.TransformerList.class");
-            clazz = new byte[fis.available()];
-            fis.read(clazz);
-            fis.close();
-            cachedClasses.put("kanade.kill.util.TransformerList", Unsafe.instance.defineClass("kanade.kill.util.TransformerList", clazz, 0, clazz.length, Launch.classLoader, domain));
-
-            fis = new FileInputStream("Kanade.CheckThread.class");
-            clazz = new byte[fis.available()];
-            fis.read(clazz);
-            fis.close();
-            cachedClasses.put("kanade.kill.util.CheckThread", Unsafe.instance.defineClass("kanade.kill.util.CheckThread", clazz, 0, clazz.length, Launch.classLoader, domain));
-
-            System.out.println("Injecting into LaunchClassLoader.");
+            Core.LOGGER.info("Injecting into LaunchClassLoader.");
 
             Object old = Unsafe.instance.getObjectVolatile(Launch.classLoader, EarlyFields.transformers_offset);
             lists = (List<IClassTransformer>) cachedClasses.get("kanade.kill.util.TransformerList").getConstructor(Collection.class).newInstance(old);
             Unsafe.instance.putObjectVolatile(Launch.classLoader, EarlyFields.transformers_offset, lists);
 
-            System.out.println("Constructing check thread.");
-            Thread check = (Thread) cachedClasses.get("kanade.kill.util.CheckThread").newInstance();
+            Core.LOGGER.info("Constructing check thread.");
+            Thread check = (Thread) cachedClasses.get("kanade.kill.thread.TransformersCheckThread").newInstance();
             check.start();
 
-            System.out.println("Replacing exception handler.");
+            Core.LOGGER.info("Replacing exception handler.");
             Unsafe.instance.putObjectVolatile(Thread.currentThread(), EarlyFields.uncaughtExceptionHandler_offset, ExceptionHandler.instance);
 
-            System.out.println("Core loading completed.");
+            Core.LOGGER.info("Core loading completed.");
         } catch (Throwable e) {
-            e.printStackTrace();
+            LOGGER.fatal(e);
             throw new RuntimeException(e);
         }
     }

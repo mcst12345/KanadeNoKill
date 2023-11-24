@@ -14,7 +14,6 @@ import scala.concurrent.util.Unsafe;
 
 import java.lang.reflect.Field;
 
-@SuppressWarnings("JavaReflectionMemberAccess")
 public class LateFields {
     public static final long loadedEntityList_offset;
     public static final long entityLists_offset;
@@ -34,36 +33,36 @@ public class LateFields {
 
     static {
         try {
-            Field field = World.class.getDeclaredField("field_72996_f");
+            Field field = ReflectionUtil.getField(World.class, "field_72996_f");
             loadedEntityList_offset = Unsafe.instance.objectFieldOffset(field);
-            field = World.class.getDeclaredField("field_73010_i");
+            field = ReflectionUtil.getField(World.class, "field_73010_i");
             playerEntities_offset = Unsafe.instance.objectFieldOffset(field);
-            field = Chunk.class.getDeclaredField("field_76645_j");
+            field = ReflectionUtil.getField(Chunk.class, "field_76645_j");
             entityLists_offset = Unsafe.instance.objectFieldOffset(field);
-            field = Entity.class.getDeclaredField("field_70180_af");
+            field = ReflectionUtil.getField(Entity.class, "field_70180_af");
             dataManager_offset = Unsafe.instance.objectFieldOffset(field);
-            field = EntityLivingBase.class.getDeclaredField("field_184632_c");
+            field = ReflectionUtil.getField(EntityLivingBase.class, "field_184632_c");
             HEALTH_base = Unsafe.instance.staticFieldBase(field);
             HEALTH_offset = Unsafe.instance.staticFieldOffset(field);
-            field = Entity.class.getDeclaredField("HatedByLife");
+            field = ReflectionUtil.getField(Entity.class, "HatedByLife");
             HatedByLife_offset = Unsafe.instance.objectFieldOffset(field);
-            field = MinecraftForge.class.getDeclaredField("Event_bus");
+            field = ReflectionUtil.getField(MinecraftForge.class, "Event_bus");
             Event_Bus_offset = Unsafe.instance.staticFieldOffset(field);
             Event_Bus_base = Unsafe.instance.staticFieldBase(field);
-            field = EventBus.class.getDeclaredField("listeners");
+            field = ReflectionUtil.getField(EventBus.class, "listeners");
             listeners_offset = Unsafe.instance.objectFieldOffset(field);
-            field = EventBus.class.getDeclaredField("listenerOwners");
+            field = ReflectionUtil.getField(EventBus.class, "listenerOwners");
             listenerOwners_offset = Unsafe.instance.objectFieldOffset(field);
-            field = Loader.class.getDeclaredField("modClassLoader");
+            field = ReflectionUtil.getField(Loader.class, "modClassLoader");
             modClassLoader_offset = Unsafe.instance.objectFieldOffset(field);
-            field = Event.class.getDeclaredField("listeners");
+            field = ReflectionUtil.getField(Event.class, "listeners");
             listeners_base = Unsafe.instance.staticFieldBase(field);
             listeners_offset_2 = Unsafe.instance.staticFieldOffset(field);
             if (ModMain.client) {
-                field = Minecraft.class.getDeclaredField("field_71462_r");
+                field = ReflectionUtil.getField(Minecraft.class, "field_71462_r");
                 currentScreen_offset = Unsafe.instance.objectFieldOffset(field);
             } else {
-                currentScreen_offset = 0;
+                currentScreen_offset = -1;
             }
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);

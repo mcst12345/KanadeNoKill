@@ -2,11 +2,13 @@ package kanade.kill.util;
 
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import kanade.kill.Core;
 import kanade.kill.ModMain;
 import kanade.kill.asm.Transformer;
 import kanade.kill.item.KillItem;
-import kanade.kill.reflection.EarlyMethods;
 import kanade.kill.reflection.LateFields;
+import kanade.kill.reflection.ReflectionUtil;
+import kanade.kill.thread.GuiThread;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
@@ -98,7 +100,7 @@ public class Util {
             reset();
             killing = false;
         } catch (Throwable t) {
-            t.printStackTrace();
+            Core.LOGGER.fatal(t);
             killing = false;
             throw new RuntimeException(t);
         }
@@ -150,47 +152,16 @@ public class Util {
 
     private static int depth;
 
-    public static List<Field> getAllFields(Class<?> clazz) {
-        try {
-            List<Field> list = new ArrayList<>();
-            if (clazz == null) {
-                return list;
-            }
-            while (clazz != Object.class) {
-                Collections.addAll(list, (Field[]) EarlyMethods.getDeclaredFields0.invoke(clazz, false));
-                clazz = clazz.getSuperclass();
-            }
-            return list;
-        } catch (Throwable t) {
-            t.printStackTrace();
-            throw new RuntimeException(t);
-        }
-    }
-
-    public static List<Field> getFields(Class<?> clazz) {
-        try {
-            List<Field> list = new ArrayList<>();
-            if (clazz == null) {
-                return list;
-            }
-            Collections.addAll(list, (Field[]) EarlyMethods.getDeclaredFields0.invoke(clazz, false));
-            return list;
-        } catch (Throwable t) {
-            t.printStackTrace();
-            throw new RuntimeException(t);
-        }
-    }
-
     public static Object clone(Object o, int depth) {
         if (o == null) {
-            System.out.println("Warn:object is null.");
+            Core.LOGGER.warn("Object is null.");
             return null;
         }
         if (o instanceof Class) {
             return o;
         }
         if (depth > 10000) {
-            System.out.println("Too deep.");
+            Core.LOGGER.info("Too deep.");
             return o;
         }
         Object copy;
@@ -327,7 +298,7 @@ public class Util {
                 throw new RuntimeException(e);
             }
         }
-        for (Field field : getAllFields(o.getClass())) {
+        for (Field field : ReflectionUtil.getAllFields(o.getClass())) {
             if (Modifier.isStatic(field.getModifiers())) {
                 continue;
             }
@@ -371,7 +342,7 @@ public class Util {
                     break;
                 }
                 default: {
-                    System.out.println("Coping field:" + field.getName() + ":" + field.getType().getName());
+                    Core.LOGGER.info("Coping field:" + field.getName() + ":" + field.getType().getName());
                     Object obj = Unsafe.instance.getObjectVolatile(o, offset);
                     Unsafe.instance.putObjectVolatile(copy, offset, clone(obj, depth + 1));
                 }
@@ -381,26 +352,26 @@ public class Util {
     }
 
     public synchronized static void save() {
-        System.out.println("Coping event listeners in EventBus.");
+        Core.LOGGER.info("Coping event listeners in EventBus.");
         saved_listeners = clone(Unsafe.instance.getObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset), 0);
-        System.out.println("Coping static fields in event listeners.");
+        Core.LOGGER.info("Coping static fields in event listeners.");
         for (String s : Transformer.getEventListeners()) {
             try {
                 Class<?> clazz = Class.forName(s);
 
-                System.out.println("Listener:" + s);
-                for (Field field : getFields(clazz)) {
+                Core.LOGGER.info("Listener:" + s);
+                for (Field field : ReflectionUtil.getFields(clazz)) {
                     if (Modifier.isStatic(field.getModifiers())) {
                         if (shouldIgnore(field)) {
                             continue;
                         }
-                        System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
+                        Core.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName());
                         try {
                             Object o = getStatic(field);
                             cache.put(field, clone(o, 0));
                         } catch (Throwable t) {
                             if (t instanceof StackOverflowError) {
-                                System.out.println("Too deep. Ignoring this field.");
+                                Core.LOGGER.warn("Too deep. Ignoring this field.");
                             } else {
                                 throw new RuntimeException(t);
                             }
@@ -411,29 +382,29 @@ public class Util {
             }
         }
 
-        System.out.println("Coping event listeners in Event.");
+        Core.LOGGER.info("Coping event listeners in Event.");
         saved_listeners_2 = clone(Unsafe.instance.getObjectVolatile(LateFields.listeners_base, LateFields.listeners_offset_2), 0);
-        System.out.println("Coping static fields in mod instances.");
+        Core.LOGGER.info("Coping static fields in mod instances.");
         try {
             for (ModContainer container : Loader.instance().getActiveModList()) {
                 if (container.getModId().equals("mcp") || container.getModId().equals("minecraft") || container.getModId().equals("FML") || container.getModId().equals("kanade") || container.getModId().equals("forge")) {
                     continue;
                 }
-                System.out.println("Mod:" + container.getModId());
+                Core.LOGGER.info("Mod:" + container.getModId());
                 Class<?> clazz = container.getMod().getClass();
-                for (Field field : getFields(clazz)) {
+                for (Field field : ReflectionUtil.getFields(clazz)) {
                     if (Modifier.isStatic(field.getModifiers())) {
                         if (shouldIgnore(field)) {
                             continue;
                         }
-                        System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
+                        Core.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName());
                         try {
                             Object object = getStatic(field);
 
                             cache.put(field, clone(object, 0));
                         } catch (Throwable t) {
                             if (t instanceof StackOverflowError) {
-                                System.out.println("Too deep. Ignoring this field.");
+                                Core.LOGGER.warn("Too deep. Ignoring this field.");
                             } else {
                                 throw new RuntimeException(t);
                             }
@@ -444,18 +415,18 @@ public class Util {
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
-        System.out.println("Saving fields which the transformer found.");
+        Core.LOGGER.info("Saving fields which the transformer found.");
         for (FieldInfo fieldinfo : Transformer.getFields()) {
             Field field = fieldinfo.toField();
             if (field == null || cache.containsKey(field)) {
                 continue;
             }
-            System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
+            Core.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName());
             try {
                 cache2.put(field, clone(getStatic(field), 0));
             } catch (Throwable t) {
                 if (t instanceof StackOverflowError) {
-                    System.out.println("Too deep. Ignoring this field.");
+                    Core.LOGGER.warn("Too deep. Ignoring this field.");
                 } else {
                     throw new RuntimeException(t);
                 }
@@ -576,25 +547,25 @@ public class Util {
     }
 
     public synchronized static void reset() {
-        System.out.println("Resetting cached fields.");
-        System.out.println("Resetting event listeners in EventBus.");
+        Core.LOGGER.info("Resetting cached fields.");
+        Core.LOGGER.info("Resetting event listeners in EventBus.");
         Unsafe.instance.putObjectVolatile(MinecraftForge.Event_bus, LateFields.listeners_offset, clone(saved_listeners, 0));
-        System.out.println("Resetting static fields in event listeners.");
+        Core.LOGGER.info("Resetting static fields in event listeners.");
 
         for (String s : Transformer.getEventListeners()) {
             try {
                 Class<?> clazz = Class.forName(s);
 
-                System.out.println("Listener:" + s);
-                for (Field field : getFields(clazz)) {
+                Core.LOGGER.info("Listener:" + s);
+                for (Field field : ReflectionUtil.getFields(clazz)) {
                     if (Modifier.isStatic(field.getModifiers())) {
                         if (shouldIgnore(field)) {
                             continue;
                         }
-                        System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
+                        Core.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName());
                         Object object = getStatic(field);
                         if (cache.containsKey(field)) {
-                            System.out.println("Replacing.");
+                            Core.LOGGER.info("Replacing.");
                             putStatic(field, clone(cache.get(field), 0));
                         }
                     }
@@ -603,25 +574,25 @@ public class Util {
             }
         }
 
-        System.out.println("Resetting event listeners in Event.");
+        Core.LOGGER.info("Resetting event listeners in Event.");
         Unsafe.instance.putObjectVolatile(LateFields.listeners_base, LateFields.listeners_offset_2, saved_listeners_2);
-        System.out.println("Resetting mod static fields.");
+        Core.LOGGER.info("Resetting mod static fields.");
         try {
             for (ModContainer container : Loader.instance().getActiveModList()) {
                 if (container.getModId().equals("mcp") || container.getModId().equals("minecraft") || container.getModId().equals("FML") || container.getModId().equals("kanade") || container.getModId().equals("forge")) {
                     continue;
                 }
-                System.out.println("Mod:" + container.getModId());
+                Core.LOGGER.info("Mod:" + container.getModId());
                 Class<?> clazz = container.getMod().getClass();
-                for (Field field : getFields(clazz)) {
+                for (Field field : ReflectionUtil.getFields(clazz)) {
                     if (Modifier.isStatic(field.getModifiers())) {
                         if (shouldIgnore(field)) {
                             continue;
                         }
-                        System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
+                        Core.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName());
                         Object object = getStatic(field);
                         if (cache.containsKey(field)) {
-                            System.out.println("Replacing.");
+                            Core.LOGGER.info("Replacing.");
                             putStatic(field, clone(cache.get(field), 0));
                         }
                     }
@@ -631,10 +602,10 @@ public class Util {
             throw new RuntimeException(t);
         }
 
-        System.out.println("Resetting fields which the transformer found.");
+        Core.LOGGER.info("Resetting fields which the transformer found.");
         cache2.forEach((field, object) -> {
-            System.out.println("Field:" + field.getName() + ":" + field.getType().getName());
-            System.out.println("Replacing.");
+            Core.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName());
+            Core.LOGGER.info("Replacing.");
             putStatic(field, clone(object, 0));
         });
     }

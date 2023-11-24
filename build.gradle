@@ -84,7 +84,8 @@ jar {
         attributes([
                 'ForceLoadAsMod'             : 'true',
                 "FMLCorePlugin"              : "kanade.kill.Core",
-                "FMLCorePluginContainsFMLMod": "true"
+                "FMLCorePluginContainsFMLMod": "true",
+                "Agent-Class"                : "kanade.kill.AgentMain"
         ])
     }
     from{

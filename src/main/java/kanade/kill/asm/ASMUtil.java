@@ -60,4 +60,16 @@ public class ASMUtil implements Opcodes {
         }
         mn.instructions.add(new InsnNode(RETURN));
     }
+
+    public static MethodInsnNode isDead() {
+        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "isDead", "(Lnet/minecraft/entity/Entity;)Z", false);
+    }
+
+    public static MethodInsnNode inList() {
+        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/item/KillItem", "inList", "(Ljava/lang/Object;)Z", false);
+    }
+
+    public static MethodInsnNode NoRemove() {
+        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "NoRemove", "(Ljava/lang/Object;)Z");
+    }
 }

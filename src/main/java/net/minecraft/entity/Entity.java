@@ -8,7 +8,6 @@ public class Entity {
 
     public boolean isDead;
     public boolean addedToChunk;
-    public int dimension;
     public World world;
     public int chunkCoordX;
     public int chunkCoordZ;
@@ -17,7 +16,4 @@ public class Entity {
         return null;
     }
 
-    public boolean isCreatureType(EnumCreatureType type, boolean forSpawnCount) {
-        return false;
-    }
 }

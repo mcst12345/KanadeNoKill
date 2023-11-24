@@ -3,7 +3,6 @@ package kanade.kill;
 import com.sun.jna.Function;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
-import sun.instrument.InstrumentationImpl;
 
 public class Attach {
     public static void run() {
