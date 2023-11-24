@@ -8,4 +8,8 @@ public class KanadeClassLoader extends LaunchClassLoader {
     public KanadeClassLoader(URL[] sources) {
         super(sources);
     }
+
+    public KanadeClassLoader(LaunchClassLoader old) {
+        super(old.getURLs());
+    }
 }

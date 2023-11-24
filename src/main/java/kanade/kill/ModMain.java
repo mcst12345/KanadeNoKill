@@ -56,7 +56,7 @@ public class ModMain {
             cachedClasses.put("kanade.kill.reflection.LateFields", Unsafe.instance.defineClass("kanade.kill.reflection.LateFields", clazz, 0, clazz.length, Launch.classLoader, domain));
 
             if (client) {
-                is = Empty.class.getResourceAsStream("/kanade/kill/util/GuiThread.class");
+                is = Empty.class.getResourceAsStream("/kanade/kill/thread/GuiThread.class");
                 assert is != null;
                 clazz = new byte[is.available()];
                 is.read(clazz);
