@@ -17,7 +17,16 @@ public class EarlyFields {
     public static final long uncaughtExceptionHandler_offset;
     public static final long renameTransformer_offset;
     public static final long mNativeAgent_offset;
-
+    public static final long invalidClasses_offset;
+    public static final long transformerExceptions_offset;
+    public static final long packageManifests_offset;
+    public static final long cachedClasses_offset;
+    public static final long classLoaderExceptions_offset;
+    public static final long parent_offset;
+    public static final long sources_offset;
+    public static final long resourceCache_offset;
+    public static final long negativeResourceCache_offset;
+    public static final long loadBuffer_offset;
     static {
         try {
             Field field = ReflectionUtil.getField(Field.class, "modifiers");
@@ -37,6 +46,26 @@ public class EarlyFields {
             uncaughtExceptionHandler_offset = Unsafe.instance.objectFieldOffset(field);
             field = ReflectionUtil.getField(InstrumentationImpl.class, "mNativeAgent");
             mNativeAgent_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(LaunchClassLoader.class, "invalidClasses");
+            invalidClasses_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(LaunchClassLoader.class, "transformerExceptions");
+            transformerExceptions_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(LaunchClassLoader.class, "packageManifests");
+            packageManifests_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(LaunchClassLoader.class, "cachedClasses");
+            cachedClasses_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(LaunchClassLoader.class, "classLoaderExceptions");
+            classLoaderExceptions_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(LaunchClassLoader.class, "parent");
+            parent_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(LaunchClassLoader.class, "sources");
+            sources_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(LaunchClassLoader.class, "resourceCache");
+            resourceCache_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(LaunchClassLoader.class, "negativeResourceCache");
+            negativeResourceCache_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(LaunchClassLoader.class, "loadBuffer");
+            loadBuffer_offset = Unsafe.instance.objectFieldOffset(field);
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
