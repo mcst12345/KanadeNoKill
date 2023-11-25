@@ -5,9 +5,14 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
 public class Attach {
+    static {
+        try {
+            System.loadLibrary("instrument");
+        } catch (Throwable ignored) {
+        }
+    }
     public static void run() {
-	String path = Empty.class.getProtectionDomain().getCodeSource().getLocation().getPath().substring(1).replace("!/kanade/kill/Empty.class","");
-        //InstrumentationImpl.class.getDeclaredConstructors();
+        String path = Empty.class.getProtectionDomain().getCodeSource().getLocation().getPath().substring(1).replace("!/kanade/kill/Empty.class", "");
         Function JNI_GetCreatedJavaVMs = Function.getFunction("jvm", "JNI_GetCreatedJavaVMs");
         Pointer[] pJavaVMs = new Pointer[1];
         JNI_GetCreatedJavaVMs.invokeInt(new Object[]{pJavaVMs, 1, (new IntByReference(1)).getPointer()});

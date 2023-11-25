@@ -4,7 +4,10 @@ import kanade.kill.Core;
 import kanade.kill.asm.Transformer;
 import kanade.kill.reflection.EarlyFields;
 import kanade.kill.util.TransformerList;
-import net.minecraft.launchwrapper.*;
+import net.minecraft.launchwrapper.IClassNameTransformer;
+import net.minecraft.launchwrapper.IClassTransformer;
+import net.minecraft.launchwrapper.Launch;
+import net.minecraft.launchwrapper.LaunchClassLoader;
 import scala.concurrent.util.Unsafe;
 
 import java.io.IOException;
@@ -119,12 +122,6 @@ public class KanadeClassLoader extends LaunchClassLoader {
                         if (pkg == null) {
                             pkg = definePackage(packageName, manifest, jarURLConnection.getJarFileURL());
                             packageManifests.put(pkg, manifest);
-                        } else {
-                            if (pkg.isSealed() && !pkg.isSealed(jarURLConnection.getJarFileURL())) {
-                                LogWrapper.severe("The jar file %s is trying to seal already secured path %s", jarFile.getName(), packageName);
-                            } else if (isSealed(packageName, manifest)) {
-                                LogWrapper.severe("The jar file %s has a security seal for path %s, but that path is defined and not secure", jarFile.getName(), packageName);
-                            }
                         }
                     }
                 } else {
@@ -132,8 +129,6 @@ public class KanadeClassLoader extends LaunchClassLoader {
                     if (pkg == null) {
                         pkg = definePackage(packageName, null, null, null, null, null, null, null);
                         packageManifests.put(pkg, EMPTY);
-                    } else if (pkg.isSealed()) {
-                        LogWrapper.severe("The URL %s is defining elements for sealed path %s", urlConnection.getURL(), packageName);
                     }
                 }
             }

@@ -1,7 +1,5 @@
 package kanade.kill;
 
-import kanade.kill.reflection.EarlyFields;
-import kanade.kill.util.ExceptionHandler;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
 import net.minecraft.launchwrapper.Launch;
@@ -31,7 +29,7 @@ public class ModMain {
     public static final boolean client = System.getProperty("minecraft.client.jar") != null;
     static {
         try {
-            System.out.println("Defining classes.");
+            Core.LOGGER.info("Defining classes.");
 
             ProtectionDomain domain = Launch.class.getProtectionDomain();
             InputStream is = Empty.class.getResourceAsStream("/kanade/kill/item/KillItem.class");
@@ -64,19 +62,10 @@ public class ModMain {
                 cachedClasses.put("kanade.kill.thread.GuiThread", Unsafe.instance.defineClass("kanade.kill.thread.GuiThread", clazz, 0, clazz.length, Launch.classLoader, domain));
             }
 
-            System.out.println("Constructing items.");
+            Core.LOGGER.info("Constructing items.");
 
             kill_item = (Item) cachedClasses.get("kanade.kill.item.KillItem").newInstance();
             death_item = (Item) cachedClasses.get("kanade.kill.item.DeathItem").newInstance();
-
-            System.out.println("Replacing exception handlers.");
-
-            ThreadGroup group = Thread.currentThread().getThreadGroup();
-            Thread[] threads = new Thread[group.activeCount()];
-            group.enumerate(threads);
-            for (Thread thread : threads) {
-                Unsafe.instance.putObjectVolatile(thread, EarlyFields.uncaughtExceptionHandler_offset, ExceptionHandler.instance);
-            }
         } catch (InstantiationException | IllegalAccessException | IOException e) {
             throw new RuntimeException(e);
         }

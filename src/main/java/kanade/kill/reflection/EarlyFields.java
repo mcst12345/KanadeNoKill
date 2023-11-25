@@ -27,6 +27,7 @@ public class EarlyFields {
     public static final long resourceCache_offset;
     public static final long negativeResourceCache_offset;
     public static final long loadBuffer_offset;
+    public static final long contextClassLoader_offset;
     static {
         try {
             Field field = ReflectionUtil.getField(Field.class, "modifiers");
@@ -66,6 +67,8 @@ public class EarlyFields {
             negativeResourceCache_offset = Unsafe.instance.objectFieldOffset(field);
             field = ReflectionUtil.getField(LaunchClassLoader.class, "loadBuffer");
             loadBuffer_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(Thread.class, "contextClassLoader");
+            contextClassLoader_offset = Unsafe.instance.objectFieldOffset(field);
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }

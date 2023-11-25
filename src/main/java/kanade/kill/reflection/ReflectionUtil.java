@@ -1,8 +1,10 @@
 package kanade.kill.reflection;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,5 +39,15 @@ public class ReflectionUtil {
             re[i] = list.get(i);
         }
         return re;
+    }
+
+    public static Object invoke(Method method, @Nullable Object obj, @Nullable Object... args) {
+        EarlyMethods.invoke0.setAccessible(true);
+        method.setAccessible(true);
+        try {
+            return EarlyMethods.invoke0.invoke(null, method, obj, args != null ? args : new Object[0]);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

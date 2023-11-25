@@ -1,1 +1,1 @@
-cp -f ./build/libs/*.jar ./mods/
+cp -f ./build/libs/*.jar ~/.minecraft/mods/

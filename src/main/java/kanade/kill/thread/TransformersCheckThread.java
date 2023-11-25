@@ -11,7 +11,8 @@ import java.util.List;
 
 @SuppressWarnings("unused")
 public class TransformersCheckThread extends Thread {
-    public TransformersCheckThread() {
+    public TransformersCheckThread(ThreadGroup group) {
+        super(group, "TransformersCheckThread");
         this.setPriority(9);
         this.setDaemon(true);
         this.setName("TransformersCheckThread");

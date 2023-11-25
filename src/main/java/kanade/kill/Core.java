@@ -1,7 +1,6 @@
 package kanade.kill;
 
 import kanade.kill.reflection.EarlyFields;
-import kanade.kill.util.ExceptionHandler;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
@@ -25,6 +24,7 @@ public class Core implements IFMLLoadingPlugin {
     public static List<IClassTransformer> lists;
 
     public static Logger LOGGER = LogManager.getLogger("Kanade");
+    private static final ThreadGroup KanadeThreads = new ThreadGroup("Kanade");
 
     static {
         try {//EarlyMethods
@@ -58,7 +58,7 @@ public class Core implements IFMLLoadingPlugin {
             classes.add("kanade.kill.classload.KanadeClassLoader");
             classes.add("kanade.kill.util.FieldInfo");
             classes.add("kanade.kill.util.KanadeSecurityManager");
-            classes.add("kanade.kill.util.ExceptionHandler");
+            classes.add("kanade.kill.thread.SecurityManagerCheckThread");
             classes.add("kanade.kill.AgentMain");
             classes.add("kanade.kill.Attach");
 
@@ -87,12 +87,20 @@ public class Core implements IFMLLoadingPlugin {
             lists = (List<IClassTransformer>) cachedClasses.get("kanade.kill.util.TransformerList").getConstructor(Collection.class).newInstance(old);
             Unsafe.instance.putObjectVolatile(Launch.classLoader, EarlyFields.transformers_offset, lists);
 
-            Core.LOGGER.info("Constructing check thread.");
-            Thread check = (Thread) cachedClasses.get("kanade.kill.thread.TransformersCheckThread").newInstance();
+            Core.LOGGER.info("Constructing transformers check thread.");
+            Thread check = (Thread) cachedClasses.get("kanade.kill.thread.TransformersCheckThread").getConstructor(ThreadGroup.class).newInstance(KanadeThreads);
             check.start();
 
-            Core.LOGGER.info("Replacing exception handler.");
-            Unsafe.instance.putObjectVolatile(Thread.currentThread(), EarlyFields.uncaughtExceptionHandler_offset, ExceptionHandler.instance);
+            Core.LOGGER.info("Constructing classloader check thread.");
+            check = (Thread) cachedClasses.get("kanade.kill.thread.ClassLoaderCheckThread").getConstructor(ThreadGroup.class).newInstance(KanadeThreads);
+            check.start();
+
+            Core.LOGGER.info("Constructing SecurityManager check thread.");
+            check = (Thread) cachedClasses.get("kanade.kill.thread.SecurityManagerCheckThread").getConstructor(ThreadGroup.class).newInstance(KanadeThreads);
+            check.start();
+
+            Core.LOGGER.info("Starting attach.");
+            Attach.run();
 
             Core.LOGGER.info("Core loading completed.");
         } catch (Throwable e) {

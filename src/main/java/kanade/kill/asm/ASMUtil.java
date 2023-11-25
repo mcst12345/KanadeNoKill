@@ -1,5 +1,6 @@
 package kanade.kill.asm;
 
+import kanade.kill.Core;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -48,7 +49,7 @@ public class ASMUtil implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
-        System.out.println("Insert return in " + mn.name);
+        Core.LOGGER.info("Insert return in " + mn.name);
     }
 
     public static void clearMethod(MethodNode mn) {
