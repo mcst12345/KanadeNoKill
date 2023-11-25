@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
+import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Files;
@@ -39,6 +40,13 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
     private static final ObjectArrayList<FieldInfo> fields = new ObjectArrayList<>();
     private static final Set<String> transformedClasses = new HashSet<>();
     private Transformer(){}
+
+    private static Instrumentation inst;
+    private static boolean hasInst = false;
+
+    public static boolean hasInst() {
+        return hasInst;
+    }
 
     static {
         File file = new File("transformedClasses");
@@ -71,12 +79,17 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
     public static List<FieldInfo> getFields() {
         return Collections.unmodifiableList(fields);
     }
+
+    public static Instrumentation getInst() {
+        return inst;
+    }
+
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
-        if(transformedClasses.contains(transformedName)){
-            Core.LOGGER.info("Class " + transformedName + " is already transformed.");
-            return basicClass;
-        }
+        //if(transformedClasses.contains(transformedName)){
+        //    Core.LOGGER.info("Class " + transformedName + " is already transformed.");
+        //    return basicClass;
+        //}
         if (name.equals("kanade.kill.ModMain")) {
             try {
                 InputStream is = Empty.class.getResourceAsStream("/kanade/kill/ModMain.class");
@@ -305,6 +318,16 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                             EntityPlayer.InjectOnUpdate(mn);
                             break;
                         }
+                    }
+                }
+                break;
+            }
+            case "net.minecraftforge.client.ForgeHooksClient": {
+                changed = true;
+                Core.LOGGER.info("Get ForgeHooksClient.");
+                for (MethodNode mn : cn.methods) {
+                    if (mn.name.equals("drawScreen")) {
+                        ForgeHooksClient.InjectDrawScreen(mn);
                     }
                 }
                 break;
@@ -704,6 +727,15 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     }
                 }
             }
+            if ((mn.name.equals("agentmain") || mn.name.equals("premain")) && mn.desc.equals("(Ljava/lang/String;Ljava/lang/instrument/Instrumentation;)V")) {
+                System.out.println("Find agent:" + name + ",steal the inst.");
+                InsnList list = new InsnList();
+                list.add(new VarInsnNode(ALOAD, 1));
+                list.add(new FieldInsnNode(PUTSTATIC, "kanade/kill/asm/Transformer", "inst", "Ljava/lang/instrument/Instrumentation;"));
+                mn.instructions.insert(list);
+                hasInst = true;
+                changed = true;
+            }
         }
         if (!goodClass) {
             for (FieldNode fn : cn.fields) {
@@ -740,6 +772,6 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
     @Override
     public byte[] transform(ClassLoader classLoader, String s, Class<?> aClass, ProtectionDomain protectionDomain, byte[] bytes) {
         s = s.replace('/','.');
-        return transform(s,classNameTransformer.remapClassName(s),bytes);
+        return transform(s, classNameTransformer.remapClassName(s), bytes);
     }
 }

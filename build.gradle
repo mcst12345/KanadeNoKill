@@ -14,7 +14,7 @@ group = 'kanade'
 version = ''
 
 java {
-    archivesBaseName = '!!!Kanade no Kill'
+    archivesBaseName = 'KanadeNoKill'
     toolchain.languageVersion = JavaLanguageVersion.of(8)
 }
 
@@ -85,7 +85,9 @@ jar {
                 'ForceLoadAsMod'             : 'true',
                 "FMLCorePlugin"              : "kanade.kill.Core",
                 "FMLCorePluginContainsFMLMod": "true",
-                "Agent-Class"                : "kanade.kill.AgentMain"
+                "Agent-Class"         : "kanade.kill.AgentMain",
+                "Can-Redefine-Classes": "true",
+                "Main-Class"          : "kanade.kill.Empty"
         ])
     }
     from{

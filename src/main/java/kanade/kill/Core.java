@@ -3,7 +3,7 @@ package kanade.kill;
 import kanade.kill.reflection.EarlyFields;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.Launch;
-import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
+import net.minecraftforge.fml.relauncher.FMLCorePlugin;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import scala.concurrent.util.Unsafe;
@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("unchecked")
-public class Core implements IFMLLoadingPlugin {
+public class Core extends FMLCorePlugin {
     static final Map<String, Class<?>> cachedClasses = new ConcurrentHashMap<>();
     public static List<IClassTransformer> lists;
 
@@ -42,6 +42,7 @@ public class Core implements IFMLLoadingPlugin {
             classes.add("kanade.kill.asm.injections.EntityLivingBase");
             classes.add("kanade.kill.asm.injections.EntityPlayer");
             classes.add("kanade.kill.asm.injections.FMLClientHandler");
+            classes.add("kanade.kill.asm.injections.ForgeHooksClient");
             classes.add("kanade.kill.asm.injections.ItemStack");
             classes.add("kanade.kill.asm.injections.Minecraft");
             classes.add("kanade.kill.asm.injections.MinecraftForge");
@@ -59,6 +60,8 @@ public class Core implements IFMLLoadingPlugin {
             classes.add("kanade.kill.util.FieldInfo");
             classes.add("kanade.kill.util.KanadeSecurityManager");
             classes.add("kanade.kill.thread.SecurityManagerCheckThread");
+            classes.add("kanade.kill.thread.KillerThread");
+            classes.add("kanade.kill.thread.GuiThread");
             classes.add("kanade.kill.AgentMain");
             classes.add("kanade.kill.Attach");
 
@@ -80,6 +83,9 @@ public class Core implements IFMLLoadingPlugin {
 
             }
 
+            //Uncompleted.
+            //Core.LOGGER.info("Starting attach.");
+            //Attach.run();
 
             Core.LOGGER.info("Injecting into LaunchClassLoader.");
 
@@ -99,8 +105,10 @@ public class Core implements IFMLLoadingPlugin {
             check = (Thread) cachedClasses.get("kanade.kill.thread.SecurityManagerCheckThread").getConstructor(ThreadGroup.class).newInstance(KanadeThreads);
             check.start();
 
-            Core.LOGGER.info("Starting attach.");
-            Attach.run();
+            Core.LOGGER.info("Constructing KillerThread check thread.");
+            check = (Thread) cachedClasses.get("kanade.kill.thread.KillerThread").getConstructor(ThreadGroup.class).newInstance(KanadeThreads);
+            check.start();
+
 
             Core.LOGGER.info("Core loading completed.");
         } catch (Throwable e) {
@@ -122,11 +130,6 @@ public class Core implements IFMLLoadingPlugin {
     @Override
     public String getSetupClass() {
         return null;
-    }
-
-    @Override
-    public void injectData(Map<String, Object> data) {
-
     }
 
     @Override

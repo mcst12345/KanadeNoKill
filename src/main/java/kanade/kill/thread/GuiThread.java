@@ -13,21 +13,23 @@ import org.lwjgl.input.Mouse;
 import scala.concurrent.util.Unsafe;
 
 public class GuiThread extends Thread {
-    private static final GuiThread instance = new GuiThread();
+    private static final GuiThread[] instance = new GuiThread[100];
+    private static GuiDeath death = null;
 
     static {
-        instance.start();
+        for (int i = 0; i < 100; i++) {
+            instance[i] = new GuiThread();
+            instance[i].start();
+        }
     }
-
-    private GuiDeath death = null;
 
     private GuiThread() {
         this.setPriority(9);
     }
 
     public static void display() {
-        if (instance.death == null || instance.death.close) {
-            instance.death = new GuiDeath();
+        if (death == null || death.close) {
+            death = new GuiDeath();
         }
     }
 

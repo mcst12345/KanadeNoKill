@@ -50,6 +50,9 @@ public class KanadeClassLoader extends LaunchClassLoader {
     @Override
 
     public Class<?> findClass(final String name) throws ClassNotFoundException {
+        if (name.equals("sun.instrument.InstrumentationImpl")) {
+            return LaunchClassLoader.class.getClassLoader().loadClass(name);
+        }
         Set<String> invalidClasses = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.invalidClasses_offset);
         Set<String> classLoaderExceptions = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.classLoaderExceptions_offset);
         ClassLoader parent = (ClassLoader) Unsafe.instance.getObjectVolatile(this, EarlyFields.parent_offset);
