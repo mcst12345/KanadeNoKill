@@ -14,9 +14,12 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import scala.concurrent.util.Unsafe;
 
 import javax.swing.*;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static kanade.kill.Core.cachedClasses;
@@ -31,35 +34,33 @@ public class ModMain {
         try {
             Core.LOGGER.info("Defining classes.");
 
+            final List<String> classes = new ArrayList<>();
             ProtectionDomain domain = Launch.class.getProtectionDomain();
-            InputStream is = Empty.class.getResourceAsStream("/kanade/kill/item/KillItem.class");
-            assert is != null;
-            byte[] clazz = new byte[is.available()];
-            is.read(clazz);
-            is.close();
-            cachedClasses.put("kanade.kill.item.KillItem", Unsafe.instance.defineClass("kanade.kill.item.KillItem", clazz, 0, clazz.length, Launch.classLoader, domain));
-
-            is = Empty.class.getResourceAsStream("/kanade/kill/item/DeathItem.class");
-            assert is != null;
-            clazz = new byte[is.available()];
-            is.read(clazz);
-            is.close();
-            cachedClasses.put("kanade.kill.item.DeathItem", Unsafe.instance.defineClass("kanade.kill.item.DeathItem", clazz, 0, clazz.length, Launch.classLoader, domain));
-
-            is = Empty.class.getResourceAsStream("/kanade/kill/reflection/LateFields.class");
-            assert is != null;
-            clazz = new byte[is.available()];
-            is.read(clazz);
-            is.close();
-            cachedClasses.put("kanade.kill.reflection.LateFields", Unsafe.instance.defineClass("kanade.kill.reflection.LateFields", clazz, 0, clazz.length, Launch.classLoader, domain));
+            classes.add("kanade.kill.item.KillItem");
+            classes.add("kanade.kill.item.DeathItem");
+            classes.add("kanade.kill.reflection.LateFields");
+            classes.add("kanade.kill.network.packets.KillAllEntities");
+            classes.add("kanade.kill.network.NetworkHandler");
 
             if (client) {
-                is = Empty.class.getResourceAsStream("/kanade/kill/thread/GuiThread.class");
-                assert is != null;
-                clazz = new byte[is.available()];
-                is.read(clazz);
-                is.close();
-                cachedClasses.put("kanade.kill.thread.GuiThread", Unsafe.instance.defineClass("kanade.kill.thread.GuiThread", clazz, 0, clazz.length, Launch.classLoader, domain));
+                classes.add("kanade.kill.thread.GuiThread");
+            }
+
+            for (String s : classes) {
+                Core.LOGGER.info("Defining class:" + s);
+                try (InputStream is = Empty.class.getResourceAsStream('/' + s.replace('.', '/') + ".class")) {
+                    assert is != null;
+                    //6 lines below are from Apache common io.
+                    final ByteArrayOutputStream output = new ByteArrayOutputStream();
+                    final byte[] buffer = new byte[8024];
+                    int n;
+                    while (-1 != (n = is.read(buffer))) {
+                        output.write(buffer, 0, n);
+                    }
+                    byte[] bytes = output.toByteArray();
+                    cachedClasses.put(s, Unsafe.instance.defineClass(s, bytes, 0, bytes.length, Launch.classLoader, domain));
+                }
+
             }
 
             Core.LOGGER.info("Constructing items.");

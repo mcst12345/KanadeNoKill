@@ -10,6 +10,8 @@ public class World {
     public List<Entity> loadedEntityList;
     public List<Entity> protects;
     public List<Entity> playerEntities;
+    public boolean isRemote;
+
     public Chunk getChunk(int x, int z) {
         return null;
     }

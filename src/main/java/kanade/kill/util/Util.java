@@ -63,7 +63,7 @@ public class Util {
 
     @SuppressWarnings("unchecked")
     public static synchronized void Kill(Entity entity) {
-        if (KillItem.inList(entity)) return;
+        if (KillItem.inList(entity) || entity == null) return;
         try {
             killing = true;
             Dead.add(entity.getUniqueID());

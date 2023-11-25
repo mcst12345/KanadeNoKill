@@ -1,6 +1,8 @@
 package kanade.kill.item;
 
 import kanade.kill.ModMain;
+import kanade.kill.network.NetworkHandler;
+import kanade.kill.network.packets.KillAllEntities;
 import kanade.kill.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
@@ -14,6 +16,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -103,15 +106,19 @@ public class KillItem extends Item {
 
     @Nonnull
     public ActionResult<ItemStack> onItemRightClick(@Nonnull World worldIn, @Nonnull EntityPlayer playerIn,@Nonnull EnumHand handIn){
-        Util.tasks.add(() -> {
-            List<Entity> targets = new ArrayList<>();
-            for (int id : DimensionManager.getIDs()) {
-                WorldServer world = DimensionManager.getWorld(id);
-                targets.addAll(world.loadedEntityList);
-            }
-            Util.Kill(targets);
-        });
-
+        synchronized (Util.tasks) {
+            Util.tasks.add(() -> {
+                List<Entity> targets = new ArrayList<>();
+                for (int id : DimensionManager.getIDs()) {
+                    WorldServer world = DimensionManager.getWorld(id);
+                    targets.addAll(world.loadedEntityList);
+                }
+                Util.Kill(targets);
+            });
+        }
+        if (FMLCommonHandler.instance().getMinecraftServerInstance().isCallingFromMinecraftThread()) {
+            NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillAllEntities());
+        }
         return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
     }
 }
