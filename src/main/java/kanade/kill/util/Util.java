@@ -609,4 +609,8 @@ public class Util {
             putStatic(field, clone(object, 0));
         });
     }
+
+    public static void CoreDump() {
+        Unsafe.instance.freeMemory(114514);
+    }
 }

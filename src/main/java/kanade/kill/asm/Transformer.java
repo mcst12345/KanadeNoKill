@@ -86,10 +86,6 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
-        //if(transformedClasses.contains(transformedName)){
-        //    Core.LOGGER.info("Class " + transformedName + " is already transformed.");
-        //    return basicClass;
-        //}
         if (name.equals("kanade.kill.ModMain")) {
             try {
                 InputStream is = Empty.class.getResourceAsStream("/kanade/kill/ModMain.class");
