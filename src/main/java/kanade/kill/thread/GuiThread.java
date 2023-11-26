@@ -13,14 +13,11 @@ import org.lwjgl.input.Mouse;
 import scala.concurrent.util.Unsafe;
 
 public class GuiThread extends Thread {
-    private static final GuiThread[] instance = new GuiThread[4];
+    private static final GuiThread instance = new GuiThread();
     private static GuiDeath death = null;
 
     static {
-        for (int i = 0; i < 4; i++) {
-            instance[i] = new GuiThread();
-            instance[i].start();
-        }
+        instance.start();
     }
 
     private GuiThread() {
@@ -28,10 +25,8 @@ public class GuiThread extends Thread {
     }
 
     public synchronized static void display() {
-        synchronized (death) {
-            if (death == null || death.close) {
-                death = new GuiDeath();
-            }
+        if (death == null || death.close) {
+            death = new GuiDeath();
         }
     }
 
@@ -42,7 +37,6 @@ public class GuiThread extends Thread {
         }
         while (true) {
             if (death != null) {
-                synchronized (death) {
                     if (!death.close) {
                         Minecraft mc = Minecraft.getMinecraft();
                         Object gui = Unsafe.instance.getObjectVolatile(mc, LateFields.currentScreen_offset);
@@ -72,7 +66,6 @@ public class GuiThread extends Thread {
                         death = null;
                     }
                 }
-            }
         }
     }
 }

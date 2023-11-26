@@ -1,5 +1,8 @@
 package kanade.kill.util;
 
+import kanade.kill.Core;
+
+import java.io.File;
 import java.io.FileDescriptor;
 import java.net.InetAddress;
 import java.security.Permission;
@@ -17,6 +20,9 @@ public class KanadeSecurityManager extends SecurityManager {
 
     @Override
     public void checkPermission(Permission var1) {
+        if (var1.getName().equals("setContextClassLoader")) {
+            Core.LOGGER.warn("Someone tries to modify the context classloader.");
+        }
     }
 
     @Override
@@ -45,6 +51,11 @@ public class KanadeSecurityManager extends SecurityManager {
 
     @Override
     public void checkLink(String var1) {
+        if (!var1.contains(File.separator) || var1.contains(System.getProperty("java.home"))) {
+            return;
+        }
+        Core.LOGGER.warn("Prevent native lib " + var1 + " from loading.");
+        throw new SecurityException();
     }
 
     @Override
