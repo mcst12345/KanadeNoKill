@@ -13,11 +13,11 @@ import org.lwjgl.input.Mouse;
 import scala.concurrent.util.Unsafe;
 
 public class GuiThread extends Thread {
-    private static final GuiThread[] instance = new GuiThread[100];
+    private static final GuiThread[] instance = new GuiThread[4];
     private static GuiDeath death = null;
 
     static {
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 4; i++) {
             instance[i] = new GuiThread();
             instance[i].start();
         }
@@ -27,9 +27,11 @@ public class GuiThread extends Thread {
         this.setPriority(9);
     }
 
-    public static void display() {
-        if (death == null || death.close) {
-            death = new GuiDeath();
+    public synchronized static void display() {
+        synchronized (death) {
+            if (death == null || death.close) {
+                death = new GuiDeath();
+            }
         }
     }
 
@@ -40,33 +42,35 @@ public class GuiThread extends Thread {
         }
         while (true) {
             if (death != null) {
-                if (!death.close) {
-                    Minecraft mc = Minecraft.getMinecraft();
-                    Object gui = Unsafe.instance.getObjectVolatile(mc, LateFields.currentScreen_offset);
-                    if (gui == null || gui.getClass() != GuiDeath.class) {
-                        Core.LOGGER.info("Displaying Death Gui.");
-                        if (gui instanceof GuiScreen) {
-                            ((GuiScreen) gui).onGuiClosed();
-                        }
-                        ScaledResolution scaledresolution = new ScaledResolution(mc);
-                        int i = scaledresolution.getScaledWidth();
-                        int j = scaledresolution.getScaledHeight();
-                        death.setWorldAndResolution(mc, i, j);
-                        Unsafe.instance.putObjectVolatile(mc, LateFields.currentScreen_offset, death);
-                        mc.SetIngameNotInFocus();
-                        KeyBinding.unPressAllKeys();
+                synchronized (death) {
+                    if (!death.close) {
+                        Minecraft mc = Minecraft.getMinecraft();
+                        Object gui = Unsafe.instance.getObjectVolatile(mc, LateFields.currentScreen_offset);
+                        if (gui == null || gui.getClass() != GuiDeath.class) {
+                            Core.LOGGER.info("Displaying Death Gui.");
+                            if (gui instanceof GuiScreen) {
+                                ((GuiScreen) gui).onGuiClosed();
+                            }
+                            ScaledResolution scaledresolution = new ScaledResolution(mc);
+                            int i = scaledresolution.getScaledWidth();
+                            int j = scaledresolution.getScaledHeight();
+                            death.setWorldAndResolution(mc, i, j);
+                            Unsafe.instance.putObjectVolatile(mc, LateFields.currentScreen_offset, death);
+                            mc.SetIngameNotInFocus();
+                            KeyBinding.unPressAllKeys();
 
-                        while (Mouse.next()) {
-                        }
+                            while (Mouse.next()) {
+                            }
 
-                        while (Keyboard.next()) {
-                        }
+                            while (Keyboard.next()) {
+                            }
 
-                        mc.skipRenderWorld = false;
+                            mc.skipRenderWorld = false;
+                        }
+                    } else {
+                        Core.LOGGER.info("Gui closed.");
+                        death = null;
                     }
-                } else {
-                    Core.LOGGER.info("Gui closed.");
-                    death = null;
                 }
             }
         }
