@@ -602,6 +602,9 @@ public class Util {
     }
 
     public static boolean BadGui(Gui gui) {
+        if (gui == null) {
+            return false;
+        }
         String name = ReflectionUtil.getName(gui.getClass());
         String l = name.toLowerCase();
         return Transformer.isModClass(name) || gui.getClass().getProtectionDomain() == null || gui.getClass().getProtectionDomain().getCodeSource() == null || gui instanceof GuiDeath || l.contains("death") || l.contains("over") || l.contains("die") || l.contains("dead");
