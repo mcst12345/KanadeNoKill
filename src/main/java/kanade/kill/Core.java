@@ -16,14 +16,14 @@ import java.util.*;
 
 @SuppressWarnings("unchecked")
 public class Core extends FMLCorePlugin {
-    static final Map<String, Class<?>> cachedClasses = new HashMap<>();
+    public static final Map<String, Class<?>> cachedClasses = new HashMap<>();
     public static List<IClassTransformer> lists;
 
     public static Logger LOGGER = LogManager.getLogger("Kanade");
     private static final ThreadGroup KanadeThreads = new ThreadGroup("Kanade");
 
     static {
-        try {//EarlyMethods
+        try {
             Core.LOGGER.info("Kanade Core loading.");
 
             final List<String> classes = new ArrayList<>();

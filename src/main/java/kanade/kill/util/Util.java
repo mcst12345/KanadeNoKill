@@ -15,8 +15,6 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.Item;
@@ -134,20 +132,8 @@ public class Util {
         return false;
     }
 
-    @SuppressWarnings("ConstantValue")
     public static void updatePlayer(EntityPlayer player) {
-        IAttributeInstance instance = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.MOVEMENT_SPEED);
-        if (instance != null) {
-            instance.setBaseValue(2.0d);
-        }
-        instance = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.FLYING_SPEED);
-        if (instance != null) {
-            instance.setBaseValue(10.0d);
-        }
-        instance = player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.LUCK);
-        if (instance != null) {
-            instance.setBaseValue(1024.0d);
-        }
+        player.hurtTime = 0;
     }
 
     private static int depth;

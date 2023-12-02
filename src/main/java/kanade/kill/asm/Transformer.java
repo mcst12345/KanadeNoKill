@@ -151,6 +151,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 return basicClass;
             }
         }
+        if (basicClass == null) {
+            return null;
+        }
         ClassReader cr = new ClassReader(basicClass);
         ClassNode cn = new ClassNode();
         cr.accept(cn, 0);
