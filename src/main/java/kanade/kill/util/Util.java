@@ -11,6 +11,7 @@ import kanade.kill.reflection.ReflectionUtil;
 import kanade.kill.thread.GuiThread;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
@@ -598,5 +599,11 @@ public class Util {
 
     public static void CoreDump() {
         Unsafe.instance.freeMemory(114514);
+    }
+
+    public static boolean BadGui(Gui gui) {
+        String name = ReflectionUtil.getName(gui.getClass());
+        String l = name.toLowerCase();
+        return Transformer.isModClass(name) || gui.getClass().getProtectionDomain() == null || gui.getClass().getProtectionDomain().getCodeSource() == null || gui instanceof GuiDeath || l.contains("death") || l.contains("over") || l.contains("die") || l.contains("dead");
     }
 }

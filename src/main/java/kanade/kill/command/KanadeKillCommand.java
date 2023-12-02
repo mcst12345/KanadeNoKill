@@ -45,6 +45,10 @@ public class KanadeKillCommand extends CommandBase {
                                 Config.disableEvent = Boolean.parseBoolean(arg2);
                                 break;
                             }
+                            default: {
+                                sender.sendMessage(new TextComponentString("Config " + arg1 + " isn't found!"));
+                                return;
+                            }
                         }
                         sender.sendMessage(new TextComponentString("Config " + arg1 + " is updated."));
                     }
