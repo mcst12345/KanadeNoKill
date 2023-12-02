@@ -533,12 +533,6 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 changed = true;
                 Core.LOGGER.info("Get MinecraftForge.");
                 MinecraftForge.AddField(cn);
-                for (MethodNode mn : cn.methods) {
-                    if (mn.name.equals("<clinit>")) {
-                        MinecraftForge.InjectClassConstructor(mn);
-                        break;
-                    }
-                }
                 break;
             }
             case "net.minecraftforge.fml.server.FMLServerHandler": {
@@ -829,7 +823,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     if (type == Type.BOOLEAN_TYPE) {
                         list.add(new InsnNode(RETURN));
                     } else {
-                        list.add(new InsnList());
+                        list.add(new InsnNode(ICONST_0));
                         list.add(new InsnNode(IRETURN));
                     }
                     list.add(label);

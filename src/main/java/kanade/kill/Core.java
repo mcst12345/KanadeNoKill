@@ -29,6 +29,7 @@ public class Core extends FMLCorePlugin {
             final List<String> classes = new ArrayList<>();
             ProtectionDomain domain = Launch.class.getProtectionDomain();
 
+            classes.add("kanade.kill.Config");
             classes.add("kanade.kill.util.Util");
             classes.add("kanade.kill.reflection.EarlyMethods");
             classes.add("kanade.kill.reflection.ReflectionUtil");

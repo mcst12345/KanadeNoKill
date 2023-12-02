@@ -1,5 +1,6 @@
 package kanade.kill.asm.injections;
 
+import kanade.kill.Core;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -64,7 +65,7 @@ public class WorldClient implements Opcodes {
         mn.localVariables.add(new LocalVariableNode("entityID", "I", null, label0, label8, 1));
         mn.localVariables.add(new LocalVariableNode("entity", "Lnet/minecraft/entity/Entity;", null, label1, label8, 2));
 
-        System.out.println("Overwrite removeEntityFromWorld.");
+        Core.LOGGER.info("Overwrite removeEntityFromWorld.");
     }
 
     public static void InjectRemoveAllEntities(MethodNode mn) {
@@ -75,6 +76,6 @@ public class WorldClient implements Opcodes {
         list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "removeIf", "(Ljava/util/function/Predicate;)Z", true));
         list.add(new InsnNode(POP));
         mn.instructions.insert(list);
-        System.out.println("Inject into removeAllEntities.");
+        Core.LOGGER.info("Inject into removeAllEntities.");
     }
 }

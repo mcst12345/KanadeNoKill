@@ -1,11 +1,12 @@
 package kanade.kill.asm.injections;
 
+import kanade.kill.Core;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
 public class ItemStack implements Opcodes {
     public static void AddMethod(ClassNode cn) {
-        System.out.println("Adding method.");
+        Core.LOGGER.info("Adding method.");
         MethodNode mn = new MethodNode(ACC_PUBLIC, "getITEM", "()Lnet/minecraft/item/Item;", null, null);
         LabelNode label0 = new LabelNode();
         LabelNode label1 = new LabelNode();

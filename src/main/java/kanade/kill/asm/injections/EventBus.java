@@ -8,13 +8,13 @@ public class EventBus implements Opcodes {
     public static void InjectPost(MethodNode mn) {
         InsnList list = new InsnList();
         LabelNode label = new LabelNode();
-        list.add(new FieldInsnNode(GETSTATIC, "/kanade/kill/Config", "disableEvent", "Z"));
+        list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Config", "disableEvent", "Z"));
         list.add(new JumpInsnNode(IFEQ, label));
-        list.add(new InsnList());
+        list.add(new InsnNode(ICONST_0));
         list.add(new InsnNode(IRETURN));
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
-        Core.LOGGER.info("Inject into post.");
+        Core.LOGGER.info("Inject into post().");
     }
 }

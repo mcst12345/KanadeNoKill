@@ -1,5 +1,6 @@
 package kanade.kill.asm.injections;
 
+import kanade.kill.Core;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -7,7 +8,7 @@ import org.objectweb.asm.tree.*;
 
 public class World implements Opcodes {
     public static void AddField(ClassNode cn) {
-        System.out.println("Adding field.");
+        Core.LOGGER.info("Adding field.");
         cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "protects", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
     }
 
@@ -19,7 +20,7 @@ public class World implements Opcodes {
         list.add(new MethodInsnNode(INVOKESPECIAL, "java/util/ArrayList", "<init>", "()V", false));
         list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "protects", "Ljava/util/List;"));
         mn.instructions.insert(list);
-        System.out.println("Inject into <init>.");
+        Core.LOGGER.info("Inject into <init>.");
     }
 
     public static void OverwriteLoadEntities(MethodNode mn) {
@@ -87,7 +88,7 @@ public class World implements Opcodes {
         mn.localVariables.add(new LocalVariableNode("this", "Lnet/minecraft/world/World;", null, label0, label9, 0));
         mn.localVariables.add(new LocalVariableNode("entityCollection", "Ljava/util/Collection;", "Ljava/util/Collection<Lnet/minecraft/entity/Entity;>;", label0, label9, 1));
         mn.localVariables.add(new LocalVariableNode("list", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", label1, label9, 2));
-        System.out.println("Overwrite loadEntities(Collection<Entity>).");
+        Core.LOGGER.info("Overwrite loadEntities(Collection<Entity>).");
     }
 
     public static void OverwriteUnloadEntities(MethodNode mn) {
@@ -122,7 +123,7 @@ public class World implements Opcodes {
         mn.localVariables.add(new LocalVariableNode("this", "Lnet/minecraft/world/World;", null, label0, label4, 0));
         mn.localVariables.add(new LocalVariableNode("entityCollection", "Ljava/util/Collection;", "Ljava/util/Collection<Lnet/minecraft/entity/Entity;>;", label0, label4, 1));
         mn.localVariables.add(new LocalVariableNode("list", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", label1, label4, 2));
-        System.out.println("Overwrite unloadEntities(Collection<Entity>).");
+        Core.LOGGER.info("Overwrite unloadEntities(Collection<Entity>).");
     }
 
     public static void InjectCountEntities1(MethodNode mn) {
@@ -177,7 +178,7 @@ public class World implements Opcodes {
         mn.instructions.insert(list);
 
         mn.localVariables.add(new LocalVariableNode("e", "Lnet/minecraft/entity/Entity;", null, label5, label3, 3));
-        System.out.println("Inject into countEntities(Class<?>).");
+        Core.LOGGER.info("Inject into countEntities(Class<?>).");
     }
 
     public static void InjectCountEntities2(MethodNode mn) {
@@ -233,7 +234,7 @@ public class World implements Opcodes {
 
         mn.localVariables.add(new LocalVariableNode("e", "Lnet/minecraft/entity/Entity;", null, label5, label3, 4));
 
-        System.out.println("Inject into countEntities(net.minecraft.entity.EnumCreatureType,boolean).");
+        Core.LOGGER.info("Inject into countEntities(net.minecraft.entity.EnumCreatureType,boolean).");
     }
 
     public static void InjectUpdateEntities(MethodNode mn) {
@@ -287,6 +288,6 @@ public class World implements Opcodes {
         mn.instructions.insert(list);
 
         mn.localVariables.add(new LocalVariableNode("e", "Lnet/minecraft/entity/Entity;", null, label5, label3, 2));
-        System.out.println("Inject into updateEntities().");
+        Core.LOGGER.info("Inject into updateEntities().");
     }
 }
