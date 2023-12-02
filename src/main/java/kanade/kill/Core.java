@@ -12,15 +12,11 @@ import javax.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 
 @SuppressWarnings("unchecked")
 public class Core extends FMLCorePlugin {
-    static final Map<String, Class<?>> cachedClasses = new ConcurrentHashMap<>();
+    static final Map<String, Class<?>> cachedClasses = new HashMap<>();
     public static List<IClassTransformer> lists;
 
     public static Logger LOGGER = LogManager.getLogger("Kanade");
@@ -33,6 +29,7 @@ public class Core extends FMLCorePlugin {
             final List<String> classes = new ArrayList<>();
             ProtectionDomain domain = Launch.class.getProtectionDomain();
 
+            classes.add("kanade.kill.util.Util");
             classes.add("kanade.kill.reflection.EarlyMethods");
             classes.add("kanade.kill.reflection.ReflectionUtil");
             classes.add("kanade.kill.reflection.EarlyFields");
@@ -41,6 +38,7 @@ public class Core extends FMLCorePlugin {
             classes.add("kanade.kill.asm.injections.Entity");
             classes.add("kanade.kill.asm.injections.EntityLivingBase");
             classes.add("kanade.kill.asm.injections.EntityPlayer");
+            classes.add("kanade.kill.asm.injections.EventBus");
             classes.add("kanade.kill.asm.injections.FMLClientHandler");
             classes.add("kanade.kill.asm.injections.ForgeHooksClient");
             classes.add("kanade.kill.asm.injections.ItemStack");
@@ -49,6 +47,7 @@ public class Core extends FMLCorePlugin {
             classes.add("kanade.kill.asm.injections.MinecraftServer");
             classes.add("kanade.kill.asm.injections.NonNullList");
             classes.add("kanade.kill.asm.injections.RenderGlobal");
+            classes.add("kanade.kill.asm.injections.ServerCommandManager");
             classes.add("kanade.kill.asm.injections.World");
             classes.add("kanade.kill.asm.injections.WorldClient");
             classes.add("kanade.kill.asm.injections.WorldServer");
@@ -80,7 +79,6 @@ public class Core extends FMLCorePlugin {
                     byte[] bytes = output.toByteArray();
                     cachedClasses.put(s, Unsafe.instance.defineClass(s, bytes, 0, bytes.length, Launch.classLoader, domain));
                 }
-
             }
 
             //Uncompleted.
@@ -93,22 +91,21 @@ public class Core extends FMLCorePlugin {
             lists = (List<IClassTransformer>) cachedClasses.get("kanade.kill.util.TransformerList").getConstructor(Collection.class).newInstance(old);
             Unsafe.instance.putObjectVolatile(Launch.classLoader, EarlyFields.transformers_offset, lists);
 
-            Core.LOGGER.info("Constructing transformers check thread.");
+            Core.LOGGER.info("Constructing TransformersCheckThread.");
             Thread check = (Thread) cachedClasses.get("kanade.kill.thread.TransformersCheckThread").getConstructor(ThreadGroup.class).newInstance(KanadeThreads);
             check.start();
 
-            Core.LOGGER.info("Constructing classloader check thread.");
+            Core.LOGGER.info("Constructing ClassLoaderCheckThread.");
             check = (Thread) cachedClasses.get("kanade.kill.thread.ClassLoaderCheckThread").getConstructor(ThreadGroup.class).newInstance(KanadeThreads);
             check.start();
 
-            Core.LOGGER.info("Constructing SecurityManager check thread.");
+            Core.LOGGER.info("Constructing SecurityManagerCheckThread.");
             check = (Thread) cachedClasses.get("kanade.kill.thread.SecurityManagerCheckThread").getConstructor(ThreadGroup.class).newInstance(KanadeThreads);
             check.start();
 
-            Core.LOGGER.info("Constructing KillerThread check thread.");
+            Core.LOGGER.info("Constructing KillerThread.");
             check = (Thread) cachedClasses.get("kanade.kill.thread.KillerThread").getConstructor(ThreadGroup.class).newInstance(KanadeThreads);
             check.start();
-
 
             Core.LOGGER.info("Core loading completed.");
         } catch (Throwable e) {

@@ -37,11 +37,13 @@ public class ModMain {
 
             final List<String> classes = new ArrayList<>();
             ProtectionDomain domain = Launch.class.getProtectionDomain();
+            classes.add("kanade.kill.util.GuiDeath");
             classes.add("kanade.kill.item.KillItem");
             classes.add("kanade.kill.item.DeathItem");
             classes.add("kanade.kill.reflection.LateFields");
             classes.add("kanade.kill.network.packets.KillAllEntities");
             classes.add("kanade.kill.network.NetworkHandler");
+            classes.add("kanade.kill.command.KanadeKillCommand");
 
             for (String s : classes) {
                 Core.LOGGER.info("Defining class:" + s);
@@ -64,6 +66,8 @@ public class ModMain {
 
             kill_item = (Item) cachedClasses.get("kanade.kill.item.KillItem").newInstance();
             death_item = (Item) cachedClasses.get("kanade.kill.item.DeathItem").newInstance();
+
+            Core.LOGGER.info("Mod loading completed.");
         } catch (InstantiationException | IllegalAccessException | IOException e) {
             throw new RuntimeException(e);
         }

@@ -24,6 +24,10 @@ public class ClassLoaderCheckThread extends Thread {
             }
         }
         while (true) {
+            Object loader = Unsafe.instance.getObjectVolatile(EarlyFields.classLoader_base, EarlyFields.classLoader_offset);
+            if (loader.getClass() != KanadeClassLoader.class) {
+                Unsafe.instance.putObjectVolatile(EarlyFields.classLoader_base, EarlyFields.classLoader_offset, KanadeClassLoader.INSTANCE);
+            }
             for (Thread thread : Thread.getAllStackTraces().keySet()) {
                 ClassLoader old = (ClassLoader) Unsafe.instance.getObjectVolatile(thread, EarlyFields.contextClassLoader_offset);
                 if (old == null || old.getClass() != KanadeClassLoader.class) {

@@ -1,5 +1,6 @@
 package kanade.kill.item;
 
+import kanade.kill.Config;
 import kanade.kill.ModMain;
 import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.KillAllEntities;
@@ -106,19 +107,24 @@ public class KillItem extends Item {
 
     @Nonnull
     public ActionResult<ItemStack> onItemRightClick(@Nonnull World worldIn, @Nonnull EntityPlayer playerIn,@Nonnull EnumHand handIn){
-        synchronized (Util.tasks) {
-            Util.tasks.add(() -> {
-                List<Entity> targets = new ArrayList<>();
-                for (int id : DimensionManager.getIDs()) {
-                    WorldServer world = DimensionManager.getWorld(id);
-                    targets.addAll(world.loadedEntityList);
-                }
-                Util.Kill(targets);
-            });
+        if (!playerIn.isSneaking()) {
+            synchronized (Util.tasks) {
+                Util.tasks.add(() -> {
+                    List<Entity> targets = new ArrayList<>();
+                    for (int id : DimensionManager.getIDs()) {
+                        WorldServer world = DimensionManager.getWorld(id);
+                        targets.addAll(world.loadedEntityList);
+                    }
+                    Util.Kill(targets);
+                });
+            }
+            if (FMLCommonHandler.instance().getMinecraftServerInstance().isCallingFromMinecraftThread()) {
+                NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillAllEntities());
+            }
+            return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
+        } else {
+            Config.Annihilation = !Config.Annihilation;
+            return new ActionResult<>(EnumActionResult.PASS, playerIn.getHeldItem(handIn));
         }
-        if (FMLCommonHandler.instance().getMinecraftServerInstance().isCallingFromMinecraftThread()) {
-            NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillAllEntities());
-        }
-        return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
     }
 }

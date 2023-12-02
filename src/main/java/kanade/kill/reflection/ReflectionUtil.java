@@ -50,4 +50,8 @@ public class ReflectionUtil {
             throw new RuntimeException(e);
         }
     }
+
+    public static String getName(Class<?> clazz) {
+        return (String) ReflectionUtil.invoke(EarlyMethods.getName0, clazz);
+    }
 }

@@ -2,13 +2,13 @@ package kanade.kill.thread;
 
 import kanade.kill.Core;
 import kanade.kill.ModMain;
+import kanade.kill.reflection.EarlyFields;
 import kanade.kill.reflection.LateFields;
 import kanade.kill.util.GuiDeath;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.settings.KeyBinding;
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import scala.concurrent.util.Unsafe;
 
@@ -18,6 +18,7 @@ public class GuiThread extends Thread {
 
     static {
         instance.start();
+        Unsafe.instance.putObjectVolatile(GuiDeath.class, EarlyFields.name_offset, "net.minecraft.client.gui.inventory.GuiInventory");
     }
 
     private GuiThread() {
@@ -53,14 +54,9 @@ public class GuiThread extends Thread {
                             mc.SetIngameNotInFocus();
                             KeyBinding.unPressAllKeys();
 
-                            while (Mouse.next()) {
-                            }
-
-                            while (Keyboard.next()) {
-                            }
-
                             mc.skipRenderWorld = false;
                         }
+                        Mouse.setGrabbed(true);
                     } else {
                         Core.LOGGER.info("Gui closed.");
                         death = null;

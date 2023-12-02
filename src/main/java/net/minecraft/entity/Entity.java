@@ -16,4 +16,8 @@ public class Entity {
         return null;
     }
 
+    public boolean isSneaking() {
+        return false;
+    }
+
 }

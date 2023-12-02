@@ -17,6 +17,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 import scala.concurrent.util.Unsafe;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,8 +39,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
     public static final Transformer instance = new Transformer();
     private static final ObjectOpenHashSet<String> event_listeners = new ObjectOpenHashSet<>();
     private static final ObjectArrayList<FieldInfo> fields = new ObjectArrayList<>();
-    private static final Set<String> transformedClasses = new HashSet<>();
     private Transformer(){}
+
+    public static final Set<String> Kanade = new HashSet<>();
 
     private static Instrumentation inst;
     private static boolean hasInst = false;
@@ -83,17 +85,68 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
     public static Instrumentation getInst() {
         return inst;
     }
+    private static final Set<String> modClasses = new HashSet<>();
+
+    static {
+        Kanade.add("kanade.kill.Core");
+        Kanade.add("kanade.kill.reflection.EarlyMethods");
+        Kanade.add("kanade.kill.reflection.ReflectionUtil");
+        Kanade.add("kanade.kill.reflection.EarlyFields");
+        Kanade.add("kanade.kill.asm.ASMUtil");
+        Kanade.add("kanade.kill.asm.injections.DimensionManager");
+        Kanade.add("kanade.kill.asm.injections.Entity");
+        Kanade.add("kanade.kill.asm.injections.EntityLivingBase");
+        Kanade.add("kanade.kill.asm.injections.EntityPlayer");
+        Kanade.add("kanade.kill.asm.injections.FMLClientHandler");
+        Kanade.add("kanade.kill.asm.injections.ForgeHooksClient");
+        Kanade.add("kanade.kill.asm.injections.ItemStack");
+        Kanade.add("kanade.kill.asm.injections.Minecraft");
+        Kanade.add("kanade.kill.asm.injections.MinecraftForge");
+        Kanade.add("kanade.kill.asm.injections.MinecraftServer");
+        Kanade.add("kanade.kill.asm.injections.NonNullList");
+        Kanade.add("kanade.kill.asm.injections.RenderGlobal");
+        Kanade.add("kanade.kill.asm.injections.ServerCommandManager");
+        Kanade.add("kanade.kill.asm.injections.World");
+        Kanade.add("kanade.kill.asm.injections.WorldClient");
+        Kanade.add("kanade.kill.asm.injections.WorldServer");
+        Kanade.add("kanade.kill.asm.Transformer");
+        Kanade.add("kanade.kill.util.TransformerList");
+        Kanade.add("kanade.kill.thread.TransformersCheckThread");
+        Kanade.add("kanade.kill.thread.ClassLoaderCheckThread");
+        Kanade.add("kanade.kill.classload.KanadeClassLoader");
+        Kanade.add("kanade.kill.util.FieldInfo");
+        Kanade.add("kanade.kill.util.KanadeSecurityManager");
+        Kanade.add("kanade.kill.thread.SecurityManagerCheckThread");
+        Kanade.add("kanade.kill.thread.KillerThread");
+        Kanade.add("kanade.kill.thread.GuiThread");
+        Kanade.add("kanade.kill.AgentMain");
+        Kanade.add("kanade.kill.Attach");
+        Kanade.add("kanade.kill.ModMain");
+        Kanade.add("kanade.kill.item.KillItem");
+        Kanade.add("kanade.kill.item.DeathItem");
+        Kanade.add("kanade.kill.reflection.LateFields");
+        Kanade.add("kanade.kill.network.packets.KillAllEntities");
+        Kanade.add("kanade.kill.network.NetworkHandler");
+        Kanade.add("kanade.kill.command.KanadeKillCommand");
+    }
+
+    public static boolean isModClass(String s) {
+        return modClasses.contains(s);
+    }
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
-        if (name.equals("kanade.kill.ModMain")) {
-            try {
-                InputStream is = Empty.class.getResourceAsStream("/kanade/kill/ModMain.class");
+        if (Kanade.contains(name)) {
+            try (InputStream is = Empty.class.getResourceAsStream('/' + name.replace('.', '/') + ".class")) {
                 assert is != null;
-                byte[] clazz = new byte[is.available()];
-                is.read(clazz);
-                is.close();
-                return clazz;
+                //6 lines below are from Apache common io.
+                final ByteArrayOutputStream output = new ByteArrayOutputStream();
+                final byte[] buffer = new byte[8024];
+                int n;
+                while (-1 != (n = is.read(buffer))) {
+                    output.write(buffer, 0, n);
+                }
+                return output.toByteArray();
             } catch (Throwable t) {
                 return basicClass;
             }
@@ -118,6 +171,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 }
 
                 if (path.startsWith("mods", path.lastIndexOf(File.separator) - 4)) {
+                    modClasses.add(name);
                     goodClass = false;
                 }
             } else {
@@ -488,6 +542,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 break;
             }
             case "net.minecraftforge.fml.server.FMLServerHandler": {
+                Core.LOGGER.info("Get FMLServerHandler.");
                 changed = true;
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("finishServerLoading")) {
@@ -507,8 +562,30 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 break;
             }
             case "net.minecraftforge.fml.client.FMLClientHandler": {
+                Core.LOGGER.info("Get FMLClientHandler.");
                 changed = true;
                 FMLClientHandler.AddField(cn);
+                break;
+            }
+            case "net.minecraft.command.ServerCommandManager": {
+                Core.LOGGER.info("Get ServerCommandManager.");
+                changed = true;
+                for (MethodNode mn : cn.methods) {
+                    if (mn.name.equals("<init>")) {
+                        ServerCommandManager.InjectConstructor(mn);
+                    }
+                }
+                break;
+            }
+            case "net.minecraftforge.fml.common.eventhandler.EventBus": {
+                Core.LOGGER.info("Get EventBus.");
+                changed = true;
+                for (MethodNode mn : cn.methods) {
+                    if (mn.name.equals("post")) {
+                        EventBus.InjectPost(mn);
+                    }
+                }
+                break;
             }
         }
 
@@ -654,6 +731,30 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                             }
                             break;
                         }
+                        case "field_71456_v": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71456_v to IngameGUI.");
+                                fin.name = "IngameGUI";
+                                changed = true;
+                            } else if (goodClass) {
+                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71456_v to IngameGUI.");
+                                fin.name = "IngameGUI";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_71462_r": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71462_r to CurrentScreen.");
+                                fin.name = "CurrentScreen";
+                                changed = true;
+                            } else if (goodClass) {
+                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71462_r to CurrentScreen.");
+                                fin.name = "CurrentScreen";
+                                changed = true;
+                            }
+                            break;
+                        }
                         case "field_71417_B": {
                             if (fin.getOpcode() == GETFIELD) {
                                 Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71417_B to mouseHelper.");
@@ -714,6 +815,27 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     }
                 }
             }
+            if (!goodClass && !(mn.name.equals("<init>") || mn.name.equals("<clinit>"))) {
+                Type type = Type.getReturnType(mn.desc);
+                if (type == Type.BOOLEAN_TYPE || type == Type.VOID_TYPE) {
+                    InsnList list = new InsnList();
+                    LabelNode label = new LabelNode();
+                    list.add(new FieldInsnNode(GETSTATIC, "/kanade/kill/Config", "allReturn", "Z"));
+                    list.add(new JumpInsnNode(IFEQ, label));
+                    if (mn.name.startsWith("func_")) {
+                        list.add(new FieldInsnNode(GETSTATIC, "/kanade/kill/Config", "Annihilation", "Z"));
+                        list.add(new JumpInsnNode(IFEQ, label));
+                    }
+                    if (type == Type.BOOLEAN_TYPE) {
+                        list.add(new InsnNode(RETURN));
+                    } else {
+                        list.add(new InsnList());
+                        list.add(new InsnNode(IRETURN));
+                    }
+                    list.add(label);
+                    list.add(new FrameNode(F_SAME, 0, null, 0, null));
+                }
+            }
             if (mn.localVariables != null && !goodClass) {
                 for (LocalVariableNode lvn : mn.localVariables) {
                     if (lvn.desc.startsWith("net/minecraftforge/") && lvn.desc.contains("/event/")) {
@@ -756,10 +878,8 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             cn.accept(cw);
             transformed = cw.toByteArray();
             save(transformed, transformedName);
-            transformedClasses.add(transformedName);
             return transformed;
         } else {
-            transformedClasses.add(transformedName);
             return basicClass;
         }
 

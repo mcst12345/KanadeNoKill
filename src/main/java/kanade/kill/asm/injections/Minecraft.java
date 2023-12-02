@@ -13,9 +13,9 @@ public class Minecraft implements Opcodes {
         cn.fields.add(new FieldNode(ACC_PUBLIC, "renderManager", "Lnet/minecraft/client/renderer/entity/RenderManager;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "mouseHelper", "Lnet/minecraft/util/MouseHelper;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "WORLD", "Lnet/minecraft/client/multiplayer/WorldClient;", null, null));
-
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "IngameGUI", "Lnet/minecraft/client/gui/GuiIngame;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "CurrentScreen", "Lnet/minecraft/client/gui/GuiScreen;", null, null));
     }
-
     public static void AddMethod(ClassNode cn) {
         System.out.println("Adding method.");
         MethodNode inGameFocus = new MethodNode(ACC_PUBLIC, "SetIngameFocus", "()V", null, null);

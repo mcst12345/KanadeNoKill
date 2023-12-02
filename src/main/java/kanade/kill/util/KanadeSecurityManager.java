@@ -1,6 +1,8 @@
 package kanade.kill.util;
 
 import kanade.kill.Core;
+import kanade.kill.asm.Transformer;
+import kanade.kill.reflection.ReflectionUtil;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -22,6 +24,9 @@ public class KanadeSecurityManager extends SecurityManager {
     public void checkPermission(Permission var1) {
         if (var1.getName().equals("setContextClassLoader")) {
             Core.LOGGER.warn("Someone tries to modify the context classloader.");
+            if (Transformer.isModClass(ReflectionUtil.getName(getClassContext()[1]))) {
+                throw new SecurityException("No you can't replace the contextClassLoader");
+            }
         }
     }
 

@@ -16,14 +16,15 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.security.CodeSigner;
 import java.security.CodeSource;
-import java.security.cert.Certificate;
+import java.security.ProtectionDomain;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+
+import static kanade.kill.asm.Transformer.Kanade;
 
 @SuppressWarnings("unchecked")
 public class KanadeClassLoader extends LaunchClassLoader {
@@ -46,12 +47,13 @@ public class KanadeClassLoader extends LaunchClassLoader {
         Unsafe.instance.putObjectVolatile(this, EarlyFields.transformerExceptions_offset, Unsafe.instance.getObjectVolatile(old, EarlyFields.transformerExceptions_offset));
         Unsafe.instance.putObjectVolatile(this, EarlyFields.loadBuffer_offset, Unsafe.instance.getObjectVolatile(old, EarlyFields.loadBuffer_offset));
     }
-
     @Override
-
     public Class<?> findClass(final String name) throws ClassNotFoundException {
         if (name.equals("sun.instrument.InstrumentationImpl")) {
             return LaunchClassLoader.class.getClassLoader().loadClass(name);
+        }
+        if (Kanade.contains(name)) {
+            return old.findClass(name);
         }
         Set<String> invalidClasses = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.invalidClasses_offset);
         Set<String> classLoaderExceptions = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.classLoaderExceptions_offset);
@@ -82,7 +84,8 @@ public class KanadeClassLoader extends LaunchClassLoader {
                         throw new ClassNotFoundException(name);
                     }
                     CLASS = Transformer.instance.transform(name, renameTransformer != null ? renameTransformer.remapClassName(name) : name, CLASS);
-                    final Class<?> clazz = super.defineClass(name, CLASS, 0, CLASS.length, new CodeSource(null, (Certificate[]) null));
+                    final Class<?> clazz = Unsafe.instance.defineClass(name, CLASS, 0, CLASS.length, this, new ProtectionDomain(null, null));
+                    //defineClass(name, CLASS, 0, CLASS.length, new CodeSource(null, (Certificate[]) null));
                     cachedClasses.put(name, clazz);
                     return clazz;
                 } catch (ClassNotFoundException e) {
@@ -143,10 +146,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
             cachedClasses.put(transformedName, clazz);
             return clazz;
         } catch (Throwable e) {
-            invalidClasses.add(name);
-            Core.LOGGER.trace("Exception encountered attempting classloading of " + name, e);
-            Core.LOGGER.error("Exception encountered attempting classloading of %s", e);
-            throw new ClassNotFoundException(name, e);
+            return old.findClass(name);
         }
     }
 
@@ -164,31 +164,20 @@ public class KanadeClassLoader extends LaunchClassLoader {
     }
 
     private byte[] runTransformers(final String name, final String transformedName, byte[] basicClass) {
-        List<IClassTransformer> transformers = (List<IClassTransformer>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformers_offset);
-        if (transformers.getClass() != TransformerList.class) {
-            transformers = new TransformerList<>(transformers);
-            Unsafe.instance.putObjectVolatile(this, EarlyFields.transformers_offset, transformers);
-            Unsafe.instance.putObjectVolatile(old, EarlyFields.transformers_offset, transformers);
-        }
-        for (final IClassTransformer transformer : transformers) {
-            basicClass = transformer.transform(name, transformedName, basicClass);
-        }
-        return basicClass;
-    }
-
-    private boolean isSealed(final String path, final Manifest manifest) {
-        Attributes attributes = manifest.getAttributes(path);
-        String sealed = null;
-        if (attributes != null) {
-            sealed = attributes.getValue(Attributes.Name.SEALED);
-        }
-
-        if (sealed == null) {
-            attributes = manifest.getMainAttributes();
-            if (attributes != null) {
-                sealed = attributes.getValue(Attributes.Name.SEALED);
+        try {
+            List<IClassTransformer> transformers = (List<IClassTransformer>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformers_offset);
+            if (transformers.getClass() != TransformerList.class) {
+                transformers = new TransformerList<>(transformers);
+                Unsafe.instance.putObjectVolatile(this, EarlyFields.transformers_offset, transformers);
+                Unsafe.instance.putObjectVolatile(old, EarlyFields.transformers_offset, transformers);
             }
+            for (final IClassTransformer transformer : transformers) {
+                basicClass = transformer.transform(name, transformedName, basicClass);
+            }
+            return basicClass;
+        } catch (Throwable t) {
+            Core.LOGGER.warn("Catch exception when running transformers:", t);
+            return basicClass;
         }
-        return "true".equalsIgnoreCase(sealed);
     }
 }
