@@ -10,6 +10,10 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IThre
     public WorldServer[] worlds = new WorldServer[0];
     public WorldServer[] backup = new WorldServer[0];
 
+    public static long getCurrentTimeMillis() {
+        return 0;
+    }
+
     public PlayerList getPlayerList() {
         return null;
     }

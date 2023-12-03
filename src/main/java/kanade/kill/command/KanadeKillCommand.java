@@ -75,6 +75,9 @@ public class KanadeKillCommand extends CommandBase {
                         Util.Kill(entity);
                     }
                 }
+                default: {
+                    sender.sendMessage(new TextComponentString("Unknown command."));
+                }
             }
         }
     }

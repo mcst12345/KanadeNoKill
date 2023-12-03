@@ -36,7 +36,6 @@ import java.util.jar.JarFile;
 @SuppressWarnings("unused")
 public class InstrumentationImpl implements Instrumentation {
     private final TransformerManager mTransformerManager = null;
-    // needs to store a native pointer, so use 64 bits
     private final long mNativeAgent = 0;
     private final boolean mEnvironmentSupportsRedefineClasses = false;
     private final boolean mEnvironmentSupportsNativeMethodPrefix = false;

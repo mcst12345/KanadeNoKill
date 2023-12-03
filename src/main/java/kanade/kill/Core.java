@@ -21,9 +21,14 @@ public class Core extends FMLCorePlugin {
 
     public static Logger LOGGER = LogManager.getLogger("Kanade");
     private static final ThreadGroup KanadeThreads = new ThreadGroup("Kanade");
+    public static final boolean funny = System.getProperty("Kanade") != null && System.getProperty("Kanade").equalsIgnoreCase("true");
 
     static {
         try {
+            if (funny) {
+                Core.LOGGER.warn("Vanish mode enabled.");
+            }
+
             Core.LOGGER.info("Kanade Core loading.");
 
             final List<String> classes = new ArrayList<>();

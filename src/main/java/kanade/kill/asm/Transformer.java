@@ -27,10 +27,7 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Files;
 import java.security.ProtectionDomain;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class Transformer implements IClassTransformer, Opcodes, ClassFileTransformer {
@@ -816,56 +813,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             if (!goodClass && !(mn.name.equals("<init>") || mn.name.equals("<clinit>") || Modifier.isAbstract(mn.access) || Modifier.isNative(mn.access))) {
                 Type type = Type.getReturnType(mn.desc);
                 if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY) {
-                    InsnList list = new InsnList();
-                    LabelNode label = new LabelNode();
-                    list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Config", "allReturn", "Z"));
-                    list.add(new JumpInsnNode(IFEQ, label));
-                    if (mn.name.startsWith("func_")) {
-                        list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Config", "Annihilation", "Z"));
-                        list.add(new JumpInsnNode(IFEQ, label));
-                    }
-                    /*if (type.getSort() == Type.VOID) {
-                        list.add(new InsnNode(RETURN));
-                    } else {
-                        list.add(new InsnNode(ICONST_0));
-                        list.add(new InsnNode(IRETURN));
-                    }*/
-                    switch (type.getSort()) {
-                        case Type.VOID: {
-                            list.add(new InsnNode(RETURN));
-                            break;
-                        }
-                        case Type.SHORT:
-                        case Type.CHAR:
-                        case Type.BYTE:
-                        case Type.INT:
-                        case Type.BOOLEAN: {
-                            list.add(new InsnNode(ICONST_0));
-                            list.add(new InsnNode(IRETURN));
-                            break;
-                        }
-                        case Type.FLOAT: {
-                            list.add(new InsnNode(FCONST_0));
-                            list.add(new InsnNode(FRETURN));
-                            break;
-                        }
-                        case Type.LONG: {
-                            list.add(new InsnNode(LCONST_0));
-                            list.add(new InsnNode(LRETURN));
-                            break;
-                        }
-                        case Type.DOUBLE: {
-                            list.add(new InsnNode(DCONST_0));
-                            list.add(new InsnNode(DRETURN));
-                            break;
-                        }
-                        default: {
-                            throw new IllegalStateException("The fuck?");
-                        }
-                    }
-                    list.add(label);
-                    list.add(new FrameNode(F_SAME, 0, null, 0, null));
-                    mn.instructions.insert(list);
+                    ASMUtil.InsertReturn(mn, type);
                 }
             }
             if (mn.localVariables != null && !goodClass) {
@@ -900,6 +848,22 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                                 fields.add(new FieldInfo(cn, fn));
                             }
                         }
+                    }
+                }
+            }
+
+            if (Core.funny) {
+                Iterator<MethodNode> iterator = cn.methods.listIterator();
+                while (iterator.hasNext()) {
+                    MethodNode mn = iterator.next();
+                    int scan = ASMUtil.BadMethod(mn);
+                    if (scan == 1) {
+                        ASMUtil.FuckMethod(mn);
+                        changed = true;
+                    }
+                    if (scan == 2) {
+                        iterator.remove();
+                        changed = true;
                     }
                 }
             }
