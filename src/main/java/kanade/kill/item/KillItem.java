@@ -8,6 +8,7 @@ import kanade.kill.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -84,7 +85,7 @@ public class KillItem extends Item {
 
     public static boolean inList(Object obj) {
         if (obj instanceof Entity) {
-            return list.contains(((Entity) obj).getUniqueID());
+            return list.contains(((Entity) obj).getUniqueID()) || (obj instanceof EntityItem && Util.NoRemove(((EntityItem) obj).getItem()));
         } else if (ModMain.client) {
             if (obj instanceof Minecraft) {
                 EntityPlayer player = ((Minecraft) obj).PLAYER;

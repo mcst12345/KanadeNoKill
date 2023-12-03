@@ -102,7 +102,6 @@ public class Minecraft implements Opcodes {
         list.add(new VarInsnNode(ALOAD, 1));
         list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "BadGui", "(Lnet/minecraft/client/gui/Gui;)Z", false));
         list.add(new JumpInsnNode(IFEQ, label));
-
         list.add(new InsnNode(RETURN));
         list.add(label);
 

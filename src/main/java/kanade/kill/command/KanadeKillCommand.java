@@ -45,6 +45,14 @@ public class KanadeKillCommand extends CommandBase {
                                 Config.disableEvent = Boolean.parseBoolean(arg2);
                                 break;
                             }
+                            case "guiProtect": {
+                                Config.guiProtect = Boolean.parseBoolean(arg2);
+                                break;
+                            }
+                            case "coreDumpAttack": {
+                                Config.coreDumpAttack = Boolean.parseBoolean(arg2);
+                                break;
+                            }
                             default: {
                                 sender.sendMessage(new TextComponentString("Config " + arg1 + " isn't found!"));
                                 return;

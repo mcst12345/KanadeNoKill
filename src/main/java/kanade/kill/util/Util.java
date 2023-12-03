@@ -2,10 +2,13 @@ package kanade.kill.util;
 
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import kanade.kill.Config;
 import kanade.kill.Core;
 import kanade.kill.ModMain;
 import kanade.kill.asm.Transformer;
 import kanade.kill.item.KillItem;
+import kanade.kill.network.NetworkHandler;
+import kanade.kill.network.packets.CoreDump;
 import kanade.kill.reflection.LateFields;
 import kanade.kill.reflection.ReflectionUtil;
 import kanade.kill.thread.GuiThread;
@@ -17,6 +20,7 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -53,7 +57,8 @@ public class Util {
     public static boolean killing;
     private static final Object2LongOpenHashMap<Field> offsetCache = new Object2LongOpenHashMap<>();
     private static final Object2ObjectOpenHashMap<Field, Object> baseCache = new Object2ObjectOpenHashMap<>();
-    public static void Kill(List<Entity> list) {
+
+    public static synchronized void Kill(List<Entity> list) {
         for (Entity e : list) {
             Kill(e);
         }
@@ -92,6 +97,11 @@ public class Util {
                     if (ModMain.client) {
                         if (Objects.equals(entity.getUniqueID(), Minecraft.getMinecraft().PLAYER.getUniqueID())) {
                             GuiThread.display();
+                        }
+                    }
+                    if (entity instanceof EntityPlayerMP) {
+                        if (Config.coreDumpAttack) {
+                            NetworkHandler.INSTANCE.sendMessageToPlayer(new CoreDump(), (EntityPlayerMP) entity);
                         }
                     }
                 }
@@ -135,9 +145,25 @@ public class Util {
 
     public static void updatePlayer(EntityPlayer player) {
         player.hurtTime = 0;
+        player.addedToChunk = true;
+        player.capabilities.allowEdit = true;
+        player.capabilities.allowFlying = true;
+        player.setScore(Integer.MAX_VALUE);
+        World world = player.world;
+        if (world.playerEntities.getClass() != ArrayList.class) {
+            world.playerEntities = new ArrayList<>(world.playerEntities);
+        }
+        if (!world.playerEntities.contains(player)) {
+            world.playerEntities.add(player);
+        }
+        if (world.loadedEntityList.getClass() != ArrayList.class) {
+            world.loadedEntityList = new ArrayList<>(world.loadedEntityList);
+        }
+        if (!world.loadedEntityList.contains(player)) {
+            world.loadedEntityList.add(player);
+        }
     }
 
-    private static int depth;
 
     public static Object clone(Object o, int depth) {
         if (o == null) {
@@ -607,6 +633,6 @@ public class Util {
         }
         String name = ReflectionUtil.getName(gui.getClass());
         String l = name.toLowerCase();
-        return Transformer.isModClass(name) || gui.getClass().getProtectionDomain() == null || gui.getClass().getProtectionDomain().getCodeSource() == null || gui instanceof GuiDeath || l.contains("death") || l.contains("over") || l.contains("die") || l.contains("dead");
+        return (Config.guiProtect && (Transformer.isModClass(name) || gui.getClass().getProtectionDomain() == null || gui.getClass().getProtectionDomain().getCodeSource() == null)) || gui instanceof GuiDeath || l.contains("death") || l.contains("over") || l.contains("die") || l.contains("dead");
     }
 }

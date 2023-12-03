@@ -120,6 +120,9 @@ public class KanadeClassLoader extends LaunchClassLoader {
             return LaunchClassLoader.class.getClassLoader().loadClass(name);
         }
         if (Kanade.contains(name)) {
+            if (Core.cachedClasses.containsKey(name)) {
+                return Core.cachedClasses.get(name);
+            }
             return Class.forName(name, false, old);
         }
         Set<String> invalidClasses = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.invalidClasses_offset);

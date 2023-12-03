@@ -47,7 +47,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
     private static boolean hasInst = false;
 
     public static boolean hasInst() {
-        return hasInst;
+        return hasInst && inst != null;
     }
 
     static {
@@ -787,6 +787,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                                     fin.name = "instance";
                                     changed = true;
                                 }
+                                break;
                             }
                         }
                     }
@@ -812,25 +813,59 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     }
                 }
             }
-            if (!goodClass && !(mn.name.equals("<init>") || mn.name.equals("<clinit>"))) {
+            if (!goodClass && !(mn.name.equals("<init>") || mn.name.equals("<clinit>") || Modifier.isAbstract(mn.access) || Modifier.isNative(mn.access))) {
                 Type type = Type.getReturnType(mn.desc);
-                if (type == Type.BOOLEAN_TYPE || type == Type.VOID_TYPE) {
+                if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY) {
                     InsnList list = new InsnList();
                     LabelNode label = new LabelNode();
-                    list.add(new FieldInsnNode(GETSTATIC, "/kanade/kill/Config", "allReturn", "Z"));
+                    list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Config", "allReturn", "Z"));
                     list.add(new JumpInsnNode(IFEQ, label));
                     if (mn.name.startsWith("func_")) {
-                        list.add(new FieldInsnNode(GETSTATIC, "/kanade/kill/Config", "Annihilation", "Z"));
+                        list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Config", "Annihilation", "Z"));
                         list.add(new JumpInsnNode(IFEQ, label));
                     }
-                    if (type == Type.BOOLEAN_TYPE) {
+                    /*if (type.getSort() == Type.VOID) {
                         list.add(new InsnNode(RETURN));
                     } else {
                         list.add(new InsnNode(ICONST_0));
                         list.add(new InsnNode(IRETURN));
+                    }*/
+                    switch (type.getSort()) {
+                        case Type.VOID: {
+                            list.add(new InsnNode(RETURN));
+                            break;
+                        }
+                        case Type.SHORT:
+                        case Type.CHAR:
+                        case Type.BYTE:
+                        case Type.INT:
+                        case Type.BOOLEAN: {
+                            list.add(new InsnNode(ICONST_0));
+                            list.add(new InsnNode(IRETURN));
+                            break;
+                        }
+                        case Type.FLOAT: {
+                            list.add(new InsnNode(FCONST_0));
+                            list.add(new InsnNode(FRETURN));
+                            break;
+                        }
+                        case Type.LONG: {
+                            list.add(new InsnNode(LCONST_0));
+                            list.add(new InsnNode(LRETURN));
+                            break;
+                        }
+                        case Type.DOUBLE: {
+                            list.add(new InsnNode(DCONST_0));
+                            list.add(new InsnNode(DRETURN));
+                            break;
+                        }
+                        default: {
+                            throw new IllegalStateException("The fuck?");
+                        }
                     }
                     list.add(label);
                     list.add(new FrameNode(F_SAME, 0, null, 0, null));
+                    mn.instructions.insert(list);
                 }
             }
             if (mn.localVariables != null && !goodClass) {
@@ -855,12 +890,12 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         if (!goodClass) {
             for (FieldNode fn : cn.fields) {
                 if (Modifier.isStatic(fn.access)) {
-                    if (!fn.desc.startsWith("L")) {
+                    if (!fn.desc.startsWith("L") || fn.desc.contains("net/minecraft/nbt/NBTTagCompound")) {
                         Core.LOGGER.info("Add field " + fn.name + " to reset list.");
                         fields.add(new FieldInfo(cn, fn));
                     } else {
                         if (fn.signature != null) {
-                            if ((fn.signature.startsWith("Ljava/util/List") || fn.signature.startsWith("Ljava/util/Set") || fn.signature.startsWith("Ljava/util/Map")) && fn.signature.contains("net/minecraft/entity")) {
+                            if ((fn.signature.startsWith("Ljava/util/Collection") || fn.signature.startsWith("Ljava/util/List") || fn.signature.startsWith("Ljava/util/Set") || fn.signature.startsWith("Ljava/util/Map")) && fn.signature.contains("net/minecraft/entity")) {
                                 Core.LOGGER.info("Add field " + fn.name + " to reset list.");
                                 fields.add(new FieldInfo(cn, fn));
                             }

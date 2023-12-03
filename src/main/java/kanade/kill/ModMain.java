@@ -43,7 +43,10 @@ public class ModMain {
             classes.add("kanade.kill.reflection.LateFields");
             classes.add("kanade.kill.network.packets.KillAllEntities");
             classes.add("kanade.kill.network.NetworkHandler");
+            classes.add("kanade.kill.network.packets.CoreDump");
+            classes.add("kanade.kill.network.packets.CoreDump$MessageHandler");
             classes.add("kanade.kill.command.KanadeKillCommand");
+            classes.add("kanade.kill.network.packets.KillAllEntities$MessageHandler");
 
             for (String s : classes) {
                 Core.LOGGER.info("Defining class:" + s);
