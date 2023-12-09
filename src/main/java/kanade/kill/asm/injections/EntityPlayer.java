@@ -20,4 +20,21 @@ public class EntityPlayer implements Opcodes {
         mn.instructions.insert(list);
         Launch.LOGGER.info("Inject into onUpdate.");
     }
+
+    public static void AddField(ClassNode cn) {
+        Launch.LOGGER.info("Adding field.");
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "Inventory", "Lnet/minecraft/entity/player/InventoryPlayer;", null, null));
+    }
+
+    public static void InjectConstructor(MethodNode mn) {
+        InsnList list = new InsnList();
+        list.add(new VarInsnNode(ALOAD, 0));
+        list.add(new TypeInsnNode(NEW, "net/minecraft/entity/player/InventoryPlayer"));
+        list.add(new InsnNode(DUP));
+        list.add(new VarInsnNode(ALOAD, 0));
+        list.add(new MethodInsnNode(INVOKESPECIAL, "net/minecraft/entity/player/InventoryPlayer", "<init>", "(Lnet/minecraft/entity/player/EntityPlayer;)V", false));
+        list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/entity/player/EntityPlayer", "field_71071_by", "Lnet/minecraft/entity/player/InventoryPlayer;"));
+        mn.instructions.insertBefore(mn.instructions.getLast(), list);
+        Launch.LOGGER.info("Inject into <init>.");
+    }
 }

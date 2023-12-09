@@ -124,7 +124,7 @@ public class Util {
     }
 
     public static boolean invHaveKillItem(EntityPlayer player) {
-        InventoryPlayer inventoryPlayer = player.inventory;
+        InventoryPlayer inventoryPlayer = player.Inventory;
         for (ItemStack stack : inventoryPlayer.armorInventory) {
             if (stack.getITEM() == ModMain.kill_item) {
                 return true;
@@ -149,6 +149,9 @@ public class Util {
         player.capabilities.allowEdit = true;
         player.capabilities.allowFlying = true;
         player.setScore(Integer.MAX_VALUE);
+        player.updateBlocked = false;
+        player.isAddedToWorld = true;
+        player.forceSpawn = true;
         World world = player.world;
         if (world.playerEntities.getClass() != ArrayList.class) {
             world.playerEntities = new ArrayList<>(world.playerEntities);

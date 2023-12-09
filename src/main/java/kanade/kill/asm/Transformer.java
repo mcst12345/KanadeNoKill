@@ -323,6 +323,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             case "net.minecraft.entity.player.EntityPlayer": {
                 changed = true;
                 kanade.kill.Launch.LOGGER.info("Get EntityPlayer.");
+                EntityPlayer.AddField(cn);
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
                         case "func_70106_y":
@@ -346,6 +347,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "func_70071_h_": {
                             EntityPlayer.InjectOnUpdate(mn);
+                            break;
+                        }
+                        case "<init>": {
+                            EntityPlayer.InjectConstructor(mn);
                             break;
                         }
                     }
@@ -509,6 +514,18 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 RenderGlobal.AddField(cn);
                 break;
             }
+            case "net.minecraft.client.renderer.entity.RenderManager": {
+                changed = true;
+                kanade.kill.Launch.LOGGER.info("Get RenderManager");
+                RenderManager.AddField(cn);
+                for (MethodNode mn : cn.methods) {
+                    if (mn.name.equals("<init>")) {
+                        RenderManager.InjectConstructor(mn);
+                        break;
+                    }
+                }
+                break;
+            }
             case "net.minecraftforge.common.MinecraftForge": {
                 changed = true;
                 kanade.kill.Launch.LOGGER.info("Get MinecraftForge.");
@@ -573,11 +590,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     switch (fin.name) {
                         case "field_70128_L": {
                             if (fin.getOpcode() == GETFIELD) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":isDead to HatedByLife.");
                                 fin.name = "HatedByLife";
                                 changed = true;
                             } else if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":isDead to HatedByLife.");
                                 fin.name = "HatedByLife";
                                 changed = true;
                             }
@@ -585,11 +600,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_70725_aQ": {
                             if (fin.getOpcode() == GETFIELD) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":deathTime to Death_Time.");
                                 fin.name = "Death_Time";
                                 changed = true;
                             } else if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":deathTime to Death_Time.");
                                 fin.name = "Death_Time";
                                 changed = true;
                             }
@@ -599,11 +612,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                             if (fin.owner.equals("net/minecraftforge/common/MinecraftForge")) {
                                 if (fin.getOpcode() == GETSTATIC) {
                                     fin.name = "Event_bus";
-                                    kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":EVENT_BUS to Event_bus.");
                                     changed = true;
                                 } else if (goodClass) {
                                     fin.name = "Event_bus";
-                                    kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":EVENT_BUS to Event_bus.");
                                     changed = true;
                                 }
                             }
@@ -611,11 +622,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71439_g": {
                             if (fin.getOpcode() == GETFIELD) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":player to PLAYER.");
                                 fin.name = "PLAYER";
                                 changed = true;
                             } else if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":player to PLAYER.");
                                 fin.name = "PLAYER";
                                 changed = true;
                             }
@@ -623,11 +632,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_70181_x": {
                             if (fin.getOpcode() == GETFIELD) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_70181_x to motionY.");
                                 fin.name = "motionY";
                                 changed = true;
                             } else if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_70181_x to motionY.");
                                 fin.name = "motionY";
                                 changed = true;
                             }
@@ -635,11 +642,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_70159_w": {
                             if (fin.getOpcode() == GETFIELD) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_70159_w to motionX.");
                                 fin.name = "motionX";
                                 changed = true;
                             } else if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_70159_w to motionX.");
                                 fin.name = "motionX";
                                 changed = true;
                             }
@@ -647,11 +652,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_70179_y": {
                             if (fin.getOpcode() == GETFIELD) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_70179_y to motionZ.");
                                 fin.name = "motionZ";
                                 changed = true;
                             } else if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_70179_y to motionZ.");
                                 fin.name = "motionZ";
                                 changed = true;
                             }
@@ -659,11 +662,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71424_I": {
                             if (fin.getOpcode() == GETFIELD) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71424_I to profiler.");
                                 fin.name = "profiler";
                                 changed = true;
                             } else if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71424_I to profiler.");
                                 fin.name = "profiler";
                                 changed = true;
                             }
@@ -671,35 +672,20 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71460_t": {
                             if (fin.getOpcode() == GETFIELD) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71460_t to entityRenderer.");
                                 fin.name = "entityRenderer";
                                 changed = true;
                             } else if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71460_t to entityRenderer.");
                                 fin.name = "entityRenderer";
                                 changed = true;
                             }
                             break;
                         }
-                        case "field_175616_W": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_175616_W to renderManager.");
-                                fin.name = "renderManager";
-                                changed = true;
-                            } else if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_175616_W to renderManager.");
-                                fin.name = "renderManager";
-                                changed = true;
-                            }
-                            break;
-                        }
+                        case "field_175616_W":
                         case "field_175010_j": {
                             if (fin.getOpcode() == GETFIELD) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_175010_j to renderManager.");
                                 fin.name = "renderManager";
                                 changed = true;
                             } else if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_175010_j to renderManager.");
                                 fin.name = "renderManager";
                                 changed = true;
                             }
@@ -707,11 +693,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71456_v": {
                             if (fin.getOpcode() == GETFIELD) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71456_v to IngameGUI.");
                                 fin.name = "IngameGUI";
                                 changed = true;
                             } else if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71456_v to IngameGUI.");
                                 fin.name = "IngameGUI";
                                 changed = true;
                             }
@@ -719,11 +703,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71462_r": {
                             if (fin.getOpcode() == GETFIELD) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71462_r to CurrentScreen.");
                                 fin.name = "CurrentScreen";
                                 changed = true;
                             } else if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71462_r to CurrentScreen.");
                                 fin.name = "CurrentScreen";
                                 changed = true;
                             }
@@ -731,11 +713,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71417_B": {
                             if (fin.getOpcode() == GETFIELD) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71417_B to mouseHelper.");
                                 fin.name = "mouseHelper";
                                 changed = true;
                             } else if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71417_B to mouseHelper.");
                                 fin.name = "mouseHelper";
                                 changed = true;
                             }
@@ -743,12 +723,25 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71441_e": {
                             if (fin.getOpcode() == GETFIELD) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71441_e to WORLD.");
                                 fin.name = "WORLD";
                                 changed = true;
                             } else if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71441_e to WORLD.");
                                 fin.name = "WORLD";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_71071_by": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "Inventory";
+                            } else if (goodClass) {
+                                fin.name = "Inventory";
+                            }
+                            break;
+                        }
+                        case "field_78729_o": {
+                            if (goodClass) {
+                                fin.name = "EntityRenderMap";
                                 changed = true;
                             }
                             break;
@@ -756,11 +749,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         case "INSTANCE": {
                             if (fin.owner.equals("net/minecraftforge/fml/client/FMLClientHandler")) {
                                 if (fin.getOpcode() == GETSTATIC) {
-                                    kanade.kill.Launch.LOGGER.info("Redirecting:GETSTATIC:" + transformedName + ":" + mn.name + ":INSTANCE to instance.");
                                     fin.name = "instance";
                                     changed = true;
                                 } else if (goodClass) {
-                                    kanade.kill.Launch.LOGGER.info("Redirecting:PUTSTATIC:" + transformedName + ":" + mn.name + ":INSTANCE to instance.");
                                     fin.name = "instance";
                                     changed = true;
                                 }
@@ -786,7 +777,6 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     switch (min.name) {
                         case "func_71381_h": {
                             if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:INVOKEVIRTUAL:" + transformedName + ":" + mn.name + ":func_71381_h to SetIngameFocus.");
                                 min.name = "SetIngameFocus";
                                 changed = true;
                             }
@@ -794,7 +784,6 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "func_71364_i": {
                             if (goodClass) {
-                                kanade.kill.Launch.LOGGER.info("Redirecting:INVOKEVIRTUAL:" + transformedName + ":" + mn.name + ":func_71364_i to SetIngameNotInFocus.");
                                 min.name = "SetIngameNotInFocus";
                                 changed = true;
                             }
