@@ -1,55 +1,39 @@
 package kanade.kill.classload;
 
-import kanade.kill.Core;
+import kanade.kill.Launch;
 import kanade.kill.asm.Transformer;
 import kanade.kill.reflection.EarlyFields;
 import kanade.kill.util.TransformerList;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
-import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
+import net.minecraft.launchwrapper.LogWrapper;
+import org.apache.logging.log4j.Level;
 import scala.concurrent.util.Unsafe;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Files;
 import java.security.CodeSigner;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.security.cert.Certificate;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-import static kanade.kill.asm.Transformer.Kanade;
-
 @SuppressWarnings("unchecked")
 public class KanadeClassLoader extends LaunchClassLoader {
-    public static final KanadeClassLoader INSTANCE = new KanadeClassLoader(Launch.classLoader);
     private static final Manifest EMPTY = new Manifest();
-    private final LaunchClassLoader old;
 
-    private KanadeClassLoader(LaunchClassLoader old) {
-        super(old.getURLs());
-        this.old = old;
-        Unsafe.instance.putObjectVolatile(this, EarlyFields.classLoaderExceptions_offset, Unsafe.instance.getObjectVolatile(old, EarlyFields.classLoaderExceptions_offset));
-        Unsafe.instance.putObjectVolatile(this, EarlyFields.renameTransformer_offset, Unsafe.instance.getObjectVolatile(old, EarlyFields.renameTransformer_offset));
-        Unsafe.instance.putObjectVolatile(this, EarlyFields.transformers_offset, Unsafe.instance.getObjectVolatile(old, EarlyFields.transformers_offset));
-        Unsafe.instance.putObjectVolatile(this, EarlyFields.packageManifests_offset, Unsafe.instance.getObjectVolatile(old, EarlyFields.packageManifests_offset));
-        Unsafe.instance.putObjectVolatile(this, EarlyFields.cachedClasses_offset, Unsafe.instance.getObjectVolatile(old, EarlyFields.cachedClasses_offset));
-        Unsafe.instance.putObjectVolatile(this, EarlyFields.parent_offset, Unsafe.instance.getObjectVolatile(old, EarlyFields.parent_offset));
-        Unsafe.instance.putObjectVolatile(this, EarlyFields.sources_offset, Unsafe.instance.getObjectVolatile(old, EarlyFields.sources_offset));
-        Unsafe.instance.putObjectVolatile(this, EarlyFields.resourceCache_offset, Unsafe.instance.getObjectVolatile(old, EarlyFields.resourceCache_offset));
-        Unsafe.instance.putObjectVolatile(this, EarlyFields.negativeResourceCache_offset, Unsafe.instance.getObjectVolatile(old, EarlyFields.negativeResourceCache_offset));
-        Unsafe.instance.putObjectVolatile(this, EarlyFields.transformerExceptions_offset, Unsafe.instance.getObjectVolatile(old, EarlyFields.transformerExceptions_offset));
-        Unsafe.instance.putObjectVolatile(this, EarlyFields.loadBuffer_offset, Unsafe.instance.getObjectVolatile(old, EarlyFields.loadBuffer_offset));
-    }
+    public static final List<IClassTransformer> SafeTransformers = new ArrayList<>();
+    public static final boolean debug = System.getProperty("Debug") != null;
 
     private static final String[] RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"};
 
@@ -63,9 +47,6 @@ public class KanadeClassLoader extends LaunchClassLoader {
     }
 
     private String untransformName(final String name) {
-        //if(name.equals("net.minecraft.client.renderer.block.model.ModelResourceLocation")){
-        //    return "cgd";
-        //}
         IClassNameTransformer renameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(this, EarlyFields.renameTransformer_offset);
         if (renameTransformer != null) {
             return renameTransformer.unmapClassName(name);
@@ -87,21 +68,58 @@ public class KanadeClassLoader extends LaunchClassLoader {
         return null;
     }
 
+    public KanadeClassLoader(URL[] urls) {
+        super(urls);
+    }
+
+    private static void save(byte[] clazz, String file) {
+        if (!debug) {
+            return;
+        }
+        try {
+            Files.write(new File("transformedClasses" + File.separator + file + ".class").toPath(), clazz);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static boolean goodTransformer(String name) {
+        return name.equals("net.minecraftforge.fml.common.asm.transformers.PatchingTransformer") || name.equals("optifine.OptiFineClassTransformer") || name.equals("$wrapper.net.minecraftforge.fml.common.asm.transformers.SideTransformer") || name.equals("$wrapper.net.minecraftforge.fml.common.asm.transformers.EventSubscriptionTransformer") || name.equals("$wrapper.net.minecraftforge.fml.common.asm.transformers.EventSubscriberTransformer") || name.equals("net.minecraftforge.fml.common.asm.transformers.DeobfuscationTransformer");
+    }
+
     private byte[] runTransformers(final String name, final String transformedName, byte[] basicClass) {
         try {
             List<IClassTransformer> transformers = (List<IClassTransformer>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformers_offset);
             if (transformers.getClass() != TransformerList.class) {
                 transformers = new TransformerList<>(transformers);
                 Unsafe.instance.putObjectVolatile(this, EarlyFields.transformers_offset, transformers);
-                Unsafe.instance.putObjectVolatile(old, EarlyFields.transformers_offset, transformers);
             }
             for (final IClassTransformer transformer : transformers) {
                 basicClass = transformer.transform(name, transformedName, basicClass);
             }
             return basicClass;
         } catch (Throwable t) {
-            Core.LOGGER.warn("Catch exception when running transformers:", t);
+            Launch.LOGGER.warn("Catch exception when running transformers:", t);
             return basicClass;
+        }
+    }
+
+    @Override
+    public void registerTransformer(String transformerClassName) {
+        Launch.LOGGER.info("Register transformer:" + transformerClassName);
+        List<IClassTransformer> transformers = (List<IClassTransformer>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformers_offset);
+        IClassNameTransformer renameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(this, EarlyFields.renameTransformer_offset);
+        try {
+            IClassTransformer transformer = (IClassTransformer) loadClass(transformerClassName).newInstance();
+            if (goodTransformer(transformerClassName)) {
+                SafeTransformers.add(transformer);
+            }
+            transformers.add(transformer);
+            if (transformer instanceof IClassNameTransformer && renameTransformer == null) {
+                Unsafe.instance.putObjectVolatile(this, EarlyFields.renameTransformer_offset, transformer);
+            }
+        } catch (Exception e) {
+            LogWrapper.log(Level.ERROR, e, "A critical problem occurred registering the ASM transformer class %s", transformerClassName);
         }
     }
 
@@ -115,19 +133,15 @@ public class KanadeClassLoader extends LaunchClassLoader {
     }
 
     @Override
-    public Class<?> findClass(final String name) throws ClassNotFoundException {
-        if (name.equals("sun.instrument.InstrumentationImpl")) {
-            return LaunchClassLoader.class.getClassLoader().loadClass(name);
+    public Class<?> findClass(String name) throws ClassNotFoundException {
+        ClassLoader parent = (ClassLoader) Unsafe.instance.getObjectVolatile(this, EarlyFields.parent_offset);
+        if (name.equals("kanade.kill.Launch") || name.equals("kanade.kill.ServerMain")) {
+            return parent.loadClass(name);
         }
-        if (Kanade.contains(name)) {
-            if (Core.cachedClasses.containsKey(name)) {
-                return Core.cachedClasses.get(name);
-            }
-            return Class.forName(name, false, old);
-        }
+        String transformedName = transformName(name);
+        String untransformedName = untransformName(name);
         Set<String> invalidClasses = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.invalidClasses_offset);
         Set<String> classLoaderExceptions = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.classLoaderExceptions_offset);
-        ClassLoader parent = (ClassLoader) Unsafe.instance.getObjectVolatile(this, EarlyFields.parent_offset);
         Map<String, Class<?>> cachedClasses = (Map<String, Class<?>>) Unsafe.instance.getObjectVolatile(this, EarlyFields.cachedClasses_offset);
         Set<String> transformerExceptions = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformerExceptions_offset);
 
@@ -153,8 +167,8 @@ public class KanadeClassLoader extends LaunchClassLoader {
                     if (CLASS == null) {
                         throw new ClassNotFoundException(name);
                     }
-                    CLASS = Transformer.instance.transform(name, untransformName(name), CLASS);
-                    final Class<?> clazz = Unsafe.instance.defineClass(name, CLASS, 0, CLASS.length, this, new ProtectionDomain(null, null));
+                    CLASS = Transformer.instance.transform(untransformedName, transformedName, CLASS);
+                    final Class<?> clazz = Unsafe.instance.defineClass(transformedName, CLASS, 0, CLASS.length, this, new ProtectionDomain(new CodeSource(null, new Certificate[0]), null));
                     cachedClasses.put(name, clazz);
                     return clazz;
                 } catch (ClassNotFoundException e) {
@@ -168,13 +182,9 @@ public class KanadeClassLoader extends LaunchClassLoader {
         }
 
         try {
-            final String transformedName = transformName(name);
-
             if (cachedClasses.containsKey(transformedName)) {
                 return cachedClasses.get(transformedName);
             }
-
-            final String untransformedName = untransformName(name);
 
             final int lastDot = untransformedName.lastIndexOf('.');
             final String packageName = lastDot == -1 ? "" : untransformedName.substring(0, lastDot);
@@ -212,17 +222,30 @@ public class KanadeClassLoader extends LaunchClassLoader {
             byte[] bytes = getClassBytes(untransformedName);
 
             if (bytes == null) {
-                Core.LOGGER.warn("Class " + untransformedName + " is not found.");
+                throw new ClassNotFoundException(name);
             }
 
             final byte[] transformedClass = runTransformers(untransformedName, transformedName, bytes);
 
+            if (debug) {
+                save(transformedClass, name);
+            }
+
             final CodeSource codeSource = urlConnection == null ? null : new CodeSource(urlConnection.getURL(), signers);
-            final Class<?> clazz = defineClass(transformedName, transformedClass, 0, transformedClass.length, codeSource);
+            final Class<?> clazz;
+            Class<?> clazz1;
+            try {
+                clazz1 = defineClass(transformedName, transformedClass, 0, transformedClass.length, codeSource);
+            } catch (Throwable t) {
+                Launch.LOGGER.error("The fuck!", t);
+                throw new ClassNotFoundException(name, t);
+            }
+            clazz = clazz1;
             cachedClasses.put(transformedName, clazz);
             return clazz;
         } catch (Throwable e) {
-            return old.findClass(name);
+            Launch.LOGGER.warn("The fuck?", e);
+            throw new ClassNotFoundException(name, e);
         }
     }
 
@@ -297,7 +320,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
             System.arraycopy(buffer, 0, result, 0, totalLength);
             return result;
         } catch (Throwable t) {
-            Core.LOGGER.warn("Problem loading class", t);
+            Launch.LOGGER.warn("Problem loading class", t);
             return new byte[0];
         }
     }

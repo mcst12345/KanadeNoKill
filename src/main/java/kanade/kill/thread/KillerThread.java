@@ -1,7 +1,7 @@
 package kanade.kill.thread;
 
-import kanade.kill.Core;
-import net.minecraft.launchwrapper.Launch;
+
+import kanade.kill.Launch;
 
 import java.io.File;
 import java.net.URL;
@@ -38,11 +38,11 @@ public class KillerThread extends Thread {
             }
 
             if (!good) {
-                Core.LOGGER.warn("Killing thread:" + thread.getName());
+                kanade.kill.Launch.LOGGER.warn("Killing thread:" + thread.getName());
                 try {
                     thread.stop();
                 } catch (Throwable t) {
-                    Core.LOGGER.warn("Failed to kill thread,", t);
+                    kanade.kill.Launch.LOGGER.warn("Failed to kill thread,", t);
                 }
             }
         }

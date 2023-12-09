@@ -4,6 +4,7 @@ import com.google.common.collect.Queues;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.main.GameConfiguration;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.shader.Framebuffer;
@@ -36,8 +37,18 @@ public class Minecraft implements ISnooperInfo {
     public Minecraft() {
     }
 
+    public Minecraft(GameConfiguration gameconfiguration) {
+    }
+
     public static Minecraft getMinecraft() {
         return null;
+    }
+
+    public static long getSystemTime() {
+        return 0;
+    }
+
+    public static void stopIntegratedServer() {
     }
 
     public void displayGuiScreen(GuiScreen guiScreenIn) {

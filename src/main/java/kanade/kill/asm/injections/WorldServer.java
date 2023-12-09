@@ -1,6 +1,6 @@
 package kanade.kill.asm.injections;
 
-import kanade.kill.Core;
+import kanade.kill.Launch;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -81,7 +81,7 @@ public class WorldServer implements Opcodes {
         mn.localVariables.add(new LocalVariableNode("entityCollection", "Ljava/util/Collection;", "Ljava/util/Collection<Lnet/minecraft/entity/Entity;>;", label0, label9, 1));
         mn.localVariables.add(new LocalVariableNode("lists", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", label1, label9, 2));
 
-        Core.LOGGER.info("Overwrite loadEntities.");
+        Launch.LOGGER.info("Overwrite loadEntities.");
     }
 
 

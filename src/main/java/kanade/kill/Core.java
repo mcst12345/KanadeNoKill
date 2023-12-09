@@ -1,31 +1,114 @@
 package kanade.kill;
 
-import kanade.kill.reflection.EarlyFields;
-import net.minecraft.launchwrapper.IClassTransformer;
-import net.minecraft.launchwrapper.Launch;
+import com.sun.jna.Platform;
+import net.minecraftforge.fml.common.TracingPrintStream;
 import net.minecraftforge.fml.relauncher.FMLCorePlugin;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import scala.concurrent.util.Unsafe;
 
 import javax.annotation.Nullable;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.security.ProtectionDomain;
-import java.util.*;
+import java.io.*;
+import java.lang.management.ManagementFactory;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicReference;
 
-@SuppressWarnings("unchecked")
 public class Core extends FMLCorePlugin {
-    public static final Map<String, Class<?>> cachedClasses = new HashMap<>();
-    public static List<IClassTransformer> lists;
-
-    public static Logger LOGGER = LogManager.getLogger("Kanade");
-    private static final ThreadGroup KanadeThreads = new ThreadGroup("Kanade");
-    public static final boolean funny = System.getProperty("Kanade") != null && System.getProperty("Kanade").equalsIgnoreCase("true");
 
     static {
         try {
-            if (funny) {
+            if (System.getProperty("KanadeMode") == null) {
+                String jar = Empty.class.getProtectionDomain().getCodeSource().getLocation().getPath().replace("!/kanade/kill/Empty.class", "").replace("file:", "");
+                if (Platform.isWindows()) {
+                    jar = jar.substring(1);
+                }
+
+                boolean win = Platform.isWindows();
+                System.out.println("Restarting game.");
+                StringBuilder LAUNCH = new StringBuilder();
+                String args = System.getProperty("sun.java.command").replace("net.minecraft.launchwrapper.Launch", "kanade.kill.Launch");
+                String JAVA = System.getProperty("java.home");
+                System.out.println("java.home:" + JAVA);
+                if (JAVA.endsWith("jre")) {
+                    String JavaHome = JAVA.substring(0, JAVA.length() - 3) + "bin" + File.separator + "java";
+                    if (win) {
+                        JavaHome = JavaHome + ".exe";
+                    }
+                    JavaHome = "\"" + JavaHome + "\" ";
+                    LAUNCH.insert(0, JavaHome);
+                } else {
+                    String tmp = JAVA + File.separator + "bin" + File.separator + "java";
+                    if (win) {
+                        tmp = tmp + ".exe";
+                    }
+                    tmp = "\"" + tmp + "\"";
+                    LAUNCH.insert(0, tmp);
+                }
+                for (String s : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
+                    if (s.startsWith("-javaagent:") || s.startsWith("-agentpath:") || s.startsWith("-agentlib:")) {
+                        continue;
+                    }
+                    if (s.contains("=")) {
+                        if (!win) LAUNCH.append('"');
+                        LAUNCH.append(s);
+                        if (!win) LAUNCH.append('"');
+                    } else LAUNCH.append(s);
+                    LAUNCH.append(' ');
+                }
+                AtomicReference<String> classpath = new AtomicReference<>();
+                ManagementFactory.getRuntimeMXBean().getSystemProperties().forEach((s, v) -> {
+                    if (!s.equals("java.class.path")) {
+                        LAUNCH.append("\"-D").append(s).append("=").append(v).append("\" ");
+                    } else {
+                        classpath.set(v);
+                    }
+                });
+                LAUNCH.append("\"-DKanadeMode=true\" ");
+                LAUNCH.append("-cp ").append(classpath).append(":").append(jar).append(" ").append(args);
+                System.out.println(LAUNCH);
+
+                PrintStream output = null;
+
+                try {
+                    TracingPrintStream tps = (TracingPrintStream) System.out;
+                    Field field = FilterOutputStream.class.getDeclaredField("out");
+                    field.setAccessible(true);
+                    output = (PrintStream) field.get(tps);
+                } catch (Throwable ignored) {
+                }
+
+                boolean flag = output != null;
+
+                String shell = win ? "cmd /c " : "/bin/sh";
+                ProcessBuilder process = win ? new ProcessBuilder(shell, LAUNCH.toString()) : new ProcessBuilder(shell, "-c", LAUNCH.toString());
+                process.redirectErrorStream(true);
+                Process mc = process.start();
+                BufferedReader br = new BufferedReader(new InputStreamReader(mc.getInputStream()));
+                String line;
+                while ((line = br.readLine()) != null) {
+                    if (flag) {
+                        output.println(line);
+                    } else {
+                        System.out.println(line);
+                    }
+                }
+
+                flag = false;
+
+                try {
+                    Class<?> clazz = Class.forName("java.lang.Shutdown");
+                    Method method = clazz.getDeclaredMethod("halt0", int.class);
+                    method.invoke(null, 0);
+                } catch (Throwable t) {
+                    flag = true;
+                }
+
+                if (flag) {
+                    Runtime.getRuntime().exit(0);
+                }
+            } else {
+                System.out.println("Kanade loaded.");
+            }
+	    
+            /*if (funny) {
                 Core.LOGGER.warn("Vanish mode enabled.");
             }
 
@@ -113,9 +196,9 @@ public class Core extends FMLCorePlugin {
             check = (Thread) cachedClasses.get("kanade.kill.thread.KillerThread").getConstructor(ThreadGroup.class).newInstance(KanadeThreads);
             check.start();
 
-            Core.LOGGER.info("Core loading completed.");
+            Core.LOGGER.info("Core loading completed.");*/
         } catch (Throwable e) {
-            LOGGER.fatal(e);
+            System.out.println(e);
             throw new RuntimeException(e);
         }
     }

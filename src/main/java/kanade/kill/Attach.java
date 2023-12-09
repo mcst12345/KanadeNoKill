@@ -19,7 +19,7 @@ public class Attach {
         if (Platform.isWindows()) {
             path = path.substring(1);
         }
-        Core.LOGGER.info("Jar path:" + path);
+        Launch.LOGGER.info("Jar path:" + path);
         Function JNI_GetCreatedJavaVMs = Function.getFunction("jvm", "JNI_GetCreatedJavaVMs");
         Pointer[] pJavaVMs = new Pointer[1];
         JNI_GetCreatedJavaVMs.invokeInt(new Object[]{pJavaVMs, 1, (new IntByReference(1)).getPointer()});

@@ -1,8 +1,7 @@
 package kanade.kill.util;
 
-import kanade.kill.Core;
+import kanade.kill.Launch;
 import kanade.kill.asm.Transformer;
-import kanade.kill.reflection.ReflectionUtil;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -22,11 +21,18 @@ public class KanadeSecurityManager extends SecurityManager {
 
     @Override
     public void checkPermission(Permission var1) {
+        if (getClassContext()[2].getName().equals("kanade.kill.reflection.ReflectionUtil")) {
+            return;
+        }
         if (var1.getName().equals("setContextClassLoader")) {
-            Core.LOGGER.warn("Someone tries to modify the context classloader.");
-            if (Transformer.isModClass(ReflectionUtil.getName(getClassContext()[1]))) {
+            Launch.LOGGER.warn("Someone tries to modify the context classloader.");
+            if (Transformer.isModClass(getClassContext()[1].getName())) {
                 throw new SecurityException("No you can't replace the contextClassLoader");
             }
+        }
+        if (var1.getClass().getName().equals("com.sun.tools.attach.AttachPermission")) {
+            Launch.LOGGER.warn("Prevent attach.");
+            throw new SecurityException("Attach is not allowed.");
         }
     }
 
@@ -59,7 +65,7 @@ public class KanadeSecurityManager extends SecurityManager {
         if (!var1.contains(File.separator) || var1.contains(System.getProperty("java.home"))) {
             return;
         }
-        Core.LOGGER.warn("Prevent native lib " + var1 + " from loading.");
+        Launch.LOGGER.warn("Prevent native lib " + var1 + " from loading.");
         throw new SecurityException();
     }
 

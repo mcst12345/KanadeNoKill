@@ -1,6 +1,6 @@
 package kanade.kill.asm.injections;
 
-import kanade.kill.Core;
+import kanade.kill.Launch;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
@@ -24,6 +24,6 @@ public class ServerCommandManager implements Opcodes {
             throw new IllegalStateException("The fuck?");
         }
         mn.instructions.insertBefore(index, list);
-        Core.LOGGER.info("Inject into <init>");
+        Launch.LOGGER.info("Inject into <init>");
     }
 }

@@ -1,6 +1,6 @@
 package kanade.kill.asm.injections;
 
-import kanade.kill.Core;
+import kanade.kill.Launch;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
@@ -18,6 +18,6 @@ public class EntityPlayer implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
-        Core.LOGGER.info("Inject into onUpdate.");
+        Launch.LOGGER.info("Inject into onUpdate.");
     }
 }

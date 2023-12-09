@@ -16,10 +16,10 @@ public class AgentMain {
     private static Instrumentation inst;
     private static long nativeAgent;
     public static void agentmain(String args, Instrumentation instrumentation){
-        Core.LOGGER.info("Agent start.");
+        Launch.LOGGER.info("Agent start.");
         inst = instrumentation;
         nativeAgent = Unsafe.instance.getLongVolatile(instrumentation, EarlyFields.mNativeAgent_offset);
-        Core.LOGGER.info("Add transformer.");
+        Launch.LOGGER.info("Add transformer.");
         try {
             inst.addTransformer(Transformer.instance);
         } catch (Throwable e) {

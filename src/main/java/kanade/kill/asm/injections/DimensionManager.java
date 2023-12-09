@@ -1,6 +1,6 @@
 package kanade.kill.asm.injections;
 
-import kanade.kill.Core;
+import kanade.kill.Launch;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
@@ -29,6 +29,6 @@ public class DimensionManager implements Opcodes {
         list.add(new TypeInsnNode(CHECKCAST, "[Lnet/minecraft/world/WorldServer;"));
         list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/server/MinecraftServer", "backup", "[Lnet/minecraft/world/WorldServer;"));
         mn.instructions.insertBefore(index, list);
-        Core.LOGGER.info("Inject into setWorld(int,WorldServer,MinecraftServer).");
+        Launch.LOGGER.info("Inject into setWorld(int,WorldServer,MinecraftServer).");
     }
 }

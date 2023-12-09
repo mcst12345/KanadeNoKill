@@ -1,6 +1,6 @@
 package kanade.kill.asm.injections;
 
-import kanade.kill.Core;
+import kanade.kill.Launch;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -9,7 +9,7 @@ import java.util.Iterator;
 
 public class MinecraftServer implements Opcodes {
     public static void AddField(ClassNode cn) {
-        Core.LOGGER.info("Adding field.");
+        Launch.LOGGER.info("Adding field.");
         cn.fields.add(new FieldNode(ACC_PUBLIC, "backup", "[Lnet/minecraft/world/WorldServer;", null, null));
     }
 
@@ -20,7 +20,7 @@ public class MinecraftServer implements Opcodes {
         list.add(new TypeInsnNode(ANEWARRAY, "net/minecraft/world/WorldServer"));
         list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/server/MinecraftServer", "backup", "[Lnet/minecraft/world/WorldServer;"));
         mn.instructions.insert(list);
-        Core.LOGGER.info("Inject into <init>.");
+        Launch.LOGGER.info("Inject into <init>.");
     }
 
     public static void InjectTick(MethodNode mn) {
@@ -52,7 +52,7 @@ public class MinecraftServer implements Opcodes {
         list.add(label3);
         mn.instructions.insert(list);
         mn.localVariables.add(new LocalVariableNode("task", "Ljava/lang/Runnable;", null, label0, label3, 2));
-        Core.LOGGER.info("Inject into tick().");
+        Launch.LOGGER.info("Inject into tick().");
     }
 
     public static void InjectRun(MethodNode mn) {
@@ -160,6 +160,6 @@ public class MinecraftServer implements Opcodes {
 
         mn.localVariables.add(new LocalVariableNode("server", "Lnet/minecraft/world/WorldServer;", null, label3, label4, 7));
         mn.localVariables.add(new LocalVariableNode("flag", "Z", null, label, k_end, 3));
-        Core.LOGGER.info("Inject into run().");
+        Launch.LOGGER.info("Inject into run().");
     }
 }

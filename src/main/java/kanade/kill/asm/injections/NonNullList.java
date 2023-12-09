@@ -1,6 +1,6 @@
 package kanade.kill.asm.injections;
 
-import kanade.kill.Core;
+import kanade.kill.Launch;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -22,7 +22,7 @@ public class NonNullList implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
-        Core.LOGGER.info("Insert return in remove.");
+        Launch.LOGGER.info("Insert return in remove.");
     }
 
     public static void OverwriteClear(MethodNode mn) {
@@ -84,7 +84,7 @@ public class NonNullList implements Opcodes {
         mn.localVariables.clear();
         mn.localVariables.add(new LocalVariableNode("i", "I", null, label4, label3, 1));
         mn.localVariables.add(new LocalVariableNode("this", "Lnet/minecraft/util/NonNullList;", null, label0, label8, 0));
-        Core.LOGGER.info("Overwrite clear.");
+        Launch.LOGGER.info("Overwrite clear.");
     }
 
     public static void OverwriteSet(MethodNode mn) {
@@ -116,7 +116,7 @@ public class NonNullList implements Opcodes {
         mn.localVariables.add(new LocalVariableNode("p_set_1_", "I", null, label0, label1, 1));
         mn.localVariables.add(new LocalVariableNode("p_set_2_", "Ljava/lang/Object;", "TE;", label0, label1, 2));
 
-        Core.LOGGER.info("Overwrite set.");
+        Launch.LOGGER.info("Overwrite set.");
     }
 
     public static void AddMethod(ClassNode cn) {
@@ -140,6 +140,6 @@ public class NonNullList implements Opcodes {
         mn.instructions.add(label3);
         mn.localVariables.add(new LocalVariableNode("o", "Ljava/lang/Object;", null, label0, label3, 0));
         cn.methods.add(mn);
-        Core.LOGGER.info("Adding method.");
+        Launch.LOGGER.info("Adding method.");
     }
 }

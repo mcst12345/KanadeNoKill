@@ -1,6 +1,6 @@
 package kanade.kill.asm;
 
-import kanade.kill.Core;
+import kanade.kill.Launch;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -49,7 +49,7 @@ public class ASMUtil implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
-        Core.LOGGER.info("Insert return in " + mn.name);
+        Launch.LOGGER.info("Insert return in " + mn.name);
     }
 
     public static void InsertReturn(MethodNode mn, Type type) {
@@ -102,7 +102,7 @@ public class ASMUtil implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
-        Core.LOGGER.info("Insert return in " + mn.name + ".");
+        Launch.LOGGER.info("Insert return in " + mn.name + ".");
     }
     public static void clearMethod(MethodNode mn) {
         mn.instructions.clear();
@@ -112,7 +112,7 @@ public class ASMUtil implements Opcodes {
             mn.localVariables.clear();
         }
         mn.instructions.add(new InsnNode(RETURN));
-        Core.LOGGER.info("Clear method:" + mn.name + ".");
+        Launch.LOGGER.info("Clear method:" + mn.name + ".");
     }
 
     public static MethodInsnNode isDead() {
@@ -132,14 +132,14 @@ public class ASMUtil implements Opcodes {
             return 0;
         }
         if (Modifier.isNative(mn.access)) {
-            Core.LOGGER.warn("Remove method:" + mn.name);
+            Launch.LOGGER.warn("Remove method:" + mn.name);
             return 2;
         }
         for (AbstractInsnNode ain : mn.instructions.toArray()) {
             if (ain instanceof MethodInsnNode) {
                 MethodInsnNode min = (MethodInsnNode) ain;
                 if (min.owner.equals("sun/misc/Unsafe") || min.owner.contains("java/lang/reflect") || min.owner.contains("sun/tools") || (min.owner.contains("lwjgl") && !(min.name.equals("getEventButton") || min.name.equals("getEventButtonState") || min.name.equals("getEventDWheel"))) || (min.owner.equals("java/lang/System") && (min.name.equals("exit") || min.name.equals("load") || min.name.equals("loadLibrary"))) || min.owner.equals("java/lang/Runtime") || min.owner.contains("ReflectionHelper") || min.owner.contains("opengl")) {
-                    Core.LOGGER.warn("Remove method:" + mn.name);
+                    Launch.LOGGER.warn("Remove method:" + mn.name);
                     return 2;
                 }
                 switch (min.name) {
@@ -171,7 +171,7 @@ public class ASMUtil implements Opcodes {
                     case "func_78328_b":
                     case "func_184429_b":
                     case "func_175598_ae": {
-                        Core.LOGGER.warn("Insert return in method:" + mn.name);
+                        Launch.LOGGER.warn("Insert return in method:" + mn.name);
                         return 1;
                     }
                 }
@@ -188,7 +188,7 @@ public class ASMUtil implements Opcodes {
             case "getModContainerClass":
             case "getSetupClass":
             case "injectData": {
-                Core.LOGGER.warn("Insert return in method:" + mn.name);
+                Launch.LOGGER.warn("Insert return in method:" + mn.name);
                 return 1;
             }
         }

@@ -1,6 +1,6 @@
 package kanade.kill.thread;
 
-import kanade.kill.Core;
+import kanade.kill.Launch;
 import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.reflection.EarlyFields;
 import scala.concurrent.util.Unsafe;
@@ -16,11 +16,11 @@ public class ClassLoaderCheckThread extends Thread {
 
     @Override
     public void run() {
-        Core.LOGGER.info("ClassLoaderCheckThread started.");
+        Launch.LOGGER.info("ClassLoaderCheckThread started.");
         for (Thread thread : Thread.getAllStackTraces().keySet()) {
             ClassLoader old = (ClassLoader) Unsafe.instance.getObjectVolatile(thread, EarlyFields.contextClassLoader_offset);
             if (old == null || old.getClass() != KanadeClassLoader.class) {
-                Unsafe.instance.putObjectVolatile(thread, EarlyFields.contextClassLoader_offset, KanadeClassLoader.INSTANCE);
+                Unsafe.instance.putObjectVolatile(thread, EarlyFields.contextClassLoader_offset, Launch.classLoader);
             }
         }
         while (true) {
@@ -28,8 +28,8 @@ public class ClassLoaderCheckThread extends Thread {
             for (Thread thread : Thread.getAllStackTraces().keySet()) {
                 ClassLoader old = (ClassLoader) Unsafe.instance.getObjectVolatile(thread, EarlyFields.contextClassLoader_offset);
                 if (old == null || old.getClass() != KanadeClassLoader.class) {
-                    Core.LOGGER.warn("Someone has changed the classloader of " + thread.getName() + ". Resetting it,");
-                    Unsafe.instance.putObjectVolatile(thread, EarlyFields.contextClassLoader_offset, KanadeClassLoader.INSTANCE);
+                    Launch.LOGGER.warn("Someone has changed the classloader of " + thread.getName() + ". Resetting it,");
+                    Unsafe.instance.putObjectVolatile(thread, EarlyFields.contextClassLoader_offset, Launch.classLoader);
                 }
             }
         }

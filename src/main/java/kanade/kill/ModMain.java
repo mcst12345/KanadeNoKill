@@ -1,9 +1,10 @@
 package kanade.kill;
 
 import kanade.kill.classload.KanadeClassLoader;
+import kanade.kill.reflection.EarlyFields;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
-import net.minecraft.launchwrapper.Launch;
+import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.event.RegistryEvent;
@@ -21,22 +22,22 @@ import java.io.InputStream;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-
-import static kanade.kill.Core.cachedClasses;
 
 @Mod(modid = "kanade")
 @Mod.EventBusSubscriber
+@SuppressWarnings("unchecked")
 public class ModMain {
     public static final Item kill_item;
     public static final Item death_item;
     public static final boolean client = System.getProperty("minecraft.client.jar") != null;
     static {
         try {
-            Core.LOGGER.info("Defining classes.");
+            kanade.kill.Launch.LOGGER.info("Defining classes.");
 
             final List<String> classes = new ArrayList<>();
-            ProtectionDomain domain = Launch.class.getProtectionDomain();
+            ProtectionDomain domain = net.minecraft.launchwrapper.Launch.class.getProtectionDomain();
             classes.add("kanade.kill.util.GuiDeath");
             classes.add("kanade.kill.item.KillItem");
             classes.add("kanade.kill.item.DeathItem");
@@ -49,7 +50,7 @@ public class ModMain {
             classes.add("kanade.kill.network.packets.KillAllEntities$MessageHandler");
 
             for (String s : classes) {
-                Core.LOGGER.info("Defining class:" + s);
+                kanade.kill.Launch.LOGGER.info("Defining class:" + s);
                 try (InputStream is = Empty.class.getResourceAsStream('/' + s.replace('.', '/') + ".class")) {
                     assert is != null;
                     //6 lines below are from Apache common io.
@@ -60,18 +61,24 @@ public class ModMain {
                         output.write(buffer, 0, n);
                     }
                     byte[] bytes = output.toByteArray();
-                    cachedClasses.put(s, Unsafe.instance.defineClass(s, bytes, 0, bytes.length, KanadeClassLoader.INSTANCE, domain));
+
+                    for (IClassTransformer transformer : KanadeClassLoader.SafeTransformers) {
+                        bytes = transformer.transform(s, s, bytes);
+                    }
+
+                    Class<?> Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, kanade.kill.Launch.classLoader, domain);
+                    ((Map<String, Class>) Unsafe.instance.getObjectVolatile(kanade.kill.Launch.classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
                 }
 
             }
 
-            Core.LOGGER.info("Constructing items.");
+            kanade.kill.Launch.LOGGER.info("Constructing items.");
 
-            kill_item = (Item) cachedClasses.get("kanade.kill.item.KillItem").newInstance();
-            death_item = (Item) cachedClasses.get("kanade.kill.item.DeathItem").newInstance();
+            kill_item = (Item) Class.forName("kanade.kill.item.KillItem", false, Launch.classLoader).newInstance();
+            death_item = (Item) Class.forName("kanade.kill.item.DeathItem", false, Launch.classLoader).newInstance();
 
-            Core.LOGGER.info("Mod loading completed.");
-        } catch (InstantiationException | IllegalAccessException | IOException e) {
+            kanade.kill.Launch.LOGGER.info("Mod loading completed.");
+        } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
 

@@ -1,13 +1,13 @@
 package kanade.kill.asm.injections;
 
-import kanade.kill.Core;
+import kanade.kill.Launch;
 import kanade.kill.asm.ASMUtil;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
 public class Minecraft implements Opcodes {
     public static void AddField(ClassNode cn) {
-        Core.LOGGER.info("Adding field.");
+        Launch.LOGGER.info("Adding field.");
         cn.fields.add(new FieldNode(ACC_PUBLIC, "PLAYER", "Lnet/minecraft/client/entity/EntityPlayerSP;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "profiler", "Lnet/minecraft/profiler/Profiler;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "entityRenderer", "Lnet/minecraft/client/renderer/EntityRenderer;", null, null));
@@ -18,7 +18,7 @@ public class Minecraft implements Opcodes {
         cn.fields.add(new FieldNode(ACC_PUBLIC, "CurrentScreen", "Lnet/minecraft/client/gui/GuiScreen;", null, null));
     }
     public static void AddMethod(ClassNode cn) {
-        Core.LOGGER.info("Adding method.");
+        Launch.LOGGER.info("Adding method.");
         MethodNode inGameFocus = new MethodNode(ACC_PUBLIC, "SetIngameFocus", "()V", null, null);
         LabelNode label0 = new LabelNode();
         LabelNode label1 = new LabelNode();
@@ -108,7 +108,7 @@ public class Minecraft implements Opcodes {
 
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
-        Core.LOGGER.info("Inject into displayGuiScreen(GuiScreen).");
+        Launch.LOGGER.info("Inject into displayGuiScreen(GuiScreen).");
     }
 
     public static void InjectInit(MethodNode mn) {
@@ -121,6 +121,6 @@ public class Minecraft implements Opcodes {
                 }
             }
         }
-        Core.LOGGER.info("Inject into init().");
+        Launch.LOGGER.info("Inject into init().");
     }
 }

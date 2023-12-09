@@ -2,14 +2,13 @@ package kanade.kill.asm;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import kanade.kill.Core;
 import kanade.kill.Empty;
+import kanade.kill.Launch;
 import kanade.kill.asm.injections.*;
 import kanade.kill.reflection.EarlyFields;
 import kanade.kill.util.FieldInfo;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
-import net.minecraft.launchwrapper.Launch;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -22,7 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Files;
@@ -31,8 +29,7 @@ import java.util.*;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class Transformer implements IClassTransformer, Opcodes, ClassFileTransformer {
-    private static final IClassNameTransformer classNameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(Launch.classLoader, EarlyFields.renameTransformer_offset);
-    public static final boolean debug = System.getProperty("Debug") != null;
+    private static final IClassNameTransformer classNameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(kanade.kill.Launch.classLoader, EarlyFields.renameTransformer_offset);
     public static final Transformer instance = new Transformer();
     private static final ObjectOpenHashSet<String> event_listeners = new ObjectOpenHashSet<>();
     private static final ObjectArrayList<FieldInfo> fields = new ObjectArrayList<>();
@@ -40,12 +37,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
 
     public static final Set<String> Kanade = new HashSet<>();
 
-    private static Instrumentation inst;
-    private static boolean hasInst = false;
 
-    public static boolean hasInst() {
-        return hasInst && inst != null;
-    }
 
     static {
         File file = new File("transformedClasses");
@@ -60,16 +52,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             throw new RuntimeException(e);
         }
     }
-    private static void save(byte[] clazz, String file) {
-        if (!debug) {
-            return;
-        }
-        try {
-            Files.write(new File("transformedClasses" + File.separator + file + ".class").toPath(), clazz);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+
 
     public static Set<String> getEventListeners() {
         return Collections.unmodifiableSet(event_listeners);
@@ -79,9 +62,6 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         return Collections.unmodifiableList(fields);
     }
 
-    public static Instrumentation getInst() {
-        return inst;
-    }
     private static final Set<String> modClasses = new HashSet<>();
 
     static {
@@ -181,7 +161,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         switch (transformedName) {
             case "net.minecraftforge.common.DimensionManager": {
                 changed = true;
-                Core.LOGGER.info("Get DimensionManager.");
+                kanade.kill.Launch.LOGGER.info("Get DimensionManager.");
 
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("setWorld")) {
@@ -193,14 +173,14 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.entity.Entity": {
                 changed = true;
-                Core.LOGGER.info("Get Entity.");
+                kanade.kill.Launch.LOGGER.info("Get Entity.");
                 Entity.AddField(cn);
                 break;
             }
             case "net.minecraft.server.MinecraftServer": {
                 changed = true;
                 compute_all = true;
-                Core.LOGGER.info("Get MinecraftServer.");
+                kanade.kill.Launch.LOGGER.info("Get MinecraftServer.");
                 MinecraftServer.AddField(cn);
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -223,7 +203,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.client.Minecraft": {
                 changed = true;
-                Core.LOGGER.info("Get Minecraft.");
+                kanade.kill.Launch.LOGGER.info("Get Minecraft.");
                 Minecraft.AddField(cn);
                 Minecraft.AddMethod(cn);
                 for (MethodNode mn : cn.methods) {
@@ -251,7 +231,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.item.ItemStack": {
                 changed = true;
-                Core.LOGGER.info("Get ItemStack.");
+                kanade.kill.Launch.LOGGER.info("Get ItemStack.");
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("func_190926_b")) {
                         ASMUtil.InsertReturn(mn, Type.BOOLEAN_TYPE, Boolean.FALSE, 0, ASMUtil.NoRemove());
@@ -264,7 +244,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             case "net.minecraft.world.World": {
                 changed = true;
                 compute_all = true;
-                Core.LOGGER.info("Get World.");
+                kanade.kill.Launch.LOGGER.info("Get World.");
                 World.AddField(cn);
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -312,7 +292,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.entity.EntityLivingBase": {
                 changed = true;
-                Core.LOGGER.info("Get EntityLivingBase.");
+                kanade.kill.Launch.LOGGER.info("Get EntityLivingBase.");
                 EntityLivingBase.AddField(cn);
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -342,7 +322,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.entity.player.EntityPlayer": {
                 changed = true;
-                Core.LOGGER.info("Get EntityPlayer.");
+                kanade.kill.Launch.LOGGER.info("Get EntityPlayer.");
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
                         case "func_70106_y":
@@ -374,7 +354,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraftforge.client.ForgeHooksClient": {
                 changed = true;
-                Core.LOGGER.info("Get ForgeHooksClient.");
+                kanade.kill.Launch.LOGGER.info("Get ForgeHooksClient.");
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("drawScreen")) {
                         ForgeHooksClient.InjectDrawScreen(mn);
@@ -384,7 +364,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.entity.player.EntityPlayerSP": {
                 changed = true;
-                Core.LOGGER.info("Get EntityPlayerSP.");
+                kanade.kill.Launch.LOGGER.info("Get EntityPlayerSP.");
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
                         case "func_70097_a": {
@@ -409,7 +389,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.entity.player.EntityPlayerMP": {
                 changed = true;
-                Core.LOGGER.info("Get EntityPlayerMP.");
+                kanade.kill.Launch.LOGGER.info("Get EntityPlayerMP.");
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
                         case "func_70645_a": {
@@ -430,7 +410,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.util.NonNullList": {
                 changed = true;
-                Core.LOGGER.info("Get NonNullList.");
+                kanade.kill.Launch.LOGGER.info("Get NonNullList.");
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
                         case "remove": {
@@ -452,7 +432,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.world.WorldServer": {
                 changed = true;
-                Core.LOGGER.info("Get WorldServer.");
+                kanade.kill.Launch.LOGGER.info("Get WorldServer.");
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
                         case "func_72838_d": {
@@ -479,7 +459,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.world.WorldClient": {
                 changed = true;
-                Core.LOGGER.info("Get WorldClient.");
+                kanade.kill.Launch.LOGGER.info("Get WorldClient.");
 
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -515,7 +495,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraftforge.common.ForgeHooks": {
                 changed = true;
-                Core.LOGGER.info("Get ForgeHooks.");
+                kanade.kill.Launch.LOGGER.info("Get ForgeHooks.");
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("onLivingUpdate")) {
                         ASMUtil.InsertReturn(mn, Type.BOOLEAN_TYPE, Boolean.FALSE, 0, ASMUtil.inList());
@@ -525,18 +505,18 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.client.renderer.RenderGlobal": {
                 changed = true;
-                Core.LOGGER.info("Get RenderGlobal");
+                kanade.kill.Launch.LOGGER.info("Get RenderGlobal");
                 RenderGlobal.AddField(cn);
                 break;
             }
             case "net.minecraftforge.common.MinecraftForge": {
                 changed = true;
-                Core.LOGGER.info("Get MinecraftForge.");
+                kanade.kill.Launch.LOGGER.info("Get MinecraftForge.");
                 MinecraftForge.AddField(cn);
                 break;
             }
             case "net.minecraftforge.fml.server.FMLServerHandler": {
-                Core.LOGGER.info("Get FMLServerHandler.");
+                kanade.kill.Launch.LOGGER.info("Get FMLServerHandler.");
                 changed = true;
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("finishServerLoading")) {
@@ -550,19 +530,19 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                                 }
                             }
                         }
-                        Core.LOGGER.info("Inject into " + mn.name);
+                        kanade.kill.Launch.LOGGER.info("Inject into " + mn.name);
                     }
                 }
                 break;
             }
             case "net.minecraftforge.fml.client.FMLClientHandler": {
-                Core.LOGGER.info("Get FMLClientHandler.");
+                kanade.kill.Launch.LOGGER.info("Get FMLClientHandler.");
                 changed = true;
                 FMLClientHandler.AddField(cn);
                 break;
             }
             case "net.minecraft.command.ServerCommandManager": {
-                Core.LOGGER.info("Get ServerCommandManager.");
+                kanade.kill.Launch.LOGGER.info("Get ServerCommandManager.");
                 changed = true;
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("<init>")) {
@@ -572,7 +552,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 break;
             }
             case "net.minecraftforge.fml.common.eventhandler.EventBus": {
-                Core.LOGGER.info("Get EventBus.");
+                kanade.kill.Launch.LOGGER.info("Get EventBus.");
                 changed = true;
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("post")) {
@@ -584,7 +564,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         }
 
 
-        Core.LOGGER.info("Examine class:" + transformedName);
+        kanade.kill.Launch.LOGGER.info("Examine class:" + transformedName);
 
         for (MethodNode mn : cn.methods) {
             for (AbstractInsnNode ain : mn.instructions.toArray()) {
@@ -593,11 +573,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     switch (fin.name) {
                         case "field_70128_L": {
                             if (fin.getOpcode() == GETFIELD) {
-                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":isDead to HatedByLife.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":isDead to HatedByLife.");
                                 fin.name = "HatedByLife";
                                 changed = true;
                             } else if (goodClass) {
-                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":isDead to HatedByLife.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":isDead to HatedByLife.");
                                 fin.name = "HatedByLife";
                                 changed = true;
                             }
@@ -605,11 +585,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_70725_aQ": {
                             if (fin.getOpcode() == GETFIELD) {
-                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":deathTime to Death_Time.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":deathTime to Death_Time.");
                                 fin.name = "Death_Time";
                                 changed = true;
                             } else if (goodClass) {
-                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":deathTime to Death_Time.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":deathTime to Death_Time.");
                                 fin.name = "Death_Time";
                                 changed = true;
                             }
@@ -619,11 +599,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                             if (fin.owner.equals("net/minecraftforge/common/MinecraftForge")) {
                                 if (fin.getOpcode() == GETSTATIC) {
                                     fin.name = "Event_bus";
-                                    Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":EVENT_BUS to Event_bus.");
+                                    kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":EVENT_BUS to Event_bus.");
                                     changed = true;
                                 } else if (goodClass) {
                                     fin.name = "Event_bus";
-                                    Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":EVENT_BUS to Event_bus.");
+                                    kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":EVENT_BUS to Event_bus.");
                                     changed = true;
                                 }
                             }
@@ -631,11 +611,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71439_g": {
                             if (fin.getOpcode() == GETFIELD) {
-                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":player to PLAYER.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":player to PLAYER.");
                                 fin.name = "PLAYER";
                                 changed = true;
                             } else if (goodClass) {
-                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":player to PLAYER.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":player to PLAYER.");
                                 fin.name = "PLAYER";
                                 changed = true;
                             }
@@ -643,11 +623,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_70181_x": {
                             if (fin.getOpcode() == GETFIELD) {
-                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_70181_x to motionY.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_70181_x to motionY.");
                                 fin.name = "motionY";
                                 changed = true;
                             } else if (goodClass) {
-                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_70181_x to motionY.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_70181_x to motionY.");
                                 fin.name = "motionY";
                                 changed = true;
                             }
@@ -655,11 +635,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_70159_w": {
                             if (fin.getOpcode() == GETFIELD) {
-                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_70159_w to motionX.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_70159_w to motionX.");
                                 fin.name = "motionX";
                                 changed = true;
                             } else if (goodClass) {
-                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_70159_w to motionX.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_70159_w to motionX.");
                                 fin.name = "motionX";
                                 changed = true;
                             }
@@ -667,11 +647,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_70179_y": {
                             if (fin.getOpcode() == GETFIELD) {
-                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_70179_y to motionZ.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_70179_y to motionZ.");
                                 fin.name = "motionZ";
                                 changed = true;
                             } else if (goodClass) {
-                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_70179_y to motionZ.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_70179_y to motionZ.");
                                 fin.name = "motionZ";
                                 changed = true;
                             }
@@ -679,11 +659,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71424_I": {
                             if (fin.getOpcode() == GETFIELD) {
-                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71424_I to profiler.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71424_I to profiler.");
                                 fin.name = "profiler";
                                 changed = true;
                             } else if (goodClass) {
-                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71424_I to profiler.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71424_I to profiler.");
                                 fin.name = "profiler";
                                 changed = true;
                             }
@@ -691,11 +671,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71460_t": {
                             if (fin.getOpcode() == GETFIELD) {
-                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71460_t to entityRenderer.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71460_t to entityRenderer.");
                                 fin.name = "entityRenderer";
                                 changed = true;
                             } else if (goodClass) {
-                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71460_t to entityRenderer.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71460_t to entityRenderer.");
                                 fin.name = "entityRenderer";
                                 changed = true;
                             }
@@ -703,11 +683,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_175616_W": {
                             if (fin.getOpcode() == GETFIELD) {
-                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_175616_W to renderManager.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_175616_W to renderManager.");
                                 fin.name = "renderManager";
                                 changed = true;
                             } else if (goodClass) {
-                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_175616_W to renderManager.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_175616_W to renderManager.");
                                 fin.name = "renderManager";
                                 changed = true;
                             }
@@ -715,11 +695,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_175010_j": {
                             if (fin.getOpcode() == GETFIELD) {
-                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_175010_j to renderManager.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_175010_j to renderManager.");
                                 fin.name = "renderManager";
                                 changed = true;
                             } else if (goodClass) {
-                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_175010_j to renderManager.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_175010_j to renderManager.");
                                 fin.name = "renderManager";
                                 changed = true;
                             }
@@ -727,11 +707,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71456_v": {
                             if (fin.getOpcode() == GETFIELD) {
-                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71456_v to IngameGUI.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71456_v to IngameGUI.");
                                 fin.name = "IngameGUI";
                                 changed = true;
                             } else if (goodClass) {
-                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71456_v to IngameGUI.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71456_v to IngameGUI.");
                                 fin.name = "IngameGUI";
                                 changed = true;
                             }
@@ -739,11 +719,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71462_r": {
                             if (fin.getOpcode() == GETFIELD) {
-                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71462_r to CurrentScreen.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71462_r to CurrentScreen.");
                                 fin.name = "CurrentScreen";
                                 changed = true;
                             } else if (goodClass) {
-                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71462_r to CurrentScreen.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71462_r to CurrentScreen.");
                                 fin.name = "CurrentScreen";
                                 changed = true;
                             }
@@ -751,11 +731,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71417_B": {
                             if (fin.getOpcode() == GETFIELD) {
-                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71417_B to mouseHelper.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71417_B to mouseHelper.");
                                 fin.name = "mouseHelper";
                                 changed = true;
                             } else if (goodClass) {
-                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71417_B to mouseHelper.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71417_B to mouseHelper.");
                                 fin.name = "mouseHelper";
                                 changed = true;
                             }
@@ -763,11 +743,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71441_e": {
                             if (fin.getOpcode() == GETFIELD) {
-                                Core.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71441_e to WORLD.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:GETFIELD:" + transformedName + ":" + mn.name + ":field_71441_e to WORLD.");
                                 fin.name = "WORLD";
                                 changed = true;
                             } else if (goodClass) {
-                                Core.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71441_e to WORLD.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:PUTFIELD:" + transformedName + ":" + mn.name + ":field_71441_e to WORLD.");
                                 fin.name = "WORLD";
                                 changed = true;
                             }
@@ -776,24 +756,37 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         case "INSTANCE": {
                             if (fin.owner.equals("net/minecraftforge/fml/client/FMLClientHandler")) {
                                 if (fin.getOpcode() == GETSTATIC) {
-                                    Core.LOGGER.info("Redirecting:GETSTATIC:" + transformedName + ":" + mn.name + ":INSTANCE to instance.");
+                                    kanade.kill.Launch.LOGGER.info("Redirecting:GETSTATIC:" + transformedName + ":" + mn.name + ":INSTANCE to instance.");
                                     fin.name = "instance";
                                     changed = true;
                                 } else if (goodClass) {
-                                    Core.LOGGER.info("Redirecting:PUTSTATIC:" + transformedName + ":" + mn.name + ":INSTANCE to instance.");
+                                    kanade.kill.Launch.LOGGER.info("Redirecting:PUTSTATIC:" + transformedName + ":" + mn.name + ":INSTANCE to instance.");
                                     fin.name = "instance";
                                     changed = true;
                                 }
                                 break;
                             }
                         }
+                        if (fin.owner.equals("net/minecraft/launchwrapper/Launch")) {
+                            if (fin.getOpcode() == GETSTATIC) {
+                                fin.owner = "kanade/kill/Launch";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.owner = "kanade/kill/Launch";
+                                changed = true;
+                            }
+                        }
                     }
                 } else if (ain instanceof MethodInsnNode) {
                     MethodInsnNode min = (MethodInsnNode) ain;
+                    if (min.owner.equals("net/minecraft/launchwrapper/Launch")) {
+                        min.owner = "kanade/kill/Launch";
+                        changed = true;
+                    }
                     switch (min.name) {
                         case "func_71381_h": {
                             if (goodClass) {
-                                Core.LOGGER.info("Redirecting:INVOKEVIRTUAL:" + transformedName + ":" + mn.name + ":func_71381_h to SetIngameFocus.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:INVOKEVIRTUAL:" + transformedName + ":" + mn.name + ":func_71381_h to SetIngameFocus.");
                                 min.name = "SetIngameFocus";
                                 changed = true;
                             }
@@ -801,7 +794,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "func_71364_i": {
                             if (goodClass) {
-                                Core.LOGGER.info("Redirecting:INVOKEVIRTUAL:" + transformedName + ":" + mn.name + ":func_71364_i to SetIngameNotInFocus.");
+                                kanade.kill.Launch.LOGGER.info("Redirecting:INVOKEVIRTUAL:" + transformedName + ":" + mn.name + ":func_71364_i to SetIngameNotInFocus.");
                                 min.name = "SetIngameNotInFocus";
                                 changed = true;
                             }
@@ -819,32 +812,23 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             if (mn.localVariables != null && !goodClass) {
                 for (LocalVariableNode lvn : mn.localVariables) {
                     if (lvn.desc.startsWith("net/minecraftforge/") && lvn.desc.contains("/event/")) {
-                        Core.LOGGER.info("Find event listsner:" + transformedName);
+                        kanade.kill.Launch.LOGGER.info("Find event listsner:" + transformedName);
                         event_listeners.add(cn.name.replace('/', '.'));
                         break;
                     }
                 }
-            }
-            if ((mn.name.equals("agentmain") || mn.name.equals("premain")) && mn.desc.equals("(Ljava/lang/String;Ljava/lang/instrument/Instrumentation;)V")) {
-                System.out.println("Find agent:" + name + ",steal the inst.");
-                InsnList list = new InsnList();
-                list.add(new VarInsnNode(ALOAD, 1));
-                list.add(new FieldInsnNode(PUTSTATIC, "kanade/kill/asm/Transformer", "inst", "Ljava/lang/instrument/Instrumentation;"));
-                mn.instructions.insert(list);
-                hasInst = true;
-                changed = true;
             }
         }
         if (!goodClass) {
             for (FieldNode fn : cn.fields) {
                 if (Modifier.isStatic(fn.access)) {
                     if (!fn.desc.startsWith("L") || fn.desc.contains("net/minecraft/nbt/NBTTagCompound")) {
-                        Core.LOGGER.info("Add field " + fn.name + " to reset list.");
+                        kanade.kill.Launch.LOGGER.info("Add field " + fn.name + " to reset list.");
                         fields.add(new FieldInfo(cn, fn));
                     } else {
                         if (fn.signature != null) {
                             if ((fn.signature.startsWith("Ljava/util/Collection") || fn.signature.startsWith("Ljava/util/List") || fn.signature.startsWith("Ljava/util/Set") || fn.signature.startsWith("Ljava/util/Map")) && fn.signature.contains("net/minecraft/entity")) {
-                                Core.LOGGER.info("Add field " + fn.name + " to reset list.");
+                                kanade.kill.Launch.LOGGER.info("Add field " + fn.name + " to reset list.");
                                 fields.add(new FieldInfo(cn, fn));
                             }
                         }
@@ -852,7 +836,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 }
             }
 
-            if (Core.funny) {
+            if (kanade.kill.Launch.funny) {
                 Iterator<MethodNode> iterator = cn.methods.listIterator();
                 while (iterator.hasNext()) {
                     MethodNode mn = iterator.next();
@@ -873,7 +857,6 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             ClassWriter cw = new ClassWriter(compute_all ? ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS);
             cn.accept(cw);
             transformed = cw.toByteArray();
-            save(transformed, transformedName);
             return transformed;
         } else {
             return basicClass;

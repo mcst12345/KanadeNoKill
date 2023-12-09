@@ -1,6 +1,6 @@
 package kanade.kill.thread;
 
-import kanade.kill.Core;
+import kanade.kill.Launch;
 import kanade.kill.ModMain;
 import kanade.kill.reflection.EarlyFields;
 import kanade.kill.reflection.LateFields;
@@ -42,7 +42,7 @@ public class GuiThread extends Thread {
                         Minecraft mc = Minecraft.getMinecraft();
                         Object gui = Unsafe.instance.getObjectVolatile(mc, LateFields.currentScreen_offset);
                         if (gui == null || gui.getClass() != GuiDeath.class) {
-                            Core.LOGGER.info("Displaying Death Gui.");
+                            Launch.LOGGER.info("Displaying Death Gui.");
                             if (gui instanceof GuiScreen) {
                                 ((GuiScreen) gui).onGuiClosed();
                             }
@@ -58,7 +58,7 @@ public class GuiThread extends Thread {
                         }
                         Mouse.setGrabbed(true);
                     } else {
-                        Core.LOGGER.info("Gui closed.");
+                        Launch.LOGGER.info("Gui closed.");
                         death = null;
                     }
                 }
