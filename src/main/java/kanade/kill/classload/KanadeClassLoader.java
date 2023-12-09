@@ -222,7 +222,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
             byte[] bytes = getClassBytes(untransformedName);
 
             if (bytes == null) {
-                throw new ClassNotFoundException(name);
+                Launch.LOGGER.error("Failed to get bytes of class:" + name);
             }
 
             final byte[] transformedClass = runTransformers(untransformedName, transformedName, bytes);
