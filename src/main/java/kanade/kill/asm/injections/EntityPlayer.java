@@ -34,7 +34,19 @@ public class EntityPlayer implements Opcodes {
         list.add(new VarInsnNode(ALOAD, 0));
         list.add(new MethodInsnNode(INVOKESPECIAL, "net/minecraft/entity/player/InventoryPlayer", "<init>", "(Lnet/minecraft/entity/player/EntityPlayer;)V", false));
         list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/entity/player/EntityPlayer", "field_71071_by", "Lnet/minecraft/entity/player/InventoryPlayer;"));
-        mn.instructions.insertBefore(mn.instructions.getLast(), list);
+        AbstractInsnNode index = null;
+        for (AbstractInsnNode ain : mn.instructions.toArray()) {
+            if (ain instanceof MethodInsnNode) {
+                if (((MethodInsnNode) ain).owner.equals("net/minecraft/entity/EntityLivingBase") && ((MethodInsnNode) ain).name.equals("<init>")) {
+                    index = ain.getNext();
+                    break;
+                }
+            }
+        }
+        if (index == null) {
+            throw new IllegalStateException("The fuck?");
+        }
+        mn.instructions.insertBefore(index, list);
         Launch.LOGGER.info("Inject into <init>.");
     }
 }

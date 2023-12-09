@@ -516,6 +516,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.client.renderer.entity.RenderManager": {
                 changed = true;
+                compute_all = true;
                 kanade.kill.Launch.LOGGER.info("Get RenderManager");
                 RenderManager.AddField(cn);
                 for (MethodNode mn : cn.methods) {
@@ -579,9 +580,6 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 break;
             }
         }
-
-
-        kanade.kill.Launch.LOGGER.info("Examine class:" + transformedName);
 
         for (MethodNode mn : cn.methods) {
             for (AbstractInsnNode ain : mn.instructions.toArray()) {
@@ -734,8 +732,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         case "field_71071_by": {
                             if (fin.getOpcode() == GETFIELD) {
                                 fin.name = "Inventory";
+                                changed = true;
                             } else if (goodClass) {
                                 fin.name = "Inventory";
+                                changed = true;
                             }
                             break;
                         }
