@@ -2,6 +2,7 @@ package kanade.kill;
 
 import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.reflection.EarlyFields;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
 import net.minecraft.launchwrapper.IClassTransformer;
@@ -32,13 +33,14 @@ public class ModMain {
     public static final Item kill_item;
     public static final Item death_item;
     public static final boolean client = System.getProperty("minecraft.client.jar") != null;
+    public static final Class<?> GUI;
     static {
         try {
             kanade.kill.Launch.LOGGER.info("Defining classes.");
 
             final List<String> classes = new ArrayList<>();
             ProtectionDomain domain = net.minecraft.launchwrapper.Launch.class.getProtectionDomain();
-            classes.add("kanade.kill.util.GuiDeath");
+            classes.add("kanade.kill.util.Gui");
             classes.add("kanade.kill.item.KillItem");
             classes.add("kanade.kill.item.DeathItem");
             classes.add("kanade.kill.reflection.LateFields");
@@ -48,6 +50,8 @@ public class ModMain {
             classes.add("kanade.kill.network.packets.CoreDump$MessageHandler");
             classes.add("kanade.kill.command.KanadeKillCommand");
             classes.add("kanade.kill.network.packets.KillAllEntities$MessageHandler");
+
+            Class<?> tmp = null;
 
             for (String s : classes) {
                 kanade.kill.Launch.LOGGER.info("Defining class:" + s);
@@ -65,12 +69,17 @@ public class ModMain {
                     for (IClassTransformer transformer : KanadeClassLoader.SafeTransformers) {
                         bytes = transformer.transform(s, s, bytes);
                     }
+                    if (!s.equals("kanade.kill.util.Gui")) {
+                        Class<?> Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, kanade.kill.Launch.classLoader, domain);
+                        ((Map<String, Class>) Unsafe.instance.getObjectVolatile(kanade.kill.Launch.classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
+                    } else {
+                        tmp = Unsafe.instance.defineAnonymousClass(GuiScreen.class, bytes, null);
+                    }
 
-                    Class<?> Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, kanade.kill.Launch.classLoader, domain);
-                    ((Map<String, Class>) Unsafe.instance.getObjectVolatile(kanade.kill.Launch.classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
                 }
-
             }
+
+            GUI = tmp;
 
             kanade.kill.Launch.LOGGER.info("Constructing items.");
 

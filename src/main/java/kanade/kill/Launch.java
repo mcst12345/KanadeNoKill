@@ -8,6 +8,7 @@ import kanade.kill.reflection.EarlyFields;
 import kanade.kill.thread.ClassLoaderCheckThread;
 import kanade.kill.thread.KillerThread;
 import kanade.kill.thread.SecurityManagerCheckThread;
+import kanade.kill.util.NativeMethods;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;
@@ -37,7 +38,16 @@ public class Launch {
     public static List<IClassTransformer> lists;
     public static Logger LOGGER = LogManager.getLogger("Kanade");
 
+    public static final boolean debug = System.getProperty("NativeDebug") != null;
+    public static final boolean win = System.getProperty("os.name").startsWith("Windows");
+
+
     static {
+        if (debug) {
+            File file = new File("KanadeAgent" + (win ? ".dll" : ".so"));
+            System.load(file.getAbsolutePath());
+            NativeMethods.Test();
+        }
 
         final URLClassLoader ucl = (URLClassLoader) Launch.class.getClassLoader();
         classLoader = new KanadeClassLoader(ucl.getURLs());
@@ -80,7 +90,6 @@ public class Launch {
         classes.add("kanade.kill.thread.KillerThread");
         classes.add("kanade.kill.thread.GuiThread");
         classes.add("kanade.kill.AgentMain");
-        classes.add("kanade.kill.Attach");
 
         try {
             for (String s : classes) {

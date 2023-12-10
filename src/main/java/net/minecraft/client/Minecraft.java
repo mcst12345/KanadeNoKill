@@ -3,6 +3,7 @@ package net.minecraft.client;
 import com.google.common.collect.Queues;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.main.GameConfiguration;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -13,6 +14,7 @@ import net.minecraft.profiler.ISnooperInfo;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.profiler.Snooper;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.Session;
 import net.minecraft.util.Timer;
 import org.apache.logging.log4j.Logger;
 
@@ -33,6 +35,7 @@ public class Minecraft implements ISnooperInfo {
     public EntityRenderer entityRenderer;
     public Profiler profiler;
     public Timer timer;
+    public FontRenderer fontRenderer;
 
     public Minecraft() {
     }
@@ -101,5 +104,13 @@ public class Minecraft implements ISnooperInfo {
     @Override
     public boolean isSnooperEnabled() {
         return false;
+    }
+
+    public boolean isIntegratedServerRunning() {
+        return true;
+    }
+
+    public Session getSession() {
+        return new Session("", "", "", "");
     }
 }

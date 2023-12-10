@@ -35,6 +35,10 @@ public class EntityPlayer extends EntityLivingBase {
         return null;
     }
 
+    public int getScore() {
+        return 114514;
+    }
+
     public void setScore(int maxValue) {
 
     }

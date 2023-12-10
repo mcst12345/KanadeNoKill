@@ -86,12 +86,11 @@ public class Minecraft implements Opcodes {
 
         list.add(new VarInsnNode(ALOAD, 0));
         list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "field_71462_r", "Lnet/minecraft/client/gui/GuiScreen;"));
-        list.add(new TypeInsnNode(INSTANCEOF, "kanade/kill/util/GuiDeath"));
+        list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "isKanadeDeathGui", "(Ljava/lang/Object;)Z", false));
         list.add(new JumpInsnNode(IFEQ, label_1));
         list.add(new VarInsnNode(ALOAD, 0));
         list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "field_71462_r", "Lnet/minecraft/client/gui/GuiScreen;"));
-        list.add(new TypeInsnNode(CHECKCAST, "kanade/kill/util/GuiDeath"));
-        list.add(new FieldInsnNode(GETFIELD, "kanade/kill/util/GuiDeath", "close", "Z"));
+        list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "isKanadeDeathGuiClosed", "(Ljava/lang/Object;)Z", false));
         list.add(new JumpInsnNode(IFNE, label_1));
         list.add(new InsnNode(RETURN));
         list.add(label_1);

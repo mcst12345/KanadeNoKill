@@ -14,7 +14,6 @@ import kanade.kill.reflection.ReflectionUtil;
 import kanade.kill.thread.GuiThread;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
@@ -630,12 +629,28 @@ public class Util {
         Unsafe.instance.freeMemory(114514);
     }
 
-    public static boolean BadGui(Gui gui) {
+    public static boolean BadGui(net.minecraft.client.gui.Gui gui) {
         if (gui == null) {
             return false;
         }
         String name = ReflectionUtil.getName(gui.getClass());
         String l = name.toLowerCase();
-        return (Config.guiProtect && (Transformer.isModClass(name) || gui.getClass().getProtectionDomain() == null || gui.getClass().getProtectionDomain().getCodeSource() == null)) || gui instanceof GuiDeath || l.contains("death") || l.contains("over") || l.contains("die") || l.contains("dead");
+        return (Config.guiProtect && (Transformer.isModClass(name) || gui.getClass().getProtectionDomain() == null || gui.getClass().getProtectionDomain().getCodeSource() == null)) || gui instanceof Gui || l.contains("death") || l.contains("over") || l.contains("die") || l.contains("dead");
+    }
+
+    public static void DisplayDeathGui() {
+
+    }
+
+    public static boolean isKanadeDeathGui(Object o) {
+        return o != null && (o.getClass() == ModMain.GUI || (o instanceof Minecraft && Unsafe.instance.getObjectVolatile(o, LateFields.currentScreen_offset).getClass() == ModMain.GUI));
+    }
+
+    public static boolean isKanadeDeathGuiClosed(Object o) {
+        if (ModMain.GUI.isInstance(o)) {
+            return Unsafe.instance.getBooleanVolatile(o, LateFields.close_offset);
+        }
+        return false;
     }
 }
+

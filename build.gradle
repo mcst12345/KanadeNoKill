@@ -85,9 +85,10 @@ jar {
                 'ForceLoadAsMod'             : 'true',
                 "FMLCorePlugin"              : "kanade.kill.Core",
                 "FMLCorePluginContainsFMLMod": "true",
-                "Agent-Class"         : "kanade.kill.AgentMain",
+                "Premain-Class"          : "kanade.kill.AgentMain",
                 "Can-Redefine-Classes": "true",
-                "Main-Class"          : "kanade.kill.Empty"
+                "Can-Retransform-Classes": "true",
+                "Main-Class"             : "kanade.kill.ServerPreMain"
         ])
     }
     from{

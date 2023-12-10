@@ -15,7 +15,8 @@ import java.lang.instrument.UnmodifiableClassException;
 public class AgentMain {
     private static Instrumentation inst;
     private static long nativeAgent;
-    public static void agentmain(String args, Instrumentation instrumentation){
+
+    public static void premain(String args, Instrumentation instrumentation) {
         Launch.LOGGER.info("Agent start.");
         inst = instrumentation;
         nativeAgent = Unsafe.instance.getLongVolatile(instrumentation, EarlyFields.mNativeAgent_offset);
