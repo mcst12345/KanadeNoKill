@@ -4,9 +4,10 @@ import kanade.kill.Launch;
 import kanade.kill.ModMain;
 import kanade.kill.reflection.EarlyFields;
 import kanade.kill.reflection.LateFields;
-import kanade.kill.util.Util;
+import kanade.kill.reflection.LateMethods;
+import kanade.kill.reflection.ReflectionUtil;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.settings.KeyBinding;
 import org.lwjgl.input.Mouse;
 import scala.concurrent.util.Unsafe;
@@ -43,11 +44,11 @@ public class GuiThread extends Thread {
             if (death != null) {
                 if (!Unsafe.instance.getBooleanVolatile(death, LateFields.close_offset)) {
                     Minecraft mc = Minecraft.getMinecraft();
-                    if (!Util.isKanadeDeathGui(mc)) {
-                        synchronized (mc) {
-                            mc.displayGuiScreen((GuiScreen) death);
-                            mc.SetIngameNotInFocus();
-                        }
+                    synchronized (mc) {
+                        Unsafe.instance.putObjectVolatile(mc, LateFields.currentScreen_offset, death);
+                        mc.SetIngameNotInFocus();
+                        ScaledResolution scaledresolution = new ScaledResolution(mc);
+                        ReflectionUtil.invoke(LateMethods.setWorldAndResolution, mc, scaledresolution.getScaledWidth(), scaledresolution.getScaledHeight());
                     }
                     KeyBinding.unPressAllKeys();
                     Mouse.setGrabbed(true);

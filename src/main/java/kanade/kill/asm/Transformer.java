@@ -131,6 +131,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         if (basicClass == null) {
             return null;
         }
+        try {
+            basicClass = Launch.classLoader.getClassBytes(name);
+        } catch (IOException ignored) {
+        }
         ClassReader cr = new ClassReader(basicClass);
         ClassNode cn = new ClassNode();
         cr.accept(cn, 0);
@@ -160,6 +164,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         }
         switch (transformedName) {
             case "net.minecraftforge.common.DimensionManager": {
+
                 changed = true;
                 kanade.kill.Launch.LOGGER.info("Get DimensionManager.");
 
@@ -816,7 +821,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         fields.add(new FieldInfo(cn, fn));
                     } else {
                         if (fn.signature != null) {
-                            if ((fn.signature.startsWith("Ljava/util/Collection") || fn.signature.startsWith("Ljava/util/List") || fn.signature.startsWith("Ljava/util/Set") || fn.signature.startsWith("Ljava/util/Map")) && fn.signature.contains("net/minecraft/entity")) {
+                            if (fn.signature.startsWith("Ljava/util/Collection") || fn.signature.startsWith("Ljava/util/List") || fn.signature.startsWith("Ljava/util/Set") || fn.signature.startsWith("Ljava/util/Map")) {
                                 kanade.kill.Launch.LOGGER.info("Add field " + fn.name + " to reset list.");
                                 fields.add(new FieldInfo(cn, fn));
                             }

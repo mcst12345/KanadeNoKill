@@ -14,7 +14,7 @@ public class RenderManager implements Opcodes {
         list.add(new VarInsnNode(ALOAD, 0));
         list.add(new MethodInsnNode(INVOKESTATIC, "com/google/common/collect/Maps", "newHashMap", "()Ljava/util/HashMap;", false));
         list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/client/renderer/entity/RenderManager", "field_78729_o", "Ljava/util/Map;"));
-        mn.instructions.insertBefore(mn.instructions.getLast(), list);
+        mn.instructions.insert(list);
         Launch.LOGGER.info("Inject into <init>.");
     }
 }
