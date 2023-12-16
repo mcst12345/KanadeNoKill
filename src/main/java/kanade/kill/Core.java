@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Core extends FMLCorePlugin {
 
     static {
-        boolean debug = System.getProperty("NativeDebug") != null;
         try {
             if (System.getProperty("KanadeMode") == null) {
                 System.out.println("os:" + System.getProperty("os.name"));
@@ -45,7 +44,23 @@ public class Core extends FMLCorePlugin {
                     LAUNCH.insert(0, tmp);
                 }
 
-                if (debug) {
+                {
+                    String filename = win ? "KanadeAgent.dll" : "KanadeAgent.so";
+                    try (InputStream is = Empty.class.getResourceAsStream("/" + filename)) {
+                        assert is != null;
+                        final ByteArrayOutputStream output = new ByteArrayOutputStream();
+                        final byte[] buffer = new byte[8024];
+                        int n;
+                        while (-1 != (n = is.read(buffer))) {
+                            output.write(buffer, 0, n);
+                        }
+                        byte[] bytes = output.toByteArray();
+                        File file = new File(filename);
+                        if (file.exists()) {
+                            Files.delete(file.toPath());
+                        }
+                        Files.write(file.toPath(), bytes);
+                    }
                     File file = new File("KanadeAgent" + (win ? ".dll" : ".so"));
                     String path = file.getAbsolutePath();
                     LAUNCH.append("\"-agentpath:").append(path).append("\" ");

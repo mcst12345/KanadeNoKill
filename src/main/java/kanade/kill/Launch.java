@@ -13,6 +13,7 @@ import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import net.minecraft.launchwrapper.LogWrapper;
+import net.minecraftforge.fml.common.Loader;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,16 +39,13 @@ public class Launch {
     public static List<IClassTransformer> lists;
     public static Logger LOGGER = LogManager.getLogger("Kanade");
 
-    public static final boolean debug = System.getProperty("NativeDebug") != null;
-    public static final boolean win = System.getProperty("os.name").startsWith("Windows");
-
 
     static {
-        if (debug) {
-            File file = new File("KanadeAgent" + (win ? ".dll" : ".so"));
-            System.load(file.getAbsolutePath());
-            NativeMethods.Test();
-        }
+        final boolean win = System.getProperty("os.name").startsWith("Windows");
+
+        File file = new File("KanadeAgent" + (win ? ".dll" : ".so"));
+        System.load(file.getAbsolutePath());
+        NativeMethods.Test();
 
         final URLClassLoader ucl = (URLClassLoader) Launch.class.getClassLoader();
         classLoader = new KanadeClassLoader(ucl.getURLs());
@@ -55,7 +53,7 @@ public class Launch {
         Thread.currentThread().setContextClassLoader(classLoader);
 
         final List<String> classes = new ArrayList<>();
-        ProtectionDomain domain = net.minecraft.launchwrapper.Launch.class.getProtectionDomain();
+        ProtectionDomain domain = Loader.class.getProtectionDomain();
 
         classes.add("kanade.kill.Config");
         classes.add("kanade.kill.util.Util");
@@ -89,7 +87,6 @@ public class Launch {
         classes.add("kanade.kill.thread.SecurityManagerCheckThread");
         classes.add("kanade.kill.thread.KillerThread");
         classes.add("kanade.kill.thread.GuiThread");
-        classes.add("kanade.kill.AgentMain");
 
         try {
             for (String s : classes) {

@@ -131,13 +131,20 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         if (basicClass == null) {
             return null;
         }
+        byte[] originalBytes = null;
         try {
-            basicClass = Launch.classLoader.getClassBytes(name);
+            originalBytes = Launch.classLoader.getClassBytes(name);
         } catch (IOException ignored) {
         }
-        ClassReader cr = new ClassReader(basicClass);
+        ClassReader cr = new ClassReader(originalBytes != null ? originalBytes : basicClass);
         ClassNode cn = new ClassNode();
         cr.accept(cn, 0);
+        ClassNode changedClass = null;
+        if (originalBytes != null && !(originalBytes == basicClass)) {
+            cr = new ClassReader(originalBytes);
+            changedClass = new ClassNode();
+            cr.accept(changedClass, 0);
+        }
         byte[] transformed;
         boolean changed = false, compute_all = false;
         boolean goodClass = true;
@@ -162,6 +169,28 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 goodClass = false;
             }
         }
+
+        if (changedClass != null) {
+            final List<MethodNode> methods = new ArrayList<>(changedClass.methods);
+            for (MethodNode mn1 : changedClass.methods) {
+                for (MethodNode mn2 : cn.methods) {
+                    if (mn1.name.equals(mn2.name) && mn1.desc.equals(mn2.desc)) {
+                        methods.remove(mn1);
+                    }
+                }
+            }
+            cn.methods.addAll(methods);
+            final List<FieldNode> fields = new ArrayList<>(changedClass.fields);
+            for (FieldNode fn1 : changedClass.fields) {
+                for (FieldNode fn2 : cn.fields) {
+                    if (fn1.name.equals(fn2.name) && fn1.desc.equals(fn2.desc)) {
+                        fields.remove(fn1);
+                    }
+                }
+            }
+            cn.fields.addAll(fields);
+        }
+
         switch (transformedName) {
             case "net.minecraftforge.common.DimensionManager": {
 

@@ -10,6 +10,7 @@ import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -39,7 +40,7 @@ public class ModMain {
             kanade.kill.Launch.LOGGER.info("Defining classes.");
 
             final List<String> classes = new ArrayList<>();
-            ProtectionDomain domain = net.minecraft.launchwrapper.Launch.class.getProtectionDomain();
+            ProtectionDomain domain = Loader.class.getProtectionDomain();
             classes.add("kanade.kill.util.Gui");
             classes.add("kanade.kill.item.KillItem");
             classes.add("kanade.kill.item.DeathItem");
