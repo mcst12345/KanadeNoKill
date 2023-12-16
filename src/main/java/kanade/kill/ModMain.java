@@ -67,7 +67,7 @@ public class ModMain {
                     }
                     byte[] bytes = output.toByteArray();
 
-                    for (IClassTransformer transformer : KanadeClassLoader.SafeTransformers) {
+                    for (IClassTransformer transformer : KanadeClassLoader.NecessaryTransformers) {
                         bytes = transformer.transform(s, s, bytes);
                     }
                     if (!s.equals("kanade.kill.util.Gui")) {

@@ -32,7 +32,7 @@ import java.util.jar.Manifest;
 public class KanadeClassLoader extends LaunchClassLoader {
     private static final Manifest EMPTY = new Manifest();
 
-    public static final List<IClassTransformer> SafeTransformers = new ArrayList<>();
+    public static final List<IClassTransformer> NecessaryTransformers = new ArrayList<>();
     public static final boolean debug = System.getProperty("Debug") != null;
 
     private static final String[] RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"};
@@ -112,7 +112,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
         try {
             IClassTransformer transformer = (IClassTransformer) loadClass(transformerClassName).newInstance();
             if (goodTransformer(transformerClassName)) {
-                SafeTransformers.add(transformer);
+                NecessaryTransformers.add(transformer);
             }
             transformers.add(transformer);
             if (transformer instanceof IClassNameTransformer && renameTransformer == null) {
@@ -140,15 +140,11 @@ public class KanadeClassLoader extends LaunchClassLoader {
         }
         String transformedName = transformName(name);
         String untransformedName = untransformName(name);
-        Set<String> invalidClasses = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.invalidClasses_offset);
         Set<String> classLoaderExceptions = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.classLoaderExceptions_offset);
         Map<String, Class<?>> cachedClasses = (Map<String, Class<?>>) Unsafe.instance.getObjectVolatile(this, EarlyFields.cachedClasses_offset);
         Set<String> transformerExceptions = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformerExceptions_offset);
 
         Map<Package, Manifest> packageManifests = (Map<Package, Manifest>) Unsafe.instance.getObjectVolatile(this, EarlyFields.packageManifests_offset);
-        if (invalidClasses.contains(name)) {
-            throw new ClassNotFoundException(name);
-        }
 
         for (final String exception : classLoaderExceptions) {
             if (name.startsWith(exception)) {
@@ -171,11 +167,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
                     final Class<?> clazz = Unsafe.instance.defineClass(transformedName, CLASS, 0, CLASS.length, this, new ProtectionDomain(new CodeSource(null, new Certificate[0]), null));
                     cachedClasses.put(name, clazz);
                     return clazz;
-                } catch (ClassNotFoundException e) {
-                    invalidClasses.add(name);
-                    throw e;
                 } catch (IOException e) {
-                    invalidClasses.add(name);
                     throw new ClassNotFoundException(name);
                 }
             }
@@ -223,6 +215,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
 
             if (bytes == null) {
                 Launch.LOGGER.error("Failed to get bytes of class:" + name);
+                Launch.LOGGER.error("Untransformed name:" + untransformedName);
             }
 
             final byte[] transformedClass = runTransformers(untransformedName, transformedName, bytes);
@@ -241,10 +234,11 @@ public class KanadeClassLoader extends LaunchClassLoader {
                 throw new ClassNotFoundException(name, t);
             }
             clazz = clazz1;
-            cachedClasses.put(transformedName, clazz);
+            if (clazz != null) {
+                cachedClasses.put(transformedName, clazz);
+            }
             return clazz;
         } catch (Throwable e) {
-            Launch.LOGGER.warn("The fuck?", e);
             throw new ClassNotFoundException(name, e);
         }
     }

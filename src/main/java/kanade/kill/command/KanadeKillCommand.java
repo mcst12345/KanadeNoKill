@@ -10,6 +10,7 @@ import net.minecraft.util.text.TextComponentString;
 
 import javax.annotation.Nonnull;
 
+@SuppressWarnings("unused")
 public class KanadeKillCommand extends CommandBase {
     @Override
     @Nonnull

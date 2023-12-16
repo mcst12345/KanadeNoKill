@@ -4,6 +4,7 @@ import kanade.kill.Config;
 import kanade.kill.ModMain;
 import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.KillAllEntities;
+import kanade.kill.util.NativeMethods;
 import kanade.kill.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.creativetab.CreativeTabs;
@@ -37,9 +38,11 @@ public class KillItem extends Item {
     public static void AddToList(Object obj) {
         if (obj instanceof Entity) {
             list.add(((Entity) obj).getUniqueID());
+            NativeMethods.ProtectAdd(((Entity) obj).getUniqueID().toString());
         } else if (ModMain.client) {
             if (obj instanceof Minecraft) {
                 list.add(((Minecraft) obj).PLAYER.getUniqueID());
+                NativeMethods.ProtectAdd(((Minecraft) obj).PLAYER.getUniqueID().toString());
             }
         }
     }
@@ -85,7 +88,7 @@ public class KillItem extends Item {
 
     public static boolean inList(Object obj) {
         if (obj instanceof Entity) {
-            return list.contains(((Entity) obj).getUniqueID()) || (obj instanceof EntityItem && Util.NoRemove(((EntityItem) obj).getItem()));
+            return list.contains(((Entity) obj).getUniqueID()) || NativeMethods.ProtectContain(((Entity) obj).getUniqueID().toString()) || (obj instanceof EntityItem && Util.NoRemove(((EntityItem) obj).getItem()));
         } else if (ModMain.client) {
             if (obj instanceof Minecraft) {
                 EntityPlayer player = ((Minecraft) obj).PLAYER;

@@ -31,11 +31,13 @@ import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.registry.RegistryNamespaced;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.ForgeInternalHandler;
 import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
+import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import scala.concurrent.util.Unsafe;
 
@@ -70,6 +72,7 @@ public class Util {
         try {
             killing = true;
             Dead.add(entity.getUniqueID());
+            NativeMethods.DeadAdd(entity.getUniqueID().toString());
             World world = entity.world;
             if (world.loadedEntityList.getClass() != ArrayList.class) {
                 Unsafe.instance.putObjectVolatile(world, LateFields.loadedEntityList_offset, new ArrayList<>(world.loadedEntityList));
@@ -115,7 +118,7 @@ public class Util {
     }
 
     public static boolean isDead(Entity entity) {
-        return entity == null || Dead.contains(entity.getUniqueID());
+        return entity == null || Dead.contains(entity.getUniqueID()) || NativeMethods.DeadContain(entity.getUniqueID().toString()) || NativeMethods.HaveDeadTag(entity);
     }
 
     public static boolean NoRemove(Object item) {
@@ -651,6 +654,17 @@ public class Util {
             return Unsafe.instance.getBooleanVolatile(o, LateFields.close_offset);
         }
         return false;
+    }
+
+
+    public static boolean shouldPostEvent(Event event) {
+        if (ModMain.client) {
+            if (event instanceof GuiOpenEvent) {
+                GuiOpenEvent guiOpenEvent = (GuiOpenEvent) event;
+                return !ModMain.GUI.isInstance(guiOpenEvent.getGui());
+            }
+        }
+        return true;
     }
 }
 

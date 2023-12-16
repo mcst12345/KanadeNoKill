@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import kanade.kill.Empty;
 import kanade.kill.Launch;
 import kanade.kill.asm.injections.*;
+import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.reflection.EarlyFields;
 import kanade.kill.util.FieldInfo;
 import net.minecraft.launchwrapper.IClassNameTransformer;
@@ -105,6 +106,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         Kanade.add("kanade.kill.network.packets.KillAllEntities");
         Kanade.add("kanade.kill.network.NetworkHandler");
         Kanade.add("kanade.kill.command.KanadeKillCommand");
+        Kanade.add("kanade.kill.ClientMain");
     }
 
     public static boolean isModClass(String s) {
@@ -134,6 +136,12 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         byte[] originalBytes = null;
         try {
             originalBytes = Launch.classLoader.getClassBytes(name);
+            for (IClassTransformer t : KanadeClassLoader.NecessaryTransformers) {
+                try {
+                    originalBytes = t.transform(name, transformedName, originalBytes);
+                } catch (Throwable ignored) {
+                }
+            }
         } catch (IOException ignored) {
         }
         ClassReader cr = new ClassReader(originalBytes != null ? originalBytes : basicClass);
