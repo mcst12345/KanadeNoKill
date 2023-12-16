@@ -47,7 +47,7 @@ public class Launch {
         System.load(file.getAbsolutePath());
         NativeMethods.Test();
 
-        final URLClassLoader ucl = (URLClassLoader) Launch.class.getClassLoader();
+        final URLClassLoader ucl = (URLClassLoader) Loader.class.getClassLoader();
         classLoader = new KanadeClassLoader(ucl.getURLs());
         blackboard = new HashMap<>();
         Thread.currentThread().setContextClassLoader(classLoader);
