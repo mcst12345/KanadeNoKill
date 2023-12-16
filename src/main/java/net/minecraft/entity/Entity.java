@@ -2,6 +2,7 @@ package net.minecraft.entity;
 
 import net.minecraft.world.World;
 
+import javax.annotation.Nullable;
 import java.util.UUID;
 
 public class Entity {
@@ -15,6 +16,7 @@ public class Entity {
     public int chunkCoordX;
     public int chunkCoordZ;
 
+    @Nullable
     public UUID getUniqueID() {
         return null;
     }

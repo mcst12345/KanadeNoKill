@@ -71,8 +71,11 @@ public class Util {
         if (KillItem.inList(entity) || entity == null) return;
         try {
             killing = true;
-            Dead.add(entity.getUniqueID());
-            NativeMethods.DeadAdd(entity.getUniqueID().toString());
+            UUID uuid = entity.getUniqueID();
+            if (uuid != null) {
+                Dead.add(uuid);
+                NativeMethods.DeadAdd(uuid.hashCode());
+            }
             World world = entity.world;
             if (world.loadedEntityList.getClass() != ArrayList.class) {
                 Unsafe.instance.putObjectVolatile(world, LateFields.loadedEntityList_offset, new ArrayList<>(world.loadedEntityList));
@@ -118,7 +121,7 @@ public class Util {
     }
 
     public static boolean isDead(Entity entity) {
-        return entity == null || Dead.contains(entity.getUniqueID()) || NativeMethods.DeadContain(entity.getUniqueID().toString()) || NativeMethods.HaveDeadTag(entity);
+        return entity == null || Dead.contains(entity.getUniqueID()) || (entity.getUniqueID() != null && NativeMethods.DeadContain(entity.getUniqueID().hashCode())) || NativeMethods.HaveDeadTag(entity);
     }
 
     public static boolean NoRemove(Object item) {

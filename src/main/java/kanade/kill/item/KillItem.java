@@ -37,12 +37,18 @@ public class KillItem extends Item {
 
     public static void AddToList(Object obj) {
         if (obj instanceof Entity) {
-            list.add(((Entity) obj).getUniqueID());
-            NativeMethods.ProtectAdd(((Entity) obj).getUniqueID().toString());
+            UUID uuid = ((Entity) obj).getUniqueID();
+            if (uuid != null) {
+                list.add(uuid);
+                NativeMethods.ProtectAdd(uuid.hashCode());
+            }
         } else if (ModMain.client) {
             if (obj instanceof Minecraft) {
-                list.add(((Minecraft) obj).PLAYER.getUniqueID());
-                NativeMethods.ProtectAdd(((Minecraft) obj).PLAYER.getUniqueID().toString());
+                UUID uuid = ((Minecraft) obj).PLAYER.getUniqueID();
+                if (uuid != null) {
+                    list.add(uuid);
+                    NativeMethods.ProtectAdd(uuid.hashCode());
+                }
             }
         }
     }
@@ -88,7 +94,8 @@ public class KillItem extends Item {
 
     public static boolean inList(Object obj) {
         if (obj instanceof Entity) {
-            return list.contains(((Entity) obj).getUniqueID()) || NativeMethods.ProtectContain(((Entity) obj).getUniqueID().toString()) || (obj instanceof EntityItem && Util.NoRemove(((EntityItem) obj).getItem()));
+            UUID uuid = ((Entity) obj).getUniqueID();
+            return list.contains(uuid) || (uuid != null && NativeMethods.ProtectContain(uuid.hashCode())) || (obj instanceof EntityItem && Util.NoRemove(((EntityItem) obj).getItem()));
         } else if (ModMain.client) {
             if (obj instanceof Minecraft) {
                 EntityPlayer player = ((Minecraft) obj).PLAYER;

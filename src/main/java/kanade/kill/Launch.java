@@ -45,7 +45,7 @@ public class Launch {
 
         File file = new File("KanadeAgent" + (win ? ".dll" : ".so"));
         System.load(file.getAbsolutePath());
-        NativeMethods.Test();
+        NativeMethods.Test("12345:)");
 
         final URLClassLoader ucl = (URLClassLoader) Loader.class.getClassLoader();
         classLoader = new KanadeClassLoader(ucl.getURLs());
