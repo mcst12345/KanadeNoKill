@@ -27,7 +27,7 @@ public class KanadeKillCommand extends CommandBase {
 
     @Override
     public void execute(@Nonnull MinecraftServer server, @Nonnull ICommandSender sender, @Nonnull String[] args) throws CommandException {
-        if (args.length < 2) {
+        if (args.length < 1) {
             throw new WrongUsageException("/KanadeKill <action> <args>");
         } else {
             String action = args[0];

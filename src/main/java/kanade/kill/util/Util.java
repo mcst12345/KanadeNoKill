@@ -82,7 +82,7 @@ public class Util {
             }
             world.entities.remove(entity);
             Chunk chunk = world.getChunk(entity.chunkCoordX, entity.chunkCoordZ);
-            ClassInheritanceMultiMap<Entity>[] entityLists = (ClassInheritanceMultiMap<Entity>[]) Unsafe.instance.getObjectVolatile(chunk, LateFields.entityLists_offset);
+            ClassInheritanceMultiMap<Entity>[] entityLists = (ClassInheritanceMultiMap<Entity>[]) Unsafe.instance.getObjectVolatile(chunk, LateFields.entities_offset);
             for (ClassInheritanceMultiMap<Entity> map : entityLists) {
                 map.remove(entity);
             }

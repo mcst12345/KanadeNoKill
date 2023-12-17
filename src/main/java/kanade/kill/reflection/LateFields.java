@@ -31,6 +31,7 @@ public class LateFields {
     public static final long listeners_offset_2;
     public static final long currentScreen_offset;
     public static final long close_offset;
+    public static final long entities_offset;
 
     static {
         try {
@@ -40,6 +41,8 @@ public class LateFields {
             playerEntities_offset = Unsafe.instance.objectFieldOffset(field);
             field = ReflectionUtil.getField(Chunk.class, "field_76645_j");
             entityLists_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(Chunk.class, "entities");
+            entities_offset = Unsafe.instance.objectFieldOffset(field);
             field = ReflectionUtil.getField(Entity.class, "field_70180_af");
             dataManager_offset = Unsafe.instance.objectFieldOffset(field);
             field = ReflectionUtil.getField(EntityLivingBase.class, "field_184632_c");
