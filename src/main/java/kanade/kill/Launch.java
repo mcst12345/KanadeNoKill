@@ -64,6 +64,7 @@ public class Launch {
         classes.add("kanade.kill.reflection.ReflectionUtil");
         classes.add("kanade.kill.reflection.EarlyFields");
         classes.add("kanade.kill.asm.ASMUtil");
+        classes.add("kanade.kill.asm.injections.Chunk");
         classes.add("kanade.kill.asm.injections.DimensionManager");
         classes.add("kanade.kill.asm.injections.Entity");
         classes.add("kanade.kill.asm.injections.EntityLivingBase");

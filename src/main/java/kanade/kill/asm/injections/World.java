@@ -10,6 +10,8 @@ public class World implements Opcodes {
     public static void AddField(ClassNode cn) {
         Launch.LOGGER.info("Adding field.");
         cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "protects", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "entities", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "players", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
     }
 
     public static void InjectConstructor(MethodNode mn) {
@@ -19,6 +21,16 @@ public class World implements Opcodes {
         list.add(new InsnNode(DUP));
         list.add(new MethodInsnNode(INVOKESPECIAL, "java/util/ArrayList", "<init>", "()V", false));
         list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "protects", "Ljava/util/List;"));
+        list.add(new VarInsnNode(ALOAD, 0));
+        list.add(new TypeInsnNode(NEW, "java/util/ArrayList"));
+        list.add(new InsnNode(DUP));
+        list.add(new MethodInsnNode(INVOKESPECIAL, "java/util/ArrayList", "<init>", "()V", false));
+        list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new VarInsnNode(ALOAD, 0));
+        list.add(new TypeInsnNode(NEW, "java/util/ArrayList"));
+        list.add(new InsnNode(DUP));
+        list.add(new MethodInsnNode(INVOKESPECIAL, "java/util/ArrayList", "<init>", "()V", false));
+        list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "field_73010_i", "Ljava/util/List;"));
         mn.instructions.insert(list);
         Launch.LOGGER.info("Inject into <init>.");
     }
@@ -69,7 +81,7 @@ public class World implements Opcodes {
         list.add(new JumpInsnNode(IFNE, label6));
         list.add(label7);
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(new VarInsnNode(ALOAD, 4));
         list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "add", "(Ljava/lang/Object;)Z", true));
         list.add(new InsnNode(POP));
@@ -136,7 +148,7 @@ public class World implements Opcodes {
         LabelNode label5 = new LabelNode();
         list.add(label0);
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(new MethodInsnNode(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false));
         list.add(new LdcInsnNode(Type.getType("Ljava/util/ArrayList;")));
         list.add(new JumpInsnNode(IF_ACMPEQ, label1));
@@ -144,9 +156,9 @@ public class World implements Opcodes {
         list.add(new TypeInsnNode(NEW, "java/util/ArrayList"));
         list.add(new InsnNode(DUP));
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(new MethodInsnNode(INVOKESPECIAL, "java/util/ArrayList", "<init>", "(Ljava/util/Collection;)V", false));
-        list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(label1);
         list.add(new VarInsnNode(ALOAD, 0));
         list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "protects", "Ljava/util/List;"));
@@ -162,12 +174,12 @@ public class World implements Opcodes {
         list.add(new VarInsnNode(ASTORE, 3));
         list.add(label5);
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(new VarInsnNode(ALOAD, 3));
         list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "contains", "(Ljava/lang/Object;)Z", true));
         list.add(new JumpInsnNode(IFNE, label3));
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(new VarInsnNode(ALOAD, 3));
         list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "add", "(Ljava/lang/Object;)Z", true));
         list.add(new InsnNode(POP));
@@ -191,7 +203,7 @@ public class World implements Opcodes {
         LabelNode label5 = new LabelNode();
         list.add(label0);
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(new MethodInsnNode(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false));
         list.add(new LdcInsnNode(Type.getType("Ljava/util/ArrayList;")));
         list.add(new JumpInsnNode(IF_ACMPEQ, label1));
@@ -199,9 +211,9 @@ public class World implements Opcodes {
         list.add(new TypeInsnNode(NEW, "java/util/ArrayList"));
         list.add(new InsnNode(DUP));
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(new MethodInsnNode(INVOKESPECIAL, "java/util/ArrayList", "<init>", "(Ljava/util/Collection;)V", false));
-        list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(label1);
         list.add(new VarInsnNode(ALOAD, 0));
         list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "protects", "Ljava/util/List;"));
@@ -217,12 +229,12 @@ public class World implements Opcodes {
         list.add(new VarInsnNode(ASTORE, 4));
         list.add(label5);
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(new VarInsnNode(ALOAD, 4));
         list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "contains", "(Ljava/lang/Object;)Z", true));
         list.add(new JumpInsnNode(IFNE, label3));
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(new VarInsnNode(ALOAD, 4));
         list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "add", "(Ljava/lang/Object;)Z", true));
         list.add(new InsnNode(POP));
@@ -247,7 +259,7 @@ public class World implements Opcodes {
         LabelNode label5 = new LabelNode();
         list.add(label0);
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(new MethodInsnNode(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false));
         list.add(new LdcInsnNode(Type.getType("Ljava/util/ArrayList;")));
         list.add(new JumpInsnNode(IF_ACMPEQ, label1));
@@ -255,9 +267,9 @@ public class World implements Opcodes {
         list.add(new TypeInsnNode(NEW, "java/util/ArrayList"));
         list.add(new InsnNode(DUP));
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(new MethodInsnNode(INVOKESPECIAL, "java/util/ArrayList", "<init>", "(Ljava/util/Collection;)V", false));
-        list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(label1);
         list.add(new VarInsnNode(ALOAD, 0));
         list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "protects", "Ljava/util/List;"));
@@ -273,12 +285,12 @@ public class World implements Opcodes {
         list.add(new VarInsnNode(ASTORE, 2));
         list.add(label5);
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(new VarInsnNode(ALOAD, 2));
         list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "contains", "(Ljava/lang/Object;)Z", true));
         list.add(new JumpInsnNode(IFNE, label3));
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
         list.add(new VarInsnNode(ALOAD, 2));
         list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "add", "(Ljava/lang/Object;)Z", true));
         list.add(new InsnNode(POP));

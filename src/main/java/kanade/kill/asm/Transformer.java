@@ -113,6 +113,253 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         return modClasses.contains(s);
     }
 
+    private static boolean Redirect(ClassNode cn, boolean goodClass, String transformedName) {
+        boolean changed = false;
+        for (MethodNode mn : cn.methods) {
+            for (AbstractInsnNode ain : mn.instructions.toArray()) {
+                if (ain instanceof FieldInsnNode) {
+                    FieldInsnNode fin = (FieldInsnNode) ain;
+                    switch (fin.name) {
+                        case "field_73010_i": {
+                            if (goodClass) {
+                                fin.name = "players";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_70128_L": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "HatedByLife";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.name = "HatedByLife";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_70725_aQ": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "Death_Time";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.name = "Death_Time";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "EVENT_BUS": {
+                            if (fin.owner.equals("net/minecraftforge/common/MinecraftForge")) {
+                                if (fin.getOpcode() == GETSTATIC) {
+                                    fin.name = "Event_bus";
+                                    changed = true;
+                                } else if (goodClass) {
+                                    fin.name = "Event_bus";
+                                    changed = true;
+                                }
+                            }
+                            break;
+                        }
+                        case "field_71439_g": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "PLAYER";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.name = "PLAYER";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_70181_x": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "motionY";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.name = "motionY";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_70159_w": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "motionX";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.name = "motionX";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_70179_y": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "motionZ";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.name = "motionZ";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_71424_I": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "profiler";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.name = "profiler";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_71460_t": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "entityRenderer";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.name = "entityRenderer";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_175616_W":
+                        case "field_175010_j": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "renderManager";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.name = "renderManager";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_71456_v": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "IngameGUI";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.name = "IngameGUI";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_71462_r": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "CurrentScreen";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.name = "CurrentScreen";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_71417_B": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "mouseHelper";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.name = "mouseHelper";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_71441_e": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "WORLD";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.name = "WORLD";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_71071_by": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "Inventory";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.name = "Inventory";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_78729_o": {
+                            if (goodClass) {
+                                fin.name = "EntityRenderMap";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "field_76645_j":
+                        case "field_72996_f": {
+                            if (goodClass) {
+                                fin.name = "entities";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "INSTANCE": {
+                            if (fin.owner.equals("net/minecraftforge/fml/client/FMLClientHandler")) {
+                                if (fin.getOpcode() == GETSTATIC) {
+                                    fin.name = "instance";
+                                    changed = true;
+                                } else if (goodClass) {
+                                    fin.name = "instance";
+                                    changed = true;
+                                }
+                                break;
+                            }
+                        }
+                        if (fin.owner.equals("net/minecraft/launchwrapper/Launch")) {
+                            if (fin.getOpcode() == GETSTATIC) {
+                                fin.owner = "kanade/kill/Launch";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.owner = "kanade/kill/Launch";
+                                changed = true;
+                            }
+                        }
+                    }
+                } else if (ain instanceof MethodInsnNode) {
+                    MethodInsnNode min = (MethodInsnNode) ain;
+                    if (min.owner.equals("net/minecraft/launchwrapper/Launch")) {
+                        min.owner = "kanade/kill/Launch";
+                        changed = true;
+                    }
+                    switch (min.name) {
+                        case "func_71381_h": {
+                            if (goodClass) {
+                                min.name = "SetIngameFocus";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "func_71364_i": {
+                            if (goodClass) {
+                                min.name = "SetIngameNotInFocus";
+                                changed = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!goodClass && !(mn.name.equals("<init>") || mn.name.equals("<clinit>") || Modifier.isAbstract(mn.access) || Modifier.isNative(mn.access))) {
+                Type type = Type.getReturnType(mn.desc);
+                if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY) {
+                    ASMUtil.InsertReturn(mn, type);
+                }
+            }
+            if (mn.localVariables != null && !goodClass) {
+                for (LocalVariableNode lvn : mn.localVariables) {
+                    if (lvn.desc.startsWith("net/minecraftforge/") && lvn.desc.contains("/event/")) {
+                        kanade.kill.Launch.LOGGER.info("Find event listsner:" + transformedName);
+                        event_listeners.add(cn.name.replace('/', '.'));
+                        break;
+                    }
+                }
+            }
+        }
+        return changed;
+    }
+
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
         if (Kanade.contains(name)) {
@@ -154,7 +401,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             cr.accept(changedClass, 0);
         }
         byte[] transformed;
-        boolean changed = false, compute_all = false;
+        boolean changed, compute_all = false;
         boolean goodClass = true;
         if (name.equals(transformedName)) {
             final URL res = Launch.classLoader.findResource(name.replace('.', '/').concat(".class"));
@@ -198,6 +445,8 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             cn.fields.addAll(fields);
         }
+
+        changed = Redirect(cn, goodClass, transformedName);
 
         switch (transformedName) {
             case "net.minecraftforge.common.DimensionManager": {
@@ -621,235 +870,31 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 }
                 break;
             }
+            case "net.minecraft.world.chunk.Chunk": {
+                Launch.LOGGER.info("Get Chunk.");
+                changed = true;
+                Chunk.AddField(cn);
+                for (MethodNode mn : cn.methods) {
+                    switch (mn.name) {
+                        case "func_76612_a": {
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, 1, ASMUtil.isDead());
+                            break;
+                        }
+                        case "func_76608_a":
+                        case "func_76622_b": {
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, 1, ASMUtil.inList());
+                            break;
+                        }
+                        case "<init>": {
+                            Chunk.InjectConstructor(mn);
+                            break;
+                        }
+                    }
+                }
+            }
         }
+
 
-        for (MethodNode mn : cn.methods) {
-            for (AbstractInsnNode ain : mn.instructions.toArray()) {
-                if (ain instanceof FieldInsnNode) {
-                    FieldInsnNode fin = (FieldInsnNode) ain;
-                    switch (fin.name) {
-                        case "field_70128_L": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "HatedByLife";
-                                changed = true;
-                            } else if (goodClass) {
-                                fin.name = "HatedByLife";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "field_70725_aQ": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "Death_Time";
-                                changed = true;
-                            } else if (goodClass) {
-                                fin.name = "Death_Time";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "EVENT_BUS": {
-                            if (fin.owner.equals("net/minecraftforge/common/MinecraftForge")) {
-                                if (fin.getOpcode() == GETSTATIC) {
-                                    fin.name = "Event_bus";
-                                    changed = true;
-                                } else if (goodClass) {
-                                    fin.name = "Event_bus";
-                                    changed = true;
-                                }
-                            }
-                            break;
-                        }
-                        case "field_71439_g": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "PLAYER";
-                                changed = true;
-                            } else if (goodClass) {
-                                fin.name = "PLAYER";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "field_70181_x": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "motionY";
-                                changed = true;
-                            } else if (goodClass) {
-                                fin.name = "motionY";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "field_70159_w": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "motionX";
-                                changed = true;
-                            } else if (goodClass) {
-                                fin.name = "motionX";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "field_70179_y": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "motionZ";
-                                changed = true;
-                            } else if (goodClass) {
-                                fin.name = "motionZ";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "field_71424_I": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "profiler";
-                                changed = true;
-                            } else if (goodClass) {
-                                fin.name = "profiler";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "field_71460_t": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "entityRenderer";
-                                changed = true;
-                            } else if (goodClass) {
-                                fin.name = "entityRenderer";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "field_175616_W":
-                        case "field_175010_j": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "renderManager";
-                                changed = true;
-                            } else if (goodClass) {
-                                fin.name = "renderManager";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "field_71456_v": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "IngameGUI";
-                                changed = true;
-                            } else if (goodClass) {
-                                fin.name = "IngameGUI";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "field_71462_r": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "CurrentScreen";
-                                changed = true;
-                            } else if (goodClass) {
-                                fin.name = "CurrentScreen";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "field_71417_B": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "mouseHelper";
-                                changed = true;
-                            } else if (goodClass) {
-                                fin.name = "mouseHelper";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "field_71441_e": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "WORLD";
-                                changed = true;
-                            } else if (goodClass) {
-                                fin.name = "WORLD";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "field_71071_by": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "Inventory";
-                                changed = true;
-                            } else if (goodClass) {
-                                fin.name = "Inventory";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "field_78729_o": {
-                            if (goodClass) {
-                                fin.name = "EntityRenderMap";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "INSTANCE": {
-                            if (fin.owner.equals("net/minecraftforge/fml/client/FMLClientHandler")) {
-                                if (fin.getOpcode() == GETSTATIC) {
-                                    fin.name = "instance";
-                                    changed = true;
-                                } else if (goodClass) {
-                                    fin.name = "instance";
-                                    changed = true;
-                                }
-                                break;
-                            }
-                        }
-                        if (fin.owner.equals("net/minecraft/launchwrapper/Launch")) {
-                            if (fin.getOpcode() == GETSTATIC) {
-                                fin.owner = "kanade/kill/Launch";
-                                changed = true;
-                            } else if (goodClass) {
-                                fin.owner = "kanade/kill/Launch";
-                                changed = true;
-                            }
-                        }
-                    }
-                } else if (ain instanceof MethodInsnNode) {
-                    MethodInsnNode min = (MethodInsnNode) ain;
-                    if (min.owner.equals("net/minecraft/launchwrapper/Launch")) {
-                        min.owner = "kanade/kill/Launch";
-                        changed = true;
-                    }
-                    switch (min.name) {
-                        case "func_71381_h": {
-                            if (goodClass) {
-                                min.name = "SetIngameFocus";
-                                changed = true;
-                            }
-                            break;
-                        }
-                        case "func_71364_i": {
-                            if (goodClass) {
-                                min.name = "SetIngameNotInFocus";
-                                changed = true;
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-            if (!goodClass && !(mn.name.equals("<init>") || mn.name.equals("<clinit>") || Modifier.isAbstract(mn.access) || Modifier.isNative(mn.access))) {
-                Type type = Type.getReturnType(mn.desc);
-                if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY) {
-                    ASMUtil.InsertReturn(mn, type);
-                }
-            }
-            if (mn.localVariables != null && !goodClass) {
-                for (LocalVariableNode lvn : mn.localVariables) {
-                    if (lvn.desc.startsWith("net/minecraftforge/") && lvn.desc.contains("/event/")) {
-                        kanade.kill.Launch.LOGGER.info("Find event listsner:" + transformedName);
-                        event_listeners.add(cn.name.replace('/', '.'));
-                        break;
-                    }
-                }
-            }
-        }
         if (!goodClass) {
             for (FieldNode fn : cn.fields) {
                 if (Modifier.isStatic(fn.access)) {
@@ -897,7 +942,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
 
     @Override
     public byte[] transform(ClassLoader classLoader, String s, Class<?> aClass, ProtectionDomain protectionDomain, byte[] bytes) {
-        s = s.replace('/','.');
+        s = s.replace('/', '.');
         return transform(s, classNameTransformer.remapClassName(s), bytes);
     }
 }

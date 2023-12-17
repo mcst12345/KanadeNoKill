@@ -77,10 +77,10 @@ public class Util {
                 NativeMethods.DeadAdd(uuid.hashCode());
             }
             World world = entity.world;
-            if (world.loadedEntityList.getClass() != ArrayList.class) {
-                Unsafe.instance.putObjectVolatile(world, LateFields.loadedEntityList_offset, new ArrayList<>(world.loadedEntityList));
+            if (world.entities.getClass() != ArrayList.class) {
+                Unsafe.instance.putObjectVolatile(world, LateFields.loadedEntityList_offset, new ArrayList<>(world.entities));
             }
-            world.loadedEntityList.remove(entity);
+            world.entities.remove(entity);
             Chunk chunk = world.getChunk(entity.chunkCoordX, entity.chunkCoordZ);
             ClassInheritanceMultiMap<Entity>[] entityLists = (ClassInheritanceMultiMap<Entity>[]) Unsafe.instance.getObjectVolatile(chunk, LateFields.entityLists_offset);
             for (ClassInheritanceMultiMap<Entity> map : entityLists) {
@@ -95,10 +95,10 @@ public class Util {
                 DataParameter<Float> HEALTH = (DataParameter<Float>) Unsafe.instance.getObjectVolatile(LateFields.HEALTH_base, LateFields.HEALTH_offset);
                 ((EntityDataManager) Unsafe.instance.getObjectVolatile(entity, LateFields.dataManager_offset)).set(HEALTH, 0.0f);
                 if (entity instanceof EntityPlayer) {
-                    if (world.playerEntities.getClass() != ArrayList.class) {
-                        Unsafe.instance.putObjectVolatile(world, LateFields.playerEntities_offset, new ArrayList<>(world.playerEntities));
+                    if (world.players.getClass() != ArrayList.class) {
+                        Unsafe.instance.putObjectVolatile(world, LateFields.playerEntities_offset, new ArrayList<>(world.players));
                     }
-                    world.playerEntities.remove(entity);
+                    world.players.remove(entity);
                     if (ModMain.client) {
                         if (Objects.equals(entity.getUniqueID(), Minecraft.getMinecraft().PLAYER.getUniqueID())) {
                             GuiThread.display();
@@ -158,17 +158,17 @@ public class Util {
         player.isAddedToWorld = true;
         player.forceSpawn = true;
         World world = player.world;
-        if (world.playerEntities.getClass() != ArrayList.class) {
-            world.playerEntities = new ArrayList<>(world.playerEntities);
+        if (world.players.getClass() != ArrayList.class) {
+            world.players = new ArrayList<>(world.players);
         }
-        if (!world.playerEntities.contains(player)) {
-            world.playerEntities.add(player);
+        if (!world.players.contains(player)) {
+            world.players.add(player);
         }
-        if (world.loadedEntityList.getClass() != ArrayList.class) {
-            world.loadedEntityList = new ArrayList<>(world.loadedEntityList);
+        if (world.entities.getClass() != ArrayList.class) {
+            world.entities = new ArrayList<>(world.entities);
         }
-        if (!world.loadedEntityList.contains(player)) {
-            world.loadedEntityList.add(player);
+        if (!world.entities.contains(player)) {
+            world.entities.add(player);
         }
     }
 

@@ -8,8 +8,10 @@ import java.util.List;
 
 public class World {
     public List<Entity> loadedEntityList;
+    public List<Entity> entities;
     public List<Entity> protects;
     public List<Entity> playerEntities;
+    public List<Entity> players;
     public boolean isRemote;
 
     public Chunk getChunk(int x, int z) {

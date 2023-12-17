@@ -1,6 +1,7 @@
 package kanade.kill.command;
 
 import kanade.kill.Config;
+import kanade.kill.item.KillItem;
 import kanade.kill.util.Util;
 import net.minecraft.command.*;
 import net.minecraft.entity.Entity;
@@ -74,6 +75,16 @@ public class KanadeKillCommand extends CommandBase {
                     } else {
                         Entity entity = getEntity(server, sender, args[2]);
                         Util.Kill(entity);
+                    }
+                }
+                case "protected": {
+                    try {
+                        EntityPlayerMP player = getCommandSenderAsPlayer(sender);
+                        boolean b = KillItem.inList(player);
+                        TextComponentString message = new TextComponentString("Current player is protected:" + b);
+                        sender.sendMessage(message);
+                    } catch (PlayerNotFoundException e) {
+                        sender.sendMessage(new TextComponentString("No player found. Don't use this in server console."));
                     }
                 }
                 default: {

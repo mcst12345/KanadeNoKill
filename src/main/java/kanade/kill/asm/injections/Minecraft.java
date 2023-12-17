@@ -39,7 +39,7 @@ public class Minecraft implements Opcodes {
         inGameFocus.instructions.add(new InsnNode(ICONST_1));
         inGameFocus.instructions.add(new FieldInsnNode(PUTFIELD, "net/minecraft/client/Minecraft", "field_71415_G", "Z"));
         inGameFocus.instructions.add(new VarInsnNode(ALOAD, 0));
-        inGameFocus.instructions.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "field_71417_B", "Lnet/minecraft/util/MouseHelper;"));
+        inGameFocus.instructions.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "mouseHelper", "Lnet/minecraft/util/MouseHelper;"));
         inGameFocus.instructions.add(new MethodInsnNode(INVOKEVIRTUAL, "net/minecraft/util/MouseHelper", "func_74372_a", "()V", false));
         inGameFocus.instructions.add(new VarInsnNode(ALOAD, 0));
         inGameFocus.instructions.add(new InsnNode(ACONST_NULL));
@@ -69,7 +69,7 @@ public class Minecraft implements Opcodes {
         inGameNotFocus.instructions.add(new FieldInsnNode(PUTFIELD, "net/minecraft/client/Minecraft", "field_71415_G", "Z"));
         inGameNotFocus.instructions.add(l3);
         inGameNotFocus.instructions.add(new VarInsnNode(ALOAD, 0));
-        inGameNotFocus.instructions.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "field_71417_B", "Lnet/minecraft/util/MouseHelper;"));
+        inGameNotFocus.instructions.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "mouseHelper", "Lnet/minecraft/util/MouseHelper;"));
         inGameNotFocus.instructions.add(new MethodInsnNode(INVOKEVIRTUAL, "net/minecraft/util/MouseHelper", "func_74373_b", "()V", false));
         inGameNotFocus.instructions.add(l1);
         inGameNotFocus.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
@@ -85,11 +85,11 @@ public class Minecraft implements Opcodes {
         LabelNode label_1 = new LabelNode();
 
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "field_71462_r", "Lnet/minecraft/client/gui/GuiScreen;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "CurrentScreen", "Lnet/minecraft/client/gui/GuiScreen;"));
         list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "isKanadeDeathGui", "(Ljava/lang/Object;)Z", false));
         list.add(new JumpInsnNode(IFEQ, label_1));
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "field_71462_r", "Lnet/minecraft/client/gui/GuiScreen;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "CurrentScreen", "Lnet/minecraft/client/gui/GuiScreen;"));
         list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "isKanadeDeathGuiClosed", "(Ljava/lang/Object;)Z", false));
         list.add(new JumpInsnNode(IFNE, label_1));
         list.add(new InsnNode(RETURN));
