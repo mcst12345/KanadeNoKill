@@ -88,20 +88,20 @@ public class KanadeClassLoader extends LaunchClassLoader {
     }
 
     private byte[] runTransformers(final String name, final String transformedName, byte[] basicClass) {
-        try {
-            List<IClassTransformer> transformers = (List<IClassTransformer>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformers_offset);
-            if (transformers.getClass() != TransformerList.class) {
-                transformers = new TransformerList<>(transformers);
-                Unsafe.instance.putObjectVolatile(this, EarlyFields.transformers_offset, transformers);
-            }
-            for (final IClassTransformer transformer : transformers) {
-                basicClass = transformer.transform(name, transformedName, basicClass);
-            }
-            return basicClass;
-        } catch (Throwable t) {
-            Launch.LOGGER.warn("Catch exception when running transformers:", t);
-            return basicClass;
+        List<IClassTransformer> transformers = (List<IClassTransformer>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformers_offset);
+        if (transformers.getClass() != TransformerList.class) {
+            transformers = new TransformerList<>(transformers);
+            Unsafe.instance.putObjectVolatile(this, EarlyFields.transformers_offset, transformers);
         }
+        for (final IClassTransformer transformer : transformers) {
+            try {
+                basicClass = transformer.transform(name, transformedName, basicClass);
+            } catch (Throwable t) {
+                Launch.LOGGER.warn("Catch exception when running transformers:" + transformedName + ":", t);
+                return basicClass;
+            }
+        }
+        return basicClass;
     }
 
     @Override
@@ -156,6 +156,10 @@ public class KanadeClassLoader extends LaunchClassLoader {
             return cachedClasses.get(name);
         }
 
+        final String fileName = untransformedName.replace('.', '/').concat(".class");
+        URLConnection urlConnection = findCodeSourceConnectionFor(fileName);
+
+
         for (final String exception : transformerExceptions) {
             if (name.startsWith(exception)) {
                 try {
@@ -164,7 +168,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
                         throw new ClassNotFoundException(name);
                     }
                     CLASS = Transformer.instance.transform(untransformedName, transformedName, CLASS);
-                    final Class<?> clazz = Unsafe.instance.defineClass(transformedName, CLASS, 0, CLASS.length, this, new ProtectionDomain(new CodeSource(null, new Certificate[0]), null));
+                    final Class<?> clazz = Unsafe.instance.defineClass(transformedName, CLASS, 0, CLASS.length, this, new ProtectionDomain(new CodeSource(urlConnection != null ? urlConnection.getURL() : null, new Certificate[0]), null));
                     cachedClasses.put(name, clazz);
                     return clazz;
                 } catch (IOException e) {
@@ -180,8 +184,6 @@ public class KanadeClassLoader extends LaunchClassLoader {
 
             final int lastDot = untransformedName.lastIndexOf('.');
             final String packageName = lastDot == -1 ? "" : untransformedName.substring(0, lastDot);
-            final String fileName = untransformedName.replace('.', '/').concat(".class");
-            URLConnection urlConnection = findCodeSourceConnectionFor(fileName);
 
             CodeSigner[] signers = null;
 
