@@ -448,8 +448,8 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
 
         changed = Redirect(cn, goodClass, transformedName);
 
-	if(!cn.interfaces.contains("java.io.Serializable")){
-		cn.interfaces.add("java.io.Serializable");
+        if (!cn.interfaces.contains("java/io/Serializable")) {
+            cn.interfaces.add("java/io/Serializable");
 		changed = true;
 	}
 

@@ -88,7 +88,7 @@ public class Core extends FMLCorePlugin {
                     }
                 });
                 LAUNCH.append("\"-DKanadeMode=true\" ");
-                LAUNCH.append("\"-cp ").append(classpath).append(win ? ";" : ":").append(jar).append("\" ").append(args);
+                LAUNCH.append("-cp \"").append(classpath).append(win ? ";" : ":").append(jar).append("\" ").append(args);
 
                 System.out.println(LAUNCH);
 

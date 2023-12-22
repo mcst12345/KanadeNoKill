@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/KanadeNoKill.kanade.main.iml" filepath="$PROJECT_DIR$/.idea/modules/KanadeNoKill.kanade.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/KanadeNoKill.kanade.test.iml" filepath="$PROJECT_DIR$/.idea/modules/KanadeNoKill.kanade.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/KanadeNoKill.lib.main.iml" filepath="$PROJECT_DIR$/.idea/modules/KanadeNoKill.lib.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/KanadeNoKill.lib.test.iml" filepath="$PROJECT_DIR$/.idea/modules/KanadeNoKill.lib.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/kanade.lib.main.iml" filepath="$PROJECT_DIR$/.idea/modules/kanade.lib.main.iml" />

@@ -134,6 +134,9 @@ public class KanadeClassLoader extends LaunchClassLoader {
 
     @Override
     public Class<?> findClass(String name) throws ClassNotFoundException {
+        if (name.equals("net.minecraft.world.World")) {
+            throw new ClassNotFoundException(name);
+        }
         ClassLoader parent = (ClassLoader) Unsafe.instance.getObjectVolatile(this, EarlyFields.parent_offset);
         if (name.equals("kanade.kill.util.NativeMethods") || name.equals("kanade.kill.Launch") || name.equals("kanade.kill.ServerMain")) {
             return parent.loadClass(name);
