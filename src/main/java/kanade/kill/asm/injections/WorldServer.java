@@ -19,7 +19,11 @@ public class WorldServer implements Opcodes {
         LabelNode label7 = new LabelNode();
         LabelNode label8 = new LabelNode();
         LabelNode label9 = new LabelNode();
+        list.add(new VarInsnNode(ALOAD, 1));
+        list.add(new JumpInsnNode(IFNONNULL, label0));
+        list.add(new InsnNode(RETURN));
         list.add(label0);
+        list.add(new FrameNode(F_SAME, 0, null, 0, null));
         list.add(new TypeInsnNode(NEW, "java/util/ArrayList"));
         list.add(new InsnNode(DUP));
         list.add(new VarInsnNode(ALOAD, 1));
@@ -48,7 +52,7 @@ public class WorldServer implements Opcodes {
         list.add(new VarInsnNode(ALOAD, 4));
         list.add(new MethodInsnNode(INVOKESPECIAL, "net/minecraft/world/WorldServer", "func_184165_i", "(Lnet/minecraft/entity/Entity;)Z", false));
         list.add(new JumpInsnNode(IFEQ, label6));
-        list.add(new FieldInsnNode(GETSTATIC, "net/minecraftforge/common/MinecraftForge", "EVENT_BUS", "Lnet/minecraftforge/fml/common/eventhandler/EventBus;"));
+        list.add(new FieldInsnNode(GETSTATIC, "net/minecraftforge/common/MinecraftForge", "Event_bus", "Lnet/minecraftforge/fml/common/eventhandler/EventBus;"));
         list.add(new TypeInsnNode(NEW, "net/minecraftforge/event/entity/EntityJoinWorldEvent"));
         list.add(new InsnNode(DUP));
         list.add(new VarInsnNode(ALOAD, 4));
@@ -58,7 +62,7 @@ public class WorldServer implements Opcodes {
         list.add(new JumpInsnNode(IFNE, label6));
         list.add(label7);
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/WorldServer", "field_72996_f", "Ljava/util/List;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/WorldServer", "entities", "Ljava/util/List;"));
         list.add(new VarInsnNode(ALOAD, 4));
         list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "add", "(Ljava/lang/Object;)Z", true));
         list.add(new InsnNode(POP));

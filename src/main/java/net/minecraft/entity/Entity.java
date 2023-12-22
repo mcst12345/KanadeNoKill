@@ -15,6 +15,7 @@ public class Entity {
     public World world;
     public int chunkCoordX;
     public int chunkCoordZ;
+    public int entityId;
 
     @Nullable
     public UUID getUniqueID() {

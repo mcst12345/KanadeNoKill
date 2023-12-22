@@ -2,7 +2,6 @@ package kanade.kill.network.packets;
 
 import io.netty.buffer.ByteBuf;
 import kanade.kill.ModMain;
-import kanade.kill.reflection.LateFields;
 import kanade.kill.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -12,38 +11,41 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import scala.concurrent.util.Unsafe;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+public class KillEntity implements IMessage {
+    private int id;
 
-public class KillAllEntities implements IMessage {
+    private KillEntity() {
+    }
+
+    public KillEntity(int id) {
+        this.id = id;
+    }
+
     @Override
     public void fromBytes(ByteBuf buf) {
-
+        id = buf.readInt();
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-
+        buf.writeInt(id);
     }
 
-    public static class MessageHandler implements IMessageHandler<KillAllEntities, IMessage> {
+    public static class MessageHandler implements IMessageHandler<KillEntity, IMessage> {
+
         @Override
-        @SuppressWarnings({"unchecked", "raw"})
         @SideOnly(Side.CLIENT)
-        public IMessage onMessage(KillAllEntities message, MessageContext ctx) {
+        public IMessage onMessage(KillEntity message, MessageContext ctx) {
             if (!ModMain.client) {
                 return null;
             }
             WorldClient world = Minecraft.getMinecraft().WORLD;
-            List<Entity> targets = new ArrayList<>();
-            targets.addAll(world.entities);
-            targets.addAll(world.players);
-            targets.addAll((Collection) Unsafe.instance.getObjectVolatile(world, LateFields.entityLists_offset));
-            for (Entity e : targets) {
-                Util.Kill(e);
+            if (world != null) {
+                Entity entity = world.getEntityByID(message.id);
+                if (entity != null) {
+                    Util.Kill(entity);
+                }
             }
             return null;
         }

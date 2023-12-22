@@ -85,6 +85,7 @@ public class Launch {
         classes.add("kanade.kill.asm.Transformer");
         classes.add("kanade.kill.util.TransformerList");
         classes.add("kanade.kill.thread.ClassLoaderCheckThread");
+        classes.add("kanade.kill.thread.FieldSaveThread");
         classes.add("kanade.kill.classload.KanadeClassLoader");
         classes.add("kanade.kill.util.FieldInfo");
         classes.add("kanade.kill.util.KanadeSecurityManager");

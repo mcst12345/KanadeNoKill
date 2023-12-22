@@ -71,7 +71,7 @@ public class World implements Opcodes {
         list.add(new TypeInsnNode(CHECKCAST, "net/minecraft/entity/Entity"));
         list.add(new VarInsnNode(ASTORE, 4));
         list.add(label5);
-        list.add(new FieldInsnNode(GETSTATIC, "net/minecraftforge/common/MinecraftForge", "EVENT_BUS", "Lnet/minecraftforge/fml/common/eventhandler/EventBus;"));
+        list.add(new FieldInsnNode(GETSTATIC, "net/minecraftforge/common/MinecraftForge", "Event_bus", "Lnet/minecraftforge/fml/common/eventhandler/EventBus;"));
         list.add(new TypeInsnNode(NEW, "net/minecraftforge/event/entity/EntityJoinWorldEvent"));
         list.add(new InsnNode(DUP));
         list.add(new VarInsnNode(ALOAD, 4));

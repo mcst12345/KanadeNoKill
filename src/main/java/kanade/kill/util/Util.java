@@ -9,15 +9,20 @@ import kanade.kill.asm.Transformer;
 import kanade.kill.item.KillItem;
 import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.CoreDump;
+import kanade.kill.network.packets.KillEntity;
 import kanade.kill.reflection.LateFields;
 import kanade.kill.reflection.ReflectionUtil;
+import kanade.kill.thread.FieldSaveThread;
 import kanade.kill.thread.GuiThread;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGameOver;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -25,11 +30,15 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.pathfinding.PathWorldListener;
 import net.minecraft.potion.Potion;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.registry.RegistryNamespaced;
+import net.minecraft.world.IWorldEventListener;
+import net.minecraft.world.ServerWorldEventHandler;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.ForgeInternalHandler;
@@ -51,8 +60,8 @@ import java.util.logging.Logger;
 public class Util {
     public static final List<Runnable> tasks = new ArrayList<>();
     private static final Set<UUID> Dead = new HashSet<>();
-    private static final Map<Field, Object> cache = new HashMap<>();
-    private static final Map<Field, Object> cache2 = new HashMap<>();
+    public static final Map<Field, Object> cache = new HashMap<>();
+    public static final Map<Field, Object> cache2 = new HashMap<>();
     private static Object saved_listeners;
     private static Object saved_listeners_2;
     public static boolean killing;
@@ -110,6 +119,18 @@ public class Util {
                         }
                     }
                 }
+            }
+            for (IWorldEventListener listener : entity.world.eventListeners) {
+                if (entity instanceof EntityLiving && listener instanceof PathWorldListener) {
+                    ((PathWorldListener) listener).navigations.remove(((EntityLiving) entity).getNavigator());
+                }
+                if (world instanceof WorldServer && listener instanceof ServerWorldEventHandler) {
+                    EntityTracker tracker = ((WorldServer) entity.world).getEntityTracker();
+                    tracker.untrack(entity);
+                }
+            }
+            if (!entity.world.isRemote) {
+                NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillEntity(entity.entityId));
             }
             reset();
             killing = false;
@@ -175,13 +196,12 @@ public class Util {
 
     public static Object clone(Object o, int depth) {
         if (o == null) {
-            Launch.LOGGER.warn("Object is null.");
             return null;
         }
         if (o instanceof Class) {
             return o;
         }
-        if (depth > 10000) {
+        if (depth > 20000) {
             Launch.LOGGER.info("Too deep.");
             return o;
         }
@@ -437,7 +457,8 @@ public class Util {
             throw new RuntimeException(t);
         }
         Launch.LOGGER.info("Saving fields which the transformer found.");
-        for (FieldInfo fieldinfo : Transformer.getFields()) {
+        while (!Transformer.getFields().isEmpty()) {
+            FieldInfo fieldinfo = (FieldInfo) Transformer.getFields().poll();
             Field field = fieldinfo.toField();
             if (field == null || cache.containsKey(field)) {
                 continue;
@@ -453,6 +474,9 @@ public class Util {
                 }
             }
         }
+
+        FieldSaveThread thread = new FieldSaveThread();
+        thread.start();
     }
 
     public synchronized static Object getStatic(Field field) {
@@ -641,7 +665,7 @@ public class Util {
         }
         String name = ReflectionUtil.getName(gui.getClass());
         String l = name.toLowerCase();
-        return (Config.guiProtect && (Transformer.isModClass(name) || gui.getClass().getProtectionDomain() == null || gui.getClass().getProtectionDomain().getCodeSource() == null)) || gui instanceof Gui || l.contains("death") || l.contains("over") || l.contains("die") || l.contains("dead");
+        return (Config.guiProtect && (Transformer.isModClass(name) || gui.getClass().getProtectionDomain() == null || gui.getClass().getProtectionDomain().getCodeSource() == null)) || gui.getClass() == ModMain.GUI || l.contains("death") || l.contains("over") || l.contains("die") || l.contains("dead");
     }
 
     public static void DisplayDeathGui() {
@@ -664,10 +688,9 @@ public class Util {
         if (ModMain.client) {
             if (event instanceof GuiOpenEvent) {
                 GuiOpenEvent guiOpenEvent = (GuiOpenEvent) event;
-                return !ModMain.GUI.isInstance(guiOpenEvent.getGui());
+                return !ModMain.GUI.isInstance(guiOpenEvent.getGui()) || (guiOpenEvent.getGui() instanceof GuiGameOver);
             }
         }
         return true;
     }
 }
-

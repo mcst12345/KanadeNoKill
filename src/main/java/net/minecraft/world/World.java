@@ -13,6 +13,8 @@ public class World {
     public List<Entity> playerEntities;
     public List<Entity> players;
     public boolean isRemote;
+    public List<IWorldEventListener> eventListeners;
+    ;
 
     public Chunk getChunk(int x, int z) {
         return null;

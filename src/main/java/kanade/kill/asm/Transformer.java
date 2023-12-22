@@ -1,6 +1,5 @@
 package kanade.kill.asm;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import kanade.kill.Empty;
 import kanade.kill.Launch;
@@ -27,13 +26,14 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.security.ProtectionDomain;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class Transformer implements IClassTransformer, Opcodes, ClassFileTransformer {
     private static final IClassNameTransformer classNameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(kanade.kill.Launch.classLoader, EarlyFields.renameTransformer_offset);
     public static final Transformer instance = new Transformer();
     private static final ObjectOpenHashSet<String> event_listeners = new ObjectOpenHashSet<>();
-    private static final ObjectArrayList<FieldInfo> fields = new ObjectArrayList<>();
+    private static final Queue<FieldInfo> fields = new LinkedBlockingQueue<>();
     private Transformer(){}
 
     public static final Set<String> Kanade = new HashSet<>();
@@ -59,8 +59,8 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         return Collections.unmodifiableSet(event_listeners);
     }
 
-    public static List<FieldInfo> getFields() {
-        return Collections.unmodifiableList(fields);
+    public static Queue getFields() {
+        return fields;
     }
 
     private static final Set<String> modClasses = new HashSet<>();
@@ -447,11 +447,6 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         }
 
         changed = Redirect(cn, goodClass, transformedName);
-
-        if (!cn.interfaces.contains("java/io/Serializable")) {
-            cn.interfaces.add("java/io/Serializable");
-		changed = true;
-	}
 
         switch (transformedName) {
             case "net.minecraftforge.common.DimensionManager": {

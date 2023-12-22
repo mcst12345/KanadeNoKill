@@ -49,6 +49,8 @@ public class ModMain {
             classes.add("kanade.kill.network.NetworkHandler");
             classes.add("kanade.kill.network.packets.CoreDump");
             classes.add("kanade.kill.network.packets.CoreDump$MessageHandler");
+            classes.add("kanade.kill.network.packets.KillEntity");
+            classes.add("kanade.kill.network.packets.KillEntity$MessageHandler");
             classes.add("kanade.kill.command.KanadeKillCommand");
             classes.add("kanade.kill.network.packets.KillAllEntities$MessageHandler");
 

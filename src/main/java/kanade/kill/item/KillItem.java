@@ -124,7 +124,7 @@ public class KillItem extends Item {
                     List<Entity> targets = new ArrayList<>();
                     for (int id : DimensionManager.getIDs()) {
                         WorldServer world = DimensionManager.getWorld(id);
-                        targets.addAll(world.loadedEntityList);
+                        targets.addAll(world.entities);
                     }
                     Util.Kill(targets);
                 });
@@ -135,7 +135,7 @@ public class KillItem extends Item {
             return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
         } else {
             Config.Annihilation = !Config.Annihilation;
-            return new ActionResult<>(EnumActionResult.PASS, playerIn.getHeldItem(handIn));
+            return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
         }
     }
 }
