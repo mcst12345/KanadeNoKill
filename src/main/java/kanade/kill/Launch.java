@@ -91,7 +91,7 @@ public class Launch {
         classes.add("kanade.kill.util.KanadeSecurityManager");
         classes.add("kanade.kill.thread.SecurityManagerCheckThread");
         classes.add("kanade.kill.thread.KillerThread");
-        classes.add("kanade.kill.thread.GuiThread");
+        classes.add("kanade.kill.thread.DisplayGui");
 
         try {
             for (String s : classes) {

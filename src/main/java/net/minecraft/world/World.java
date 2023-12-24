@@ -1,6 +1,9 @@
 package net.minecraft.world;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.storage.WorldInfo;
 
@@ -21,6 +24,14 @@ public class World {
     }
 
     public WorldInfo getWorldInfo() {
+        return null;
+    }
+
+    public boolean setBlockState(BlockPos pos, IBlockState newState, int flags) {
+        return false;
+    }
+
+    public MinecraftServer getMinecraftServer() {
         return null;
     }
 }

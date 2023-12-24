@@ -16,6 +16,7 @@ public class Minecraft implements Opcodes {
         cn.fields.add(new FieldNode(ACC_PUBLIC, "WORLD", "Lnet/minecraft/client/multiplayer/WorldClient;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "IngameGUI", "Lnet/minecraft/client/gui/GuiIngame;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "CurrentScreen", "Lnet/minecraft/client/gui/GuiScreen;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_STATIC, "dead", "Z", null, null));
     }
     public static void AddMethod(ClassNode cn) {
         Launch.LOGGER.info("Adding method.");
@@ -121,5 +122,25 @@ public class Minecraft implements Opcodes {
             }
         }
         Launch.LOGGER.info("Inject into init().");
+    }
+
+    public static void InjectRun(MethodNode mn) {
+        AbstractInsnNode index = null;
+        for (AbstractInsnNode ain : mn.instructions.toArray()) {
+            if (ain instanceof FieldInsnNode) {
+                FieldInsnNode fin = (FieldInsnNode) ain;
+                if (fin.name.equals("field_71425_J") && fin.getOpcode() == GETFIELD) {
+                    index = fin.getNext();
+                    break;
+                }
+            }
+        }
+        if (index == null) {
+            throw new IllegalStateException("The fuck?");
+        }
+        InsnList list = new InsnList();
+        list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/thread/DisplayGui", "run", "()V", false));
+        mn.instructions.insert(index, list);
+        Launch.LOGGER.info("Inject into run().");
     }
 }

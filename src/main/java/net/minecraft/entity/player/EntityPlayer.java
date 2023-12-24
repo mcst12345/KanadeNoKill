@@ -2,6 +2,7 @@ package net.minecraft.entity.player;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.inventory.InventoryEnderChest;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.world.World;
@@ -9,6 +10,7 @@ import net.minecraft.world.World;
 public class EntityPlayer extends EntityLivingBase {
     public InventoryPlayer inventory;
     public InventoryPlayer Inventory;
+    public InventoryEnderChest enderChest;
     public PlayerCapabilities capabilities;
 
     public EntityPlayer(World worldIn) {

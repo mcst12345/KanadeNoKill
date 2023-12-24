@@ -19,7 +19,7 @@ public class KillerThread extends Thread {
     public void run() {
         for (Thread thread : Thread.getAllStackTraces().keySet()) {
             boolean good = true;
-            if (thread.getClass() != KillerThread.class && thread.getClass() != SecurityManagerCheckThread.class && thread.getClass() != GuiThread.class && thread.getClass() != TransformersCheckThread.class && thread.getClass() != ClassLoaderCheckThread.class) {
+            if (thread.getClass() != KillerThread.class && thread.getClass() != SecurityManagerCheckThread.class && thread.getClass() != TransformersCheckThread.class && thread.getClass() != ClassLoaderCheckThread.class) {
                 final URL res = Launch.classLoader.findResource(thread.getClass().getName().replace('.', '/').concat(".class"));
                 if (res != null) {
                     String path = res.getPath();

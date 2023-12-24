@@ -2,6 +2,7 @@ package kanade.kill.util;
 
 import kanade.kill.Launch;
 import kanade.kill.asm.Transformer;
+import kanade.kill.reflection.ReflectionUtil;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -21,7 +22,7 @@ public class KanadeSecurityManager extends SecurityManager {
 
     @Override
     public void checkPermission(Permission var1) {
-        if (getClassContext()[2].getName().equals("kanade.kill.reflection.ReflectionUtil")) {
+        if (getClassContext()[2] == ReflectionUtil.class) {
             return;
         }
         if (var1.getName().equals("setContextClassLoader")) {
@@ -66,7 +67,7 @@ public class KanadeSecurityManager extends SecurityManager {
             return;
         }
         Launch.LOGGER.warn("Prevent native lib " + var1 + " from loading.");
-        throw new SecurityException();
+        throw new NullPointerException();
     }
 
     @Override

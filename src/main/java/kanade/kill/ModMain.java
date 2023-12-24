@@ -15,6 +15,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.opengl.Display;
 import scala.concurrent.util.Unsafe;
 
 import javax.swing.*;
@@ -47,8 +48,12 @@ public class ModMain {
             classes.add("kanade.kill.reflection.LateFields");
             classes.add("kanade.kill.network.packets.KillAllEntities");
             classes.add("kanade.kill.network.NetworkHandler");
+            classes.add("kanade.kill.network.packets.Annihilation");
+            classes.add("kanade.kill.network.packets.Annihilation$MessageHandler");
             classes.add("kanade.kill.network.packets.CoreDump");
             classes.add("kanade.kill.network.packets.CoreDump$MessageHandler");
+            classes.add("kanade.kill.network.packets.KillCurrentPlayer");
+            classes.add("kanade.kill.network.packets.KillCurrentPlayer$MessageHandler");
             classes.add("kanade.kill.network.packets.KillEntity");
             classes.add("kanade.kill.network.packets.KillEntity$MessageHandler");
             classes.add("kanade.kill.command.KanadeKillCommand");
@@ -90,6 +95,10 @@ public class ModMain {
             death_item = (Item) Class.forName("kanade.kill.item.DeathItem", false, Launch.classLoader).newInstance();
 
             kanade.kill.Launch.LOGGER.info("Mod loading completed.");
+
+            if (client) {
+                Display.setTitle("Kanade's Kill R1 beta MC1.12.2");
+            }
         } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }

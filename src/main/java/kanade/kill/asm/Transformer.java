@@ -503,8 +503,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                             Minecraft.InjectDisplayGuiScreen(mn);
                             break;
                         }
+                        case "func_71411_J":
                         case "func_71407_l": {
                             ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "kanade/kill/util/Util", "killing", "Z"));
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "net/minecraft/client/Minecraft", "dead", "Z"));
                             break;
                         }
                         case "func_71381_h":
@@ -514,6 +516,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "func_71384_a": {
                             Minecraft.InjectInit(mn);
+                            break;
+                        }
+                        case "func_99999_d": {
+                            Minecraft.InjectRun(mn);
                             break;
                         }
                     }

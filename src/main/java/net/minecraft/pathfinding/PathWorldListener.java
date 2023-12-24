@@ -16,7 +16,6 @@ import java.util.List;
 public class PathWorldListener implements IWorldEventListener {
     public List<PathNavigate> navigations = Lists.newArrayList();
     ;
-
     @Override
     public void notifyBlockUpdate(World worldIn, BlockPos pos, IBlockState oldState, IBlockState newState, int flags) {
 

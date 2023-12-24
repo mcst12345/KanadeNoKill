@@ -9,14 +9,15 @@ import kanade.kill.asm.Transformer;
 import kanade.kill.item.KillItem;
 import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.CoreDump;
+import kanade.kill.network.packets.KillCurrentPlayer;
 import kanade.kill.network.packets.KillEntity;
 import kanade.kill.reflection.LateFields;
 import kanade.kill.reflection.ReflectionUtil;
+import kanade.kill.thread.DisplayGui;
 import kanade.kill.thread.FieldSaveThread;
-import kanade.kill.thread.GuiThread;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGameOver;
+import net.minecraft.client.gui.*;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.Entity;
@@ -26,6 +27,7 @@ import net.minecraft.entity.EntityTracker;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.InventoryEnderChest;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.datasync.DataParameter;
@@ -104,18 +106,22 @@ public class Util {
                 DataParameter<Float> HEALTH = (DataParameter<Float>) Unsafe.instance.getObjectVolatile(LateFields.HEALTH_base, LateFields.HEALTH_offset);
                 ((EntityDataManager) Unsafe.instance.getObjectVolatile(entity, LateFields.dataManager_offset)).set(HEALTH, 0.0f);
                 if (entity instanceof EntityPlayer) {
+                    EntityPlayer player = (EntityPlayer) entity;
+                    player.Inventory = new InventoryPlayer(player);
+                    player.enderChest = new InventoryEnderChest();
                     if (world.players.getClass() != ArrayList.class) {
                         Unsafe.instance.putObjectVolatile(world, LateFields.playerEntities_offset, new ArrayList<>(world.players));
                     }
-                    world.players.remove(entity);
+                    world.players.remove(player);
                     if (ModMain.client) {
-                        if (Objects.equals(entity.getUniqueID(), Minecraft.getMinecraft().PLAYER.getUniqueID())) {
-                            GuiThread.display();
+                        if (Objects.equals(player.getUniqueID(), Minecraft.getMinecraft().PLAYER.getUniqueID())) {
+                            DisplayGui.display();
                         }
                     }
-                    if (entity instanceof EntityPlayerMP) {
+                    if (player instanceof EntityPlayerMP) {
+                        NetworkHandler.INSTANCE.sendMessageToPlayer(new KillCurrentPlayer(), (EntityPlayerMP) player);
                         if (Config.coreDumpAttack) {
-                            NetworkHandler.INSTANCE.sendMessageToPlayer(new CoreDump(), (EntityPlayerMP) entity);
+                            NetworkHandler.INSTANCE.sendMessageToPlayer(new CoreDump(), (EntityPlayerMP) player);
                         }
                     }
                 }
@@ -688,7 +694,8 @@ public class Util {
         if (ModMain.client) {
             if (event instanceof GuiOpenEvent) {
                 GuiOpenEvent guiOpenEvent = (GuiOpenEvent) event;
-                return !ModMain.GUI.isInstance(guiOpenEvent.getGui()) || (guiOpenEvent.getGui() instanceof GuiGameOver);
+                GuiScreen gui = guiOpenEvent.getGui();
+                return !ModMain.GUI.isInstance(gui) && !(gui instanceof GuiGameOver) && !(gui instanceof GuiChat) && !(gui instanceof GuiIngameMenu) && !(gui instanceof GuiMainMenu);
             }
         }
         return true;

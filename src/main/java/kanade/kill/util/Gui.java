@@ -1,5 +1,6 @@
 package kanade.kill.util;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
@@ -17,22 +18,18 @@ public class Gui extends GuiScreen {
 
     public Gui() {
         this.causeOfDeath = new TextComponentString("");
+        this.allowUserInput = true;
     }
 
     public void initGui() {
         this.buttonList.clear();
         this.enableButtonsTimer = 0;
 
-        if (this.mc.WORLD.getWorldInfo().isHardcoreModeEnabled()) {
-            this.buttonList.add(new GuiButton(0, this.width / 2 - 100, this.height / 4 + 72, I18n.format("deathScreen.spectate")));
-            this.buttonList.add(new GuiButton(1, this.width / 2 - 100, this.height / 4 + 96, I18n.format("deathScreen." + (this.mc.isIntegratedServerRunning() ? "deleteWorld" : "leaveServer"))));
-        } else {
-            this.buttonList.add(new GuiButton(0, this.width / 2 - 100, this.height / 4 + 72, I18n.format("deathScreen.respawn")));
-            this.buttonList.add(new GuiButton(1, this.width / 2 - 100, this.height / 4 + 96, I18n.format("deathScreen.titleScreen")));
+        this.buttonList.add(new GuiButton(0, this.width / 2 - 100, this.height / 4 + 72, I18n.format("deathScreen.respawn")));
+        this.buttonList.add(new GuiButton(1, this.width / 2 - 100, this.height / 4 + 96, I18n.format("deathScreen.titleScreen")));
 
-            if (this.mc.getSession() == null) {
-                (this.buttonList.get(1)).enabled = false;
-            }
+        if (this.mc.getSession() == null) {
+            (this.buttonList.get(1)).enabled = false;
         }
 
         for (GuiButton guibutton : this.buttonList) {
@@ -46,15 +43,11 @@ public class Gui extends GuiScreen {
     @Override
     protected void actionPerformed(GuiButton button) {
         switch (button.id) {
-            case 0:
-                close = true;
-                this.mc.PLAYER.respawnPlayer();
-                this.mc.displayGuiScreen(null);
-                break;
             case 1:
 
                 if (this.mc.WORLD.getWorldInfo().isHardcoreModeEnabled()) {
                     close = true;
+                    Minecraft.dead = false;
                     this.mc.displayGuiScreen(new GuiMainMenu());
                 } else {
                     GuiYesNo guiyesno = new GuiYesNo(this, I18n.format("deathScreen.quit.confirm"), "", I18n.format("deathScreen.titleScreen"), I18n.format("deathScreen.respawn"), 0);
@@ -73,11 +66,8 @@ public class Gui extends GuiScreen {
 
             this.mc.loadWorld(null);
             close = true;
+            Minecraft.dead = false;
             this.mc.displayGuiScreen(new GuiMainMenu());
-        } else {
-            this.mc.PLAYER.respawnPlayer();
-            close = true;
-            this.mc.displayGuiScreen(null);
         }
     }
 

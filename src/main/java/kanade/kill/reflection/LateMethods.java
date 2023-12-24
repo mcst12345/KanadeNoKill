@@ -5,12 +5,13 @@ import net.minecraft.client.gui.GuiScreen;
 
 import java.lang.reflect.Method;
 
+@SuppressWarnings("JavaReflectionMemberAccess")
 public class LateMethods {
     public static final Method setWorldAndResolution;
 
     static {
         try {
-            setWorldAndResolution = GuiScreen.class.getDeclaredMethod("setWorldAndResolution", Minecraft.class, int.class, int.class);
+            setWorldAndResolution = GuiScreen.class.getDeclaredMethod("func_146280_a", Minecraft.class, int.class, int.class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }

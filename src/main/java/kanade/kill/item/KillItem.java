@@ -3,6 +3,7 @@ package kanade.kill.item;
 import kanade.kill.Config;
 import kanade.kill.ModMain;
 import kanade.kill.network.NetworkHandler;
+import kanade.kill.network.packets.Annihilation;
 import kanade.kill.network.packets.KillAllEntities;
 import kanade.kill.util.NativeMethods;
 import kanade.kill.util.Util;
@@ -135,6 +136,9 @@ public class KillItem extends Item {
             return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
         } else {
             Config.Annihilation = !Config.Annihilation;
+            if (playerIn.world.isRemote) {
+                NetworkHandler.INSTANCE.sendMessageToServer(new Annihilation(playerIn.dimension, (int) playerIn.posX, (int) playerIn.posY, (int) playerIn.posZ));
+            }
             return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
         }
     }

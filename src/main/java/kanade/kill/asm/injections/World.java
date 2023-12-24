@@ -297,8 +297,18 @@ public class World implements Opcodes {
         list.add(label3);
         list.add(new JumpInsnNode(GOTO, label4));
         list.add(label2);
-        mn.instructions.insert(list);
 
+        LabelNode label = new LabelNode();
+
+        list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/util/Util", "killing", "Z"));
+        list.add(new JumpInsnNode(IFEQ, label));
+        list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/ModMain", "client", "Z"));
+        list.add(new JumpInsnNode(IFEQ, label));
+        list.add(new FieldInsnNode(GETSTATIC, "net/minecraft/client/Minecraft", "dead", "Z"));
+        list.add(new JumpInsnNode(IFEQ, label));
+        list.add(new InsnNode(RETURN));
+        list.add(label);
+        mn.instructions.insert(list);
         mn.localVariables.add(new LocalVariableNode("e", "Lnet/minecraft/entity/Entity;", null, label5, label3, 2));
         Launch.LOGGER.info("Inject into updateEntities().");
     }

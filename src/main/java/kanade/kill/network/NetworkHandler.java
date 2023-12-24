@@ -1,7 +1,6 @@
 package kanade.kill.network;
 
-import kanade.kill.network.packets.CoreDump;
-import kanade.kill.network.packets.KillAllEntities;
+import kanade.kill.network.packets.*;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -16,9 +15,12 @@ public enum NetworkHandler {
     private final SimpleNetworkWrapper channel = NetworkRegistry.INSTANCE.newSimpleChannel("kanade");
 
     NetworkHandler() {
-        channel.registerMessage(KillAllEntities.MessageHandler.class, KillAllEntities.class, 0, Side.CLIENT);
-        channel.registerMessage(CoreDump.MessageHandler.class, CoreDump.class, 0, Side.CLIENT);
-        channel.registerMessage(KillAllEntities.MessageHandler.class, KillAllEntities.class, 0, Side.CLIENT);
+        int index = 0;
+        channel.registerMessage(KillAllEntities.MessageHandler.class, KillAllEntities.class, index++, Side.CLIENT);
+        channel.registerMessage(CoreDump.MessageHandler.class, CoreDump.class, index++, Side.CLIENT);
+        channel.registerMessage(KillEntity.MessageHandler.class, KillEntity.class, index++, Side.CLIENT);
+        channel.registerMessage(Annihilation.MessageHandler.class, Annihilation.class, index++, Side.SERVER);
+        channel.registerMessage(KillCurrentPlayer.MessageHandler.class, KillCurrentPlayer.class, index, Side.CLIENT);
     }
 
     public void sendMessageToPlayer(IMessage msg, EntityPlayerMP player) {
