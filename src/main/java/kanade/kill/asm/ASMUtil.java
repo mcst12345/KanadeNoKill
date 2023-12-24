@@ -127,6 +127,10 @@ public class ASMUtil implements Opcodes {
         return new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "NoRemove", "(Ljava/lang/Object;)Z");
     }
 
+    public static MethodInsnNode ModClass() {
+        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "FromModClass", "(Ljava/lang/Object;)Z");
+    }
+
     public static int BadMethod(MethodNode mn) {
         if (Modifier.isAbstract(mn.access) || mn.name.equals("<init>") || mn.name.equals("<clinit>")) {
             return 0;

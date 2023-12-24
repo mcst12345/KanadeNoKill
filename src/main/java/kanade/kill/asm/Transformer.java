@@ -7,6 +7,7 @@ import kanade.kill.asm.injections.*;
 import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.reflection.EarlyFields;
 import kanade.kill.util.FieldInfo;
+import kanade.kill.util.Util;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.ClassReader;
@@ -22,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.reflect.Modifier;
-import java.net.URL;
 import java.nio.file.Files;
 import java.security.ProtectionDomain;
 import java.util.*;
@@ -404,24 +404,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         boolean changed, compute_all = false;
         boolean goodClass = true;
         if (name.equals(transformedName)) {
-            final URL res = Launch.classLoader.findResource(name.replace('.', '/').concat(".class"));
-
-            if (res != null) {
-                String path = res.getPath();
-
-                if (path.contains("!")) {
-                    path = path.substring(0, path.indexOf("!"));
-                }
-                if (path.contains("file:/")) {
-                    path = path.replace("file:/", "");
-                }
-
-                if (path.startsWith("mods", path.lastIndexOf(File.separator) - 4)) {
-                    modClasses.add(name);
-                    goodClass = false;
-                }
-            } else {
+            if (Util.ModClass(name)) {
                 goodClass = false;
+                modClasses.add(name);
             }
         }
 
@@ -520,6 +505,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "func_99999_d": {
                             Minecraft.InjectRun(mn);
+                            break;
+                        }
+                        case "func_152343_a": {
+                            //ASMUtil.InsertReturn();
                             break;
                         }
                     }

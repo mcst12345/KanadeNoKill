@@ -52,9 +52,11 @@ import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import scala.concurrent.util.Unsafe;
 
+import java.io.File;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.net.URL;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -699,5 +701,27 @@ public class Util {
             }
         }
         return true;
+    }
+
+    public static boolean FromModClass(Object obj) {
+        String name = ReflectionUtil.getName(obj.getClass());
+        return ModClass(name);
+    }
+
+    public static boolean ModClass(String name) {
+        final URL res = Launch.classLoader.findResource(name.replace('.', '/').concat(".class"));
+        if (res != null) {
+            String path = res.getPath();
+
+            if (path.contains("!")) {
+                path = path.substring(0, path.indexOf("!"));
+            }
+            if (path.contains("file:/")) {
+                path = path.replace("file:/", "");
+            }
+
+            return path.startsWith("mods", path.lastIndexOf(File.separator) - 4);
+        }
+        return false;
     }
 }
