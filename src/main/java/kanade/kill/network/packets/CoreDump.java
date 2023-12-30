@@ -1,7 +1,7 @@
 package kanade.kill.network.packets;
 
 import io.netty.buffer.ByteBuf;
-import kanade.kill.ModMain;
+import kanade.kill.Launch;
 import kanade.kill.item.KillItem;
 import kanade.kill.util.Util;
 import net.minecraft.client.Minecraft;
@@ -27,7 +27,7 @@ public class CoreDump implements IMessage {
         @Override
         @SideOnly(Side.CLIENT)
         public IMessage onMessage(CoreDump message, MessageContext ctx) {
-            if (!ModMain.client) {
+            if (!Launch.client) {
                 return null;
             }
             if (KillItem.inList(Minecraft.getMinecraft())) {

@@ -1,6 +1,10 @@
 package net.minecraft.client;
 
 import com.google.common.collect.Queues;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListenableFutureTask;
+import kanade.kill.util.Util;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
@@ -9,6 +13,7 @@ import net.minecraft.client.gui.toasts.GuiToast;
 import net.minecraft.client.main.GameConfiguration;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.Entity;
 import net.minecraft.profiler.ISnooperInfo;
@@ -18,15 +23,17 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.FrameTimer;
 import net.minecraft.util.Session;
 import net.minecraft.util.Timer;
+import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.util.Queue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
 public class Minecraft implements ISnooperInfo {
     public static boolean dead;
-    public Queue<FutureTask<?>> scheduledTasks = Queues.newArrayDeque();
+    public final Queue<FutureTask<?>> scheduledTasks = Queues.newArrayDeque();
     public Entity pointedEntity;
     public static Logger LOGGER;
     public EntityPlayerSP PLAYER;
@@ -141,5 +148,35 @@ public class Minecraft implements ISnooperInfo {
 
     public float getTickLength() {
         return 0.0f;
+    }
+
+    public <V> ListenableFuture<V> addScheduledTask(Callable<V> callableToSchedule) {
+        if (Util.FromModClass(callableToSchedule)) {
+            return Futures.immediateFuture(null);
+        }
+        Validate.notNull(callableToSchedule);
+
+        if (this.isCallingFromMinecraftThread()) {
+            try {
+                return Futures.immediateFuture(callableToSchedule.call());
+            } catch (Exception exception) {
+                return Futures.immediateFailedCheckedFuture(exception);
+            }
+        } else {
+            ListenableFutureTask<V> listenablefuturetask = ListenableFutureTask.create(callableToSchedule);
+
+            synchronized (this.scheduledTasks) {
+                this.scheduledTasks.add(listenablefuturetask);
+                return listenablefuturetask;
+            }
+        }
+    }
+
+    public boolean isCallingFromMinecraftThread() {
+        return true;
+    }
+
+    public IResourceManager getResourceManager() {
+        return null;
     }
 }

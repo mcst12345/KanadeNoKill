@@ -28,6 +28,8 @@ import java.security.ProtectionDomain;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static java.lang.reflect.Modifier.*;
+
 @SuppressWarnings("SpellCheckingInspection")
 public class Transformer implements IClassTransformer, Opcodes, ClassFileTransformer {
     private static final IClassNameTransformer classNameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(kanade.kill.Launch.classLoader, EarlyFields.renameTransformer_offset);
@@ -289,7 +291,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_76645_j":
                         case "field_72996_f": {
-                            if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "entities";
+                                changed = true;
+                            } else if (goodClass) {
                                 fin.name = "entities";
                                 changed = true;
                             }
@@ -334,6 +339,13 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         case "func_71364_i": {
                             if (goodClass) {
                                 min.name = "SetIngameNotInFocus";
+                                changed = true;
+                            }
+                            break;
+                        }
+                        case "func_152343_a": {
+                            if (goodClass) {
+                                min.name = "AddTask";
                                 changed = true;
                             }
                             break;
@@ -481,7 +493,6 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 changed = true;
                 kanade.kill.Launch.LOGGER.info("Get Minecraft.");
                 Minecraft.AddField(cn);
-                Minecraft.AddMethod(cn);
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
                         case "func_147108_a": {
@@ -508,11 +519,12 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                             break;
                         }
                         case "func_152343_a": {
-                            //ASMUtil.InsertReturn();
+                            mn.name = "AddTask";
                             break;
                         }
                     }
                 }
+                Minecraft.AddMethod(cn);
                 break;
             }
             case "net.minecraft.item.ItemStack": {
@@ -783,6 +795,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 }
 
                 break;
+
             }
             case "net.minecraftforge.common.ForgeHooks": {
                 changed = true;
@@ -806,9 +819,15 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 kanade.kill.Launch.LOGGER.info("Get RenderManager");
                 RenderManager.AddField(cn);
                 for (MethodNode mn : cn.methods) {
-                    if (mn.name.equals("<init>")) {
-                        RenderManager.InjectConstructor(mn);
-                        break;
+                    switch (mn.name) {
+                        case "func_188391_a": {
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, 1, ASMUtil.isDead());
+                            break;
+                        }
+                        case "<init>": {
+                            RenderManager.InjectConstructor(mn);
+                            break;
+                        }
                     }
                 }
                 break;
@@ -893,17 +912,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         if (!goodClass) {
             for (FieldNode fn : cn.fields) {
                 if (Modifier.isStatic(fn.access)) {
-                    if (!fn.desc.startsWith("L") || fn.desc.contains("net/minecraft/nbt/NBTTagCompound")) {
-                        kanade.kill.Launch.LOGGER.info("Add field " + fn.name + " to reset list.");
-                        fields.add(new FieldInfo(cn, fn));
-                    } else {
-                        if (fn.signature != null) {
-                            if (fn.signature.startsWith("Ljava/util/Collection") || fn.signature.startsWith("Ljava/util/List") || fn.signature.startsWith("Ljava/util/Set") || fn.signature.startsWith("Ljava/util/Map")) {
-                                kanade.kill.Launch.LOGGER.info("Add field " + fn.name + " to reset list.");
-                                fields.add(new FieldInfo(cn, fn));
-                            }
-                        }
-                    }
+                    fields.add(new FieldInfo(cn, fn));
                 }
             }
 
@@ -923,6 +932,73 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 }
             }
         }
+
+        if (!isInterface(cn.access)) {
+            if (isPrivate(cn.access)) {
+                cn.access &= ~Opcodes.ACC_PRIVATE;
+                cn.access |= Opcodes.ACC_PUBLIC;
+                changed = true;
+            }
+            if (isProtected(cn.access)) {
+                cn.access &= ~Opcodes.ACC_PROTECTED;
+                cn.access |= Opcodes.ACC_PUBLIC;
+                changed = true;
+            }
+            if (isFinal(cn.access)) {
+                cn.access &= ~Opcodes.ACC_FINAL;
+                changed = true;
+            }
+            if (!isPublic(cn.access)) {
+                cn.access |= Opcodes.ACC_PUBLIC;
+                changed = true;
+            }
+            for (FieldNode fn : cn.fields) {
+                if (fn.name.equals("$VALUES")) continue;
+
+                if (isPrivate(fn.access)) {
+                    fn.access &= ~Opcodes.ACC_PRIVATE;
+                    fn.access |= Opcodes.ACC_PUBLIC;
+                    changed = true;
+                }
+                if (isProtected(fn.access)) {
+                    fn.access &= ~Opcodes.ACC_PROTECTED;
+                    fn.access |= Opcodes.ACC_PUBLIC;
+                    changed = true;
+                }
+                if (isFinal(fn.access)) {
+                    fn.access &= ~Opcodes.ACC_FINAL;
+                    changed = true;
+                }
+                if (!isPublic(fn.access)) {
+                    fn.access |= Opcodes.ACC_PUBLIC;
+                    changed = true;
+                }
+            }
+
+            for (MethodNode mn : cn.methods) {
+                if (mn.name.equals("<clinit>")) continue;
+
+                if (isPrivate(mn.access)) {
+                    mn.access &= ~Opcodes.ACC_PRIVATE;
+                    mn.access |= Opcodes.ACC_PUBLIC;
+                    changed = true;
+                }
+                if (isProtected(mn.access)) {
+                    mn.access &= ~Opcodes.ACC_PROTECTED;
+                    mn.access |= Opcodes.ACC_PUBLIC;
+                    changed = true;
+                }
+                if (isFinal(mn.access)) {
+                    mn.access &= ~Opcodes.ACC_FINAL;
+                    changed = true;
+                }
+                if (!isPublic(mn.access)) {
+                    mn.access |= Opcodes.ACC_PUBLIC;
+                    changed = true;
+                }
+            }
+        }
+
 
         if (changed) {
             ClassWriter cw = new ClassWriter(compute_all ? ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS);

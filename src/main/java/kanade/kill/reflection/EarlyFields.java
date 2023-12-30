@@ -8,6 +8,7 @@ import sun.instrument.InstrumentationImpl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.security.SecureClassLoader;
 
 public class EarlyFields {
     public static final long transformers_offset;
@@ -32,6 +33,7 @@ public class EarlyFields {
     public static final long name_offset;
     public static final Object classLoader_base;
     public static final long classLoader_offset;
+    public static final long pdcache_offset;
     static {
         try {
             Field field = ReflectionUtil.getField(Field.class, "modifiers");
@@ -78,6 +80,8 @@ public class EarlyFields {
             field = ReflectionUtil.getField(Launch.class, "classLoader");
             classLoader_base = Unsafe.instance.staticFieldBase(field);
             classLoader_offset = Unsafe.instance.staticFieldOffset(field);
+            field = ReflectionUtil.getField(SecureClassLoader.class, "pdcache");
+            pdcache_offset = Unsafe.instance.objectFieldOffset(field);
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }

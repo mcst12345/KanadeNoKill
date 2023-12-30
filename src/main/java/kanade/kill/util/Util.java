@@ -6,6 +6,7 @@ import kanade.kill.Config;
 import kanade.kill.Launch;
 import kanade.kill.ModMain;
 import kanade.kill.asm.Transformer;
+import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.item.KillItem;
 import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.CoreDump;
@@ -115,7 +116,7 @@ public class Util {
                         Unsafe.instance.putObjectVolatile(world, LateFields.playerEntities_offset, new ArrayList<>(world.players));
                     }
                     world.players.remove(player);
-                    if (ModMain.client) {
+                    if (Launch.client) {
                         if (Objects.equals(player.getUniqueID(), Minecraft.getMinecraft().PLAYER.getUniqueID())) {
                             DisplayGui.display();
                         }
@@ -414,7 +415,7 @@ public class Util {
                         if (shouldIgnore(field)) {
                             continue;
                         }
-                        Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName());
+                        Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
                         try {
                             Object o = getStatic(field);
                             cache.put(field, clone(o, 0));
@@ -446,7 +447,7 @@ public class Util {
                         if (shouldIgnore(field)) {
                             continue;
                         }
-                        Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName());
+                        Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
                         try {
                             Object object = getStatic(field);
 
@@ -471,7 +472,7 @@ public class Util {
             if (field == null || cache.containsKey(field)) {
                 continue;
             }
-            Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName());
+            Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
             try {
                 cache2.put(field, clone(getStatic(field), 0));
             } catch (Throwable t) {
@@ -592,7 +593,7 @@ public class Util {
     private static boolean shouldIgnore(Field field) {
         boolean result = field.getType() == CreativeTabs.class || field.getType() == RegistryNamespaced.class || field.getType() == SimpleNetworkWrapper.class;
         Object object = getStatic(field);
-        return result || object instanceof Item || object instanceof Block || object instanceof Potion || object instanceof Enchantment || object instanceof Logger || object instanceof MinecraftServer || (ModMain.client && (object instanceof Minecraft));
+        return result || object instanceof Item || object instanceof Block || object instanceof Potion || object instanceof Enchantment || object instanceof Logger || object instanceof MinecraftServer || (Launch.client && (object instanceof Minecraft));
     }
 
     private static boolean shouldIgnore(Class<?> clazz) {
@@ -615,7 +616,7 @@ public class Util {
                         if (shouldIgnore(field)) {
                             continue;
                         }
-                        Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName());
+                        Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
                         Object object = getStatic(field);
                         if (cache.containsKey(field)) {
                             Launch.LOGGER.info("Replacing.");
@@ -642,7 +643,7 @@ public class Util {
                         if (shouldIgnore(field)) {
                             continue;
                         }
-                        Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName());
+                        Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
                         Object object = getStatic(field);
                         if (cache.containsKey(field)) {
                             Launch.LOGGER.info("Replacing.");
@@ -657,7 +658,7 @@ public class Util {
 
         Launch.LOGGER.info("Resetting fields which the transformer found.");
         cache2.forEach((field, object) -> {
-            Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName());
+            Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
             Launch.LOGGER.info("Replacing.");
             putStatic(field, clone(object, 0));
         });
@@ -693,7 +694,7 @@ public class Util {
 
 
     public static boolean shouldPostEvent(Event event) {
-        if (ModMain.client) {
+        if (Launch.client) {
             if (event instanceof GuiOpenEvent) {
                 GuiOpenEvent guiOpenEvent = (GuiOpenEvent) event;
                 GuiScreen gui = guiOpenEvent.getGui();
@@ -705,10 +706,12 @@ public class Util {
 
     public static boolean FromModClass(Object obj) {
         String name = ReflectionUtil.getName(obj.getClass());
+        Launch.LOGGER.info("class:" + name);
         return ModClass(name);
     }
 
     public static boolean ModClass(String name) {
+        name = ((KanadeClassLoader) Launch.classLoader).untransformName(name);
         final URL res = Launch.classLoader.findResource(name.replace('.', '/').concat(".class"));
         if (res != null) {
             String path = res.getPath();

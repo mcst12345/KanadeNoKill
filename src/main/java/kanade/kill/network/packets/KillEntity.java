@@ -1,7 +1,7 @@
 package kanade.kill.network.packets;
 
 import io.netty.buffer.ByteBuf;
-import kanade.kill.ModMain;
+import kanade.kill.Launch;
 import kanade.kill.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -13,9 +13,9 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class KillEntity implements IMessage {
-    private int id;
+    public int id;
 
-    private KillEntity() {
+    public KillEntity() {
     }
 
     public KillEntity(int id) {
@@ -37,7 +37,7 @@ public class KillEntity implements IMessage {
         @Override
         @SideOnly(Side.CLIENT)
         public IMessage onMessage(KillEntity message, MessageContext ctx) {
-            if (!ModMain.client) {
+            if (!Launch.client) {
                 return null;
             }
             WorldClient world = Minecraft.getMinecraft().WORLD;

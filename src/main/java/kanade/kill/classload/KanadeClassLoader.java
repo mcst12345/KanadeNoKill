@@ -21,6 +21,7 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.security.CodeSigner;
 import java.security.CodeSource;
+import java.security.PermissionCollection;
 import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
 import java.util.*;
@@ -46,7 +47,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
         }
     }
 
-    private String untransformName(final String name) {
+    public String untransformName(final String name) {
         IClassNameTransformer renameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(this, EarlyFields.renameTransformer_offset);
         if (renameTransformer != null) {
             return renameTransformer.unmapClassName(name);
@@ -55,7 +56,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
         return name;
     }
 
-    private URLConnection findCodeSourceConnectionFor(final String name) {
+    public URLConnection findCodeSourceConnectionFor(final String name) {
         final URL resource = findResource(name);
         if (resource != null) {
             try {
@@ -230,7 +231,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
             final Class<?> clazz;
             Class<?> clazz1;
             try {
-                clazz1 = defineClass(transformedName, transformedClass, 0, transformedClass.length, codeSource);
+                clazz1 = Unsafe.instance.defineClass(transformedName, transformedClass, 0, transformedClass.length, this, getProtectionDomain(codeSource));
             } catch (Throwable t) {
                 Launch.LOGGER.error("The fuck!", t);
                 throw new ClassNotFoundException(name, t);
@@ -319,5 +320,19 @@ public class KanadeClassLoader extends LaunchClassLoader {
             Launch.LOGGER.warn("Problem loading class", t);
             return new byte[0];
         }
+    }
+
+    private ProtectionDomain getProtectionDomain(CodeSource cs) {
+        HashMap<CodeSource, ProtectionDomain> pdcache = (HashMap<CodeSource, ProtectionDomain>) Unsafe.instance.getObjectVolatile(this, EarlyFields.pdcache_offset);
+        if (cs == null)
+            return null;
+        ProtectionDomain pd;
+        pd = pdcache.get(cs);
+        if (pd == null) {
+            PermissionCollection perms = getPermissions(cs);
+            pd = new ProtectionDomain(cs, perms, this, null);
+            pdcache.put(cs, pd);
+        }
+        return pd;
     }
 }

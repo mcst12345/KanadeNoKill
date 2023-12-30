@@ -1,0 +1,55 @@
+package org.lwjgl.opengl;
+
+import kanade.kill.reflection.EarlyMethods;
+import kanade.kill.reflection.ReflectionUtil;
+
+public interface GLOffsets {
+    ContextCapabilities caps = GLContext.getCapabilities();
+    long glPushMatrix = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glPushMatrix");
+    long glClear = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glClear");
+    long glBindFramebuffer = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glBindFramebuffer");
+    long glViewport = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glViewport");
+    long glPopMatrix = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glPopMatrix");
+    long glColorMask = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glColorMask");
+    long glEnable = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glEnable");
+    long glDisable = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glDisable");
+    long glDepthMask = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glDepthMask");
+    long glMatrixMode = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glMatrixMode");
+    long glLoadIdentity = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glLoadIdentity");
+    long glOrtho = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glOrtho");
+    long glTranslatef = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glTranslatef");
+    long glColor4f = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glColor4f");
+    long glGenFramebuffers = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glGenFramebuffers");
+    long glGenTextures = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glGenTextures");
+    long glGenRenderbuffers = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glGenRenderbuffers");
+    long glBindTexture = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glBindTexture");
+    long glTexParameteri = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glTexParameteri");
+    long glTexImage2D = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glTexImage2D");
+    long glFramebufferTexture2D = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glFramebufferTexture2D");
+    long glBindRenderbuffer = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glBindRenderbuffer");
+    long glRenderbufferStorage = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glRenderbufferStorage");
+    long glFramebufferRenderbuffer = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glFramebufferRenderbuffer");
+    long glClearColor = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glClearColor");
+    long glClearDepth = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glClearDepth");
+    long glVertexPointer = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glVertexPointer");
+    long glEnableClientState = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glEnableClientState");
+    long glNormalPointer = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glNormalPointer");
+    long glColorPointer = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glColorPointer");
+    long glClientActiveTexture = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glClientActiveTexture");
+    long glTexCoordPointer = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glTexCoordPointer");
+    long glEnableVertexAttribArray = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glEnableVertexAttribArray");
+    long glVertexAttribPointer = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glVertexAttribPointer");
+    long glDisableClientState = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glDisableClientState");
+    long glDisableVertexAttribArray = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glDisableVertexAttribArray");
+    long glDrawArrays = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glDrawArrays");
+    long glBlendFuncSeparate = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glBlendFuncSeparate");
+    long glShadeModel = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glShadeModel");
+    long glScalef = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glScalef");
+    long glTexParameterf = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glTexParameterf");
+    long glTexSubImage2D = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glTexSubImage2D");
+    long glBegin = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glBegin");
+    long glTexCoord2f = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glTexCoord2f");
+    long glVertex3f = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glVertex3f");
+    long glEnd = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glEnd");
+    long glBlendFunc = (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, "glBlendFunc");
+}

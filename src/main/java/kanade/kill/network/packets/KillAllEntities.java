@@ -1,7 +1,7 @@
 package kanade.kill.network.packets;
 
 import io.netty.buffer.ByteBuf;
-import kanade.kill.ModMain;
+import kanade.kill.Launch;
 import kanade.kill.reflection.LateFields;
 import kanade.kill.util.Util;
 import net.minecraft.client.Minecraft;
@@ -34,7 +34,7 @@ public class KillAllEntities implements IMessage {
         @SuppressWarnings({"unchecked", "raw"})
         @SideOnly(Side.CLIENT)
         public IMessage onMessage(KillAllEntities message, MessageContext ctx) {
-            if (!ModMain.client) {
+            if (!Launch.client) {
                 return null;
             }
             WorldClient world = Minecraft.getMinecraft().WORLD;

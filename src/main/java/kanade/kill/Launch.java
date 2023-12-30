@@ -31,6 +31,7 @@ import java.util.*;
 public class Launch {
     public static final boolean funny = System.getProperty("Vanish") != null && System.getProperty("Kanade").equalsIgnoreCase("true");
     public static final LaunchClassLoader classLoader;
+    public static final boolean client = System.getProperty("minecraft.client.jar") != null;
     private static final String DEFAULT_TWEAK = "net.minecraft.launchwrapper.VanillaTweaker";
     private static final ThreadGroup Kanade = new ThreadGroup("Kanade");
     public static File minecraftHome;
@@ -60,6 +61,7 @@ public class Launch {
 
         classes.add("kanade.kill.Config");
         classes.add("kanade.kill.util.Util");
+        classes.add("kanade.kill.util.KanadeArrayList");
         classes.add("kanade.kill.reflection.EarlyMethods");
         classes.add("kanade.kill.reflection.ReflectionUtil");
         classes.add("kanade.kill.reflection.EarlyFields");
@@ -224,7 +226,8 @@ public class Launch {
             }
 
             // Finally we turn to the primary tweaker, and let it tell us where to go to launch
-            final String launchTarget = "kanade.kill.ClientMain";
+            final String launchTarget = client ? "kanade.kill.ClientMain" : "net.minecraft.server.MinecraftServer";
+            //net.minecraft.server.MinecraftServer
             final Class<?> clazz = Class.forName(launchTarget, false, classLoader);
             final Method mainMethod = clazz.getMethod("main", String[].class);
 

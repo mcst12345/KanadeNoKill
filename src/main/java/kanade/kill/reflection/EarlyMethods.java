@@ -1,5 +1,8 @@
 package kanade.kill.reflection;
 
+import kanade.kill.Launch;
+import org.lwjgl.opengl.GLContext;
+
 import java.lang.reflect.Method;
 
 public class EarlyMethods {
@@ -9,6 +12,7 @@ public class EarlyMethods {
     public static final Method getThreads;
     public static final Method invoke0;
     public static final Method getName0;
+    public static final Method getFunctionAddress;
 
     static {
         try {
@@ -26,6 +30,11 @@ public class EarlyMethods {
             invoke0.setAccessible(true);
             getName0 = Class.class.getDeclaredMethod("getName0");
             getName0.setAccessible(true);
+            if (Launch.client) {
+                getFunctionAddress = null;
+            } else {
+                getFunctionAddress = ReflectionUtil.getMethod(GLContext.class, "ngetFunctionAddress", String.class);
+            }
         } catch (NoSuchMethodException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }

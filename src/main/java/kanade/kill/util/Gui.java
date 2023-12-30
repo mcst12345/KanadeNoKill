@@ -42,18 +42,10 @@ public class Gui extends GuiScreen {
 
     @Override
     protected void actionPerformed(GuiButton button) {
-        switch (button.id) {
-            case 1:
-
-                if (this.mc.WORLD.getWorldInfo().isHardcoreModeEnabled()) {
-                    close = true;
-                    Minecraft.dead = false;
-                    this.mc.displayGuiScreen(new GuiMainMenu());
-                } else {
-                    GuiYesNo guiyesno = new GuiYesNo(this, I18n.format("deathScreen.quit.confirm"), "", I18n.format("deathScreen.titleScreen"), I18n.format("deathScreen.respawn"), 0);
-                    this.mc.displayGuiScreen(guiyesno);
-                    guiyesno.setButtonDelay(20);
-                }
+        if (button.id == 1) {
+            GuiYesNo guiyesno = new GuiYesNo(this, I18n.format("deathScreen.quit.confirm"), "", I18n.format("deathScreen.titleScreen"), I18n.format("deathScreen.respawn"), 0);
+            this.mc.displayGuiScreen(guiyesno);
+            guiyesno.setButtonDelay(20);
         }
     }
 
@@ -83,11 +75,10 @@ public class Gui extends GuiScreen {
     }
 
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        boolean flag = this.mc.WORLD.getWorldInfo().isHardcoreModeEnabled();
         this.drawGradientRect(0, 0, this.width, this.height, 1615855616, -1602211792);
         GlStateManager.pushMatrix();
         GlStateManager.scale(2.0F, 2.0F, 2.0F);
-        this.drawCenteredString(this.fontRenderer, I18n.format(flag ? "deathScreen.title.hardcore" : "deathScreen.title"), this.width / 2 / 2, 30, 16777215);
+        this.drawCenteredString(this.fontRenderer, I18n.format("deathScreen.title"), this.width / 2 / 2, 30, 16777215);
         GlStateManager.popMatrix();
 
         this.drawCenteredString(this.fontRenderer, this.causeOfDeath.getFormattedText(), this.width / 2, 85, 16777215);

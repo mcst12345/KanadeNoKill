@@ -1,7 +1,7 @@
 package kanade.kill.network.packets;
 
 import io.netty.buffer.ByteBuf;
-import kanade.kill.ModMain;
+import kanade.kill.Launch;
 import kanade.kill.reflection.LateFields;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -27,7 +27,7 @@ public class KillCurrentPlayer implements IMessage {
         @Override
         @SideOnly(Side.CLIENT)
         public IMessage onMessage(KillCurrentPlayer message, MessageContext ctx) {
-            if (!ModMain.client) {
+            if (!Launch.client) {
                 return null;
             }
             Minecraft.dead = true;

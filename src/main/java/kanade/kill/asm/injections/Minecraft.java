@@ -78,6 +78,10 @@ public class Minecraft implements Opcodes {
         inGameNotFocus.instructions.add(l2);
         inGameNotFocus.localVariables.add(new LocalVariableNode("this", "Lnet/minecraft/client/Minecraft;", null, l0, l2, 0));
         cn.methods.add(inGameNotFocus);
+        MethodNode func_152343_a = new MethodNode(ACC_PUBLIC, "func_152343_a", "(Ljava/util/concurrent/Callable;)Lcom/google/common/util/concurrent/ListenableFuture;", "<V:Ljava/lang/Object;>(Ljava/util/concurrent/Callable<TV;>;)Lcom/google/common/util/concurrent/ListenableFuture<TV;>;", null);
+        func_152343_a.instructions.add(new InsnNode(ACONST_NULL));
+        func_152343_a.instructions.add(new MethodInsnNode(INVOKESTATIC, "com/google/common/util/concurrent/Futures", "immediateFuture", "(Ljava/lang/Object;)Lcom/google/common/util/concurrent/ListenableFuture;", false));
+        func_152343_a.instructions.add(new InsnNode(ARETURN));
     }
 
     public static void InjectDisplayGuiScreen(MethodNode mn) {

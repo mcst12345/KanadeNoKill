@@ -1,5 +1,6 @@
 package kanade.kill.reflection;
 
+import kanade.kill.Launch;
 import kanade.kill.ModMain;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
@@ -62,7 +63,7 @@ public class LateFields {
             field = ReflectionUtil.getField(Event.class, "listeners");
             listeners_base = Unsafe.instance.staticFieldBase(field);
             listeners_offset_2 = Unsafe.instance.staticFieldOffset(field);
-            if (ModMain.client) {
+            if (Launch.client) {
                 field = ReflectionUtil.getField(Minecraft.class, "field_71462_r");
                 currentScreen_offset = Unsafe.instance.objectFieldOffset(field);
             } else {

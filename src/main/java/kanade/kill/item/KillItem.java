@@ -1,7 +1,7 @@
 package kanade.kill.item;
 
 import kanade.kill.Config;
-import kanade.kill.ModMain;
+import kanade.kill.Launch;
 import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.Annihilation;
 import kanade.kill.network.packets.KillAllEntities;
@@ -43,7 +43,7 @@ public class KillItem extends Item {
                 list.add(uuid);
                 NativeMethods.ProtectAdd(uuid.hashCode());
             }
-        } else if (ModMain.client) {
+        } else if (Launch.client) {
             if (obj instanceof Minecraft) {
                 UUID uuid = ((Minecraft) obj).PLAYER.getUniqueID();
                 if (uuid != null) {
@@ -97,7 +97,7 @@ public class KillItem extends Item {
         if (obj instanceof Entity) {
             UUID uuid = ((Entity) obj).getUniqueID();
             return list.contains(uuid) || (uuid != null && NativeMethods.ProtectContain(uuid.hashCode())) || (obj instanceof EntityItem && Util.NoRemove(((EntityItem) obj).getItem()));
-        } else if (ModMain.client) {
+        } else if (Launch.client) {
             if (obj instanceof Minecraft) {
                 EntityPlayer player = ((Minecraft) obj).PLAYER;
                 if (player != null) {

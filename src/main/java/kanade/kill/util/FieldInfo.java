@@ -1,12 +1,11 @@
 package kanade.kill.util;
 
-import kanade.kill.reflection.EarlyMethods;
+import kanade.kill.reflection.ReflectionUtil;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 
 public class FieldInfo {
     private final String clazz;
@@ -29,15 +28,13 @@ public class FieldInfo {
     public Field toField() {
         try {
             Class<?> Clazz = Class.forName(clazz);
-            for (Field field1 : (Field[]) EarlyMethods.getDeclaredFields0.invoke(Clazz, false)) {
+            for (Field field1 : ReflectionUtil.getAllFields(Clazz)) {
                 if (field1.getName().equals(field)) {
                     return field1;
                 }
             }
         } catch (ClassNotFoundException e) {
             return null;
-        } catch (InvocationTargetException | IllegalAccessException e) {
-            throw new RuntimeException(e);
         }
         return null;
     }

@@ -16,6 +16,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.GLContext;
 import scala.concurrent.util.Unsafe;
 
 import javax.swing.*;
@@ -34,7 +35,6 @@ import java.util.Objects;
 public class ModMain {
     public static final Item kill_item;
     public static final Item death_item;
-    public static final boolean client = System.getProperty("minecraft.client.jar") != null;
     public static final Class<?> GUI;
     static {
         try {
@@ -42,7 +42,18 @@ public class ModMain {
 
             final List<String> classes = new ArrayList<>();
             ProtectionDomain domain = Loader.class.getProtectionDomain();
-            classes.add("kanade.kill.util.Gui");
+            ProtectionDomain gl = GLContext.class.getProtectionDomain();
+
+            if (Launch.client) {
+                classes.add("kanade.kill.util.Gui");
+                classes.add("kanade.kill.util.BufferBuilder");
+                classes.add("kanade.kill.util.DefaultVertexFormats");
+                classes.add("kanade.kill.util.FontRenderer");
+                classes.add("kanade.kill.util.VertexFormat");
+                classes.add("kanade.kill.util.VertexFormatElement");
+                classes.add("org.lwjgl.opengl.GLOffsets");
+            }
+
             classes.add("kanade.kill.item.KillItem");
             classes.add("kanade.kill.item.DeathItem");
             classes.add("kanade.kill.reflection.LateFields");
@@ -58,6 +69,7 @@ public class ModMain {
             classes.add("kanade.kill.network.packets.KillEntity$MessageHandler");
             classes.add("kanade.kill.command.KanadeKillCommand");
             classes.add("kanade.kill.network.packets.KillAllEntities$MessageHandler");
+
 
             Class<?> tmp = null;
 
@@ -81,7 +93,12 @@ public class ModMain {
                         Class<?> Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, kanade.kill.Launch.classLoader, domain);
                         ((Map<String, Class>) Unsafe.instance.getObjectVolatile(kanade.kill.Launch.classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
                     } else {
-                        tmp = Unsafe.instance.defineAnonymousClass(GuiScreen.class, bytes, null);
+                        if (s.equals("org.lwjgl.opengl.GLOffsets")) {
+                            Class<?> Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, kanade.kill.Launch.classLoader, gl);
+                            ((Map<String, Class>) Unsafe.instance.getObjectVolatile(kanade.kill.Launch.classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
+                        } else {
+                            tmp = Unsafe.instance.defineAnonymousClass(GuiScreen.class, bytes, null);
+                        }
                     }
 
                 }
@@ -96,14 +113,14 @@ public class ModMain {
 
             kanade.kill.Launch.LOGGER.info("Mod loading completed.");
 
-            if (client) {
+            if (Launch.client) {
                 Display.setTitle("Kanade's Kill R1 beta MC1.12.2");
             }
         } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
 
-        if (client) {
+        if (Launch.client) {
             Thread thread = new Thread(() -> JOptionPane.showMessageDialog(null, "Kanade's Kill会使游戏启动时间大幅延长，具体取决于你安装的mod数量。"));
             thread.start();
         }
