@@ -20,6 +20,7 @@ import kanade.kill.thread.DisplayGui;
 import kanade.kill.thread.FieldSaveThread;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.*;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
@@ -486,6 +487,14 @@ public class Util {
 
         FieldSaveThread thread = new FieldSaveThread();
         thread.start();
+
+        try {
+            Minecraft minecraft = Minecraft.getMinecraft();
+            EntityPlayerSP player = minecraft.PLAYER;
+            System.out.println("Field exists!");
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
     public synchronized static Object getStatic(Field field) {

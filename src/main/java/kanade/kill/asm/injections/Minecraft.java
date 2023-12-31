@@ -8,7 +8,7 @@ import org.objectweb.asm.tree.*;
 public class Minecraft implements Opcodes {
     public static void AddField(ClassNode cn) {
         Launch.LOGGER.info("Adding field.");
-        cn.fields.add(new FieldNode(ACC_PUBLIC, "PLAYER", "Lnet/minecraft/client/entity/EntityPlayerSP;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "PLAYER", "Lnet/minecraft/client/entity/EntityClientPlayerMP;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "profiler", "Lnet/minecraft/profiler/Profiler;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "entityRenderer", "Lnet/minecraft/client/renderer/EntityRenderer;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "renderManager", "Lnet/minecraft/client/renderer/entity/RenderManager;", null, null));
