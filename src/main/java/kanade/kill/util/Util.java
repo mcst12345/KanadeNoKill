@@ -438,6 +438,9 @@ public class Util {
                     continue;
                 }
                 Launch.LOGGER.info("Mod:" + container.getModId());
+                if (container.getMod() == null) {
+                    continue;
+                }
                 Class<?> clazz = container.getMod().getClass();
                 for (Field field : ReflectionUtil.getFields(clazz)) {
                     if (Modifier.isStatic(field.getModifiers())) {
