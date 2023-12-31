@@ -21,7 +21,7 @@ public class DimensionManager implements Opcodes {
             throw new IllegalStateException("The fuck?");
         }
         InsnList list = new InsnList();
-        list.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/server/MinecraftServer", "getServer", "()Lnet/minecraft/server/MinecraftServer;", false));
+        list.add(new FieldInsnNode(GETSTATIC, "net/minecraft/server/MinecraftServer", "field_71309_l", "Lnet/minecraft/server/MinecraftServer;"));
         list.add(new VarInsnNode(ALOAD, 2));
         list.add(new InsnNode(ICONST_0));
         list.add(new TypeInsnNode(ANEWARRAY, "net/minecraft/world/WorldServer"));

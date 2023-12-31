@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 
 public class DeathItem extends Item {
     public DeathItem() {
-        this.setTextureName("death");
+        this.setTextureName("kanade:death");
         this.setCreativeTab(CreativeTabs.tabCombat);
     }
 

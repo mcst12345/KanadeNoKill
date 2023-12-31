@@ -29,7 +29,7 @@ public class KillItem extends Item {
     private static final Set<UUID> list = new HashSet<>();
 
     public KillItem() {
-        this.setTextureName("kill");
+        this.setTextureName("kanade:kill");
         this.setCreativeTab(CreativeTabs.tabCombat);
     }
 

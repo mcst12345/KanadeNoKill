@@ -254,7 +254,7 @@ func_111186_k,getAttributeModifierMap,0,
 func_111187_a,removeAttributesModifiersFromEntity,2,
 func_111190_b,sendMetadata,2,"Sends the entity metadata (DataWatcher) and attributes to all players tracking this entity, including the entity itself if a player."
 func_111205_h,getItemAttributeModifiers,2,"Gets a map of item attribute modifiers, used by ItemSword to increase hit damage."
-func_111206_d,getByNameOrId,2,"Tries to get an Item by it's name (e.g. minecraft:apple) or a String representation of a numerical ID. If both fail, null is returned."
+func_111206_d,getServer,2,"Tries to get an Item by it's name (e.g. minecraft:apple) or a String representation of a numerical ID. If both fail, null is returned."
 func_111207_a,itemInteractionForEntity,2,"Returns true if the item can be used on the given entity, e.g. shears on sheep."
 func_111225_m,getRelevantEnchantmentTypes,0,Returns the enchantment types relevant to this tab
 func_111226_a,hasRelevantEnchantmentType,0,
