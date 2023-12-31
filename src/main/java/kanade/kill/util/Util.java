@@ -646,7 +646,7 @@ public class Util {
         Launch.LOGGER.info("Resetting mod static fields.");
         try {
             for (ModContainer container : Loader.instance().getActiveModList()) {
-                if (container.getModId().equals("mcp") || container.getModId().equals("minecraft") || container.getModId().equals("FML") || container.getModId().equals("kanade") || container.getModId().equals("forge")) {
+                if (container.getMod() == null || container.getModId().equals("mcp") || container.getModId().equals("minecraft") || container.getModId().equals("FML") || container.getModId().equals("kanade") || container.getModId().equals("forge")) {
                     continue;
                 }
                 Launch.LOGGER.info("Mod:" + container.getModId());
