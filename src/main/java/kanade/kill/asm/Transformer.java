@@ -599,7 +599,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "func_110138_aP":
                         case "func_110143_aJ": {
-                            ASMUtil.InsertReturn(mn, Type.FLOAT_TYPE, 20.0f, 0, ASMUtil.inList());
+                            ASMUtil.InsertReturn(mn, Type.FLOAT_TYPE, new Float(20), 0, ASMUtil.inList());
                             break;
                         }
                         case "func_70097_a": {
@@ -879,6 +879,20 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                     }
                 }
+                break;
+            }
+            case "net.minecraft.network.NetHandlerPlayServer": {
+                changed = true;
+                Launch.LOGGER.info("Get NetHandlerPlayServer.");
+                for (MethodNode mn : cn.methods) {
+                    if (mn.name.equals("func_147360_c")) {
+                        InsnList list = new InsnList();
+                        list.add(new VarInsnNode(ALOAD, 0));
+                        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/network/NetHandlerPlayServer", "field_147369_b", "Lnet/minecraft/entity/player/EntityPlayerMP;"));
+                        ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, list, ASMUtil.inList());
+                    }
+                }
+                break;
             }
         }
 

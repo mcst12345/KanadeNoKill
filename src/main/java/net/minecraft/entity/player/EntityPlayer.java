@@ -7,7 +7,7 @@ import net.minecraft.world.World;
 public abstract class EntityPlayer extends EntityLivingBase {
     public InventoryPlayer inventory;
     public InventoryPlayer Inventory;
-    public InventoryEnderChest enderChest;
+    public InventoryEnderChest theInventoryEnderChest;
     public PlayerCapabilities capabilities;
 
     public EntityPlayer(World worldIn) {

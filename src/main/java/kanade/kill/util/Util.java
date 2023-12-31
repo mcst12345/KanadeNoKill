@@ -117,7 +117,7 @@ public class Util {
                 if (entity instanceof EntityPlayer) {
                     EntityPlayer player = (EntityPlayer) entity;
                     player.Inventory = new InventoryPlayer(player);
-                    player.enderChest = new InventoryEnderChest();
+                    player.theInventoryEnderChest = new InventoryEnderChest();
                     if (world.players.getClass() != ArrayList.class) {
                         Unsafe.instance.putObjectVolatile(world, LateFields.playerEntities_offset, new ArrayList<>(world.players));
                     }
