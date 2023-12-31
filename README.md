@@ -1,1 +1,1 @@
-MikuLib 1.7.10 version. Still in dev.
+KanadeNoKill 1.7.10 version. Still in dev.
