@@ -6,7 +6,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import kanade.kill.util.Util;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -28,7 +28,7 @@ public class Minecraft {
     public static Logger LOGGER;
     public final Queue<FutureTask<?>> scheduledTasks = Queues.newArrayDeque();
     public Entity pointedEntity;
-    public EntityPlayerSP PLAYER;
+    public EntityClientPlayerMP PLAYER;
     public WorldClient WORLD;
     public boolean skipRenderWorld;
     public FontRenderer fontRenderer;
