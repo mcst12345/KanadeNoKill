@@ -11,8 +11,6 @@ public abstract class Entity {
 
     public boolean isDead;
     public boolean addedToChunk;
-    public boolean updateBlocked;
-    public boolean isAddedToWorld;
     public boolean forceSpawn;
     public World world;
     public int chunkCoordX;
