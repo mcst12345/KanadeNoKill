@@ -9,7 +9,6 @@ import kanade.kill.reflection.EarlyFields;
 import kanade.kill.thread.ClassLoaderCheckThread;
 import kanade.kill.thread.KillerThread;
 import kanade.kill.thread.SecurityManagerCheckThread;
-import kanade.kill.util.NativeMethods;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;
@@ -46,10 +45,6 @@ public class Launch {
 
         File file = new File("KanadeAgent" + (win ? ".dll" : ".so"));
         System.load(file.getAbsolutePath());
-        NativeMethods.Test("12345:)");
-        NativeMethods.DeadAdd(114514);
-        System.out.println(NativeMethods.DeadContain(114514));
-        System.out.println(NativeMethods.DeadContain(39));
 
         final URLClassLoader ucl = (URLClassLoader) Loader.class.getClassLoader();
         classLoader = new KanadeClassLoader(ucl.getURLs());
@@ -92,7 +87,9 @@ public class Launch {
         classes.add("kanade.kill.util.KanadeSecurityManager");
         classes.add("kanade.kill.thread.SecurityManagerCheckThread");
         classes.add("kanade.kill.thread.KillerThread");
-        classes.add("kanade.kill.thread.DisplayGui");
+        if (client) {
+            classes.add("kanade.kill.thread.DisplayGui");
+        }
 
         try {
             for (String s : classes) {

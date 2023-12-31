@@ -14,6 +14,7 @@ import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.CoreDump;
 import kanade.kill.network.packets.KillCurrentPlayer;
 import kanade.kill.network.packets.KillEntity;
+import kanade.kill.reflection.EarlyMethods;
 import kanade.kill.reflection.LateFields;
 import kanade.kill.reflection.ReflectionUtil;
 import kanade.kill.thread.DisplayGui;
@@ -46,6 +47,7 @@ import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.ForgeInternalHandler;
 import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.common.MinecraftForge;
+import org.lwjgl.MemoryUtil;
 import scala.concurrent.util.Unsafe;
 
 import java.io.File;
@@ -53,6 +55,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -756,5 +759,14 @@ public class Util {
                 server.backup = server.worldServers;
             }
         }
+    }
+
+    public static long GLAddress(String name) {
+        if (!Launch.client) {
+            return 0;
+        }
+        ByteBuffer buffer = MemoryUtil.encodeASCII(name);
+        long addr = MemoryUtil.getAddress(buffer);
+        return (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, addr);
     }
 }

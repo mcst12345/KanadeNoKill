@@ -33,7 +33,7 @@ public class EarlyMethods {
             if (Launch.client) {
                 getFunctionAddress = null;
             } else {
-                getFunctionAddress = ReflectionUtil.getMethod(GLContext.class, "ngetFunctionAddress", String.class);
+                getFunctionAddress = ReflectionUtil.getMethod(GLContext.class, "ngetFunctionAddress", long.class);
             }
         } catch (NoSuchMethodException | ClassNotFoundException e) {
             throw new RuntimeException(e);

@@ -1,0 +1,38 @@
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.Config
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.util.Util
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.util.KanadeArrayList
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.reflection.EarlyMethods
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.reflection.ReflectionUtil
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.reflection.EarlyFields
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.ASMUtil
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.Chunk
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.DimensionManager
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.Entity
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.EntityLivingBase
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.EntityPlayer
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.EventBus
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.FMLClientHandler
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.ForgeHooksClient
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.ItemStack
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.Minecraft
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.MinecraftForge
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.MinecraftServer
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.RenderGlobal
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.ServerCommandManager
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.World
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.WorldClient
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.injections.WorldServer
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.asm.Transformer
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.util.TransformerList
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.thread.ClassLoaderCheckThread
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.thread.FieldSaveThread
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.classload.KanadeClassLoader
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.util.FieldInfo
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.util.KanadeSecurityManager
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.thread.SecurityManagerCheckThread
+[18:07:18] [main/INFO] [Kanade]: Defining class:kanade.kill.thread.KillerThread
+[18:07:18] [SecurityManagerCheckThread/INFO] [Kanade]: SecurityManagerCheckThread started.
+[18:07:18] [ClassLoaderCheckThread/INFO] [Kanade]: ClassLoaderCheckThread started.
+[18:07:19] [ClassLoaderCheckThread/WARN] [Kanade]: Someone has changed the classloader of DestroyJavaVM. Resetting it,
+[18:07:19] [ClassLoaderCheckThread/WARN] [Kanade]: Someone has changed the classloader of Thread-1. Resetting it,
+[18:07:19] [ClassLoaderCheckThread/WARN] [Kanade]: Someone has changed the classloader of Thread-0. Resetting it,

@@ -73,6 +73,9 @@ public class ReflectionUtil {
     }
 
     public static Object invoke(Method method, @Nullable Object obj, @Nullable Object... args) {
+        if (method == null) {
+            return null;
+        }
         EarlyMethods.invoke0.setAccessible(true);
         method.setAccessible(true);
         try {
