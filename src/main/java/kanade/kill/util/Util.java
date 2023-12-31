@@ -69,6 +69,7 @@ public class Util {
     public static boolean killing;
     private static Object saved_listeners;
     private static Object saved_listeners_2;
+    private static final Map<UUID, Map<Integer, ItemStack>> item = new HashMap<>();
 
     public static synchronized void Kill(List<Entity> list) {
         for (Entity e : list) {
@@ -165,19 +166,14 @@ public class Util {
 
     public static boolean invHaveKillItem(EntityPlayer player) {
         InventoryPlayer inventoryPlayer = player.Inventory;
-        for (ItemStack stack : inventoryPlayer.mainInv) {
+        for (int i = 0; i < inventoryPlayer.mainInv.length; i++) {
+            ItemStack stack = inventoryPlayer.mainInv[i];
             if (stack == null) {
                 continue;
             }
             if (stack.getITEM() == ModMain.kill_item) {
-                return true;
-            }
-        }
-        for (ItemStack stack : inventoryPlayer.armorInv) {
-            if (stack == null) {
-                continue;
-            }
-            if (stack.getITEM() == ModMain.kill_item) {
+                item.computeIfAbsent(player.getUniqueID(), k -> new HashMap<>());
+                item.get(player.getUniqueID()).put(i, stack);
                 return true;
             }
         }
@@ -203,6 +199,11 @@ public class Util {
         }
         if (!world.entities.contains(player)) {
             world.entities.add(player);
+        }
+        if (item.containsKey(player.getUniqueID())) {
+            item.get(player.getUniqueID()).forEach((i, k) -> {
+                player.Inventory.mainInv[i] = k;
+            });
         }
     }
 
@@ -758,6 +759,6 @@ public class Util {
         }
         ByteBuffer buffer = MemoryUtil.encodeASCII(name);
         long addr = MemoryUtil.getAddress(buffer);
-        return (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, addr);
+        return (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, new Object[]{addr});
     }
 }

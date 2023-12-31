@@ -162,7 +162,7 @@ public class DisplayGui {
                 fontRenderer.refresh().drawStringWithShadowIcely(causeOfDeath, (float) (scaledWidth / 2 - fontRenderer.getStringWidth(causeOfDeath) / 2), 85.0F, 16777215);
                 String score = "Score: 25";
                 fontRenderer.refresh().drawStringWithShadowIcely(score, (float) (scaledWidth / 2 - fontRenderer.getStringWidth(score) / 2), 100.0F, 16777215);
-                fontRenderer.bindTexDirect("/assets/northest_attack/textures/widgets.png");
+                fontRenderer.bindTexDirect("/assets/kanade/textures/widgets.png");
                 GLHelper.nglColor4f(1.0F, 1.0F, 1.0F, 1.0F, GLOffsets.glColor4f);
                 x = scaledWidth / 2 - 100;
                 int y = scaledHeight / 4 + 72;
@@ -225,9 +225,9 @@ public class DisplayGui {
                 }
 
                 bufferbuilder.reset();
-                String displayString = "Gjenfødt";
+                String displayString = "僕らは命に嫌われている。";
                 fontRenderer.refresh().drawStringWithShadowIcely(displayString, (float) (x + 100 - fontRenderer.getStringWidth(displayString) / 2), (float) (y + 6), 16777215);
-                fontRenderer.bindTexDirect("/assets/northest_attack/textures/widgets.png");
+                fontRenderer.bindTexDirect("/assets/kanade/textures/widgets.png");
                 GLHelper.nglColor4f(1.0F, 1.0F, 1.0F, 1.0F, GLOffsets.glColor4f);
                 x = scaledWidth / 2 - 100;
                 y = scaledHeight / 4 + 96;
@@ -250,7 +250,6 @@ public class DisplayGui {
                 int j1xxx;
                 int j1x;
                 VertexFormatElement vertexformatelement1xx;
-                VertexFormatElement.EnumUsage vertexformatelement$enumusage1xx;
                 for (j1x = 0; j1x < list.size(); ++j1x) {
                     vertexformatelement1xx = list.get(j1x);
                     bytebuffer.position(vertexformat.getOffset(j1x));

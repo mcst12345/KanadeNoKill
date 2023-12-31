@@ -911,8 +911,25 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 changed = true;
                 InventoryPlayer.AddField(cn);
                 for (MethodNode mn : cn.methods) {
-                    if (mn.name.equals("<init>")) {
-                        InventoryPlayer.InjectConstructor(mn);
+                    switch (mn.name) {
+                        case "<init>": {
+                            InventoryPlayer.InjectConstructor(mn);
+                            break;
+                        }
+                        case "func_146027_a": {
+                            InsnList list = new InsnList();
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/entity/player/InventoryPlayer", "field_70458_d", "Lnet/minecraft/entity/player/EntityPlayer;"));
+                            ASMUtil.InsertReturn(mn, Type.INT_TYPE, 0, list, ASMUtil.inList());
+                            break;
+                        }
+                        case "func_70436_m": {
+                            InsnList list = new InsnList();
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/entity/player/InventoryPlayer", "field_70458_d", "Lnet/minecraft/entity/player/EntityPlayer;"));
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, list, ASMUtil.inList());
+                            break;
+                        }
                     }
                 }
             }
