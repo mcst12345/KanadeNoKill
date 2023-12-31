@@ -3,44 +3,33 @@ buildscript {
         mavenCentral()
         maven {
             name = "forge"
-            url = "https://files.minecraftforge.net/maven"
-        }
-        maven {
-            name = "sonatype"
-            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+            url = "https://maven.minecraftforge.net/"
         }
     }
     dependencies {
-        classpath files('forgegradle/ForgeGradle-1.2.1.jar')
+        classpath('com.anatawa12.forge:ForgeGradle:1.2-1.1.+') {
+            changing = true
+        }
     }
 }
 
 apply plugin: 'forge'
 
 version = "1.0"
-group= "miku" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "mikulib"
+group = "kanade"
+archivesBaseName = "kanade"
 
 minecraft {
     version = "1.7.10-10.13.4.1614-1.7.10"
-    runDir = "eclipse"
+    runDir = "run"
 }
 
 dependencies {
-    // you may put jars on which you depend on in ./libs
-    // or you may define them like so..
-    //compile "some.group:artifact:version:classifier"
-    //compile "some.group:artifact:version"
-      
-    // real examples
-    //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
-    //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
-
-    // for more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
-
+    implementation fileTree(dir: 'libs', includes: ['*jar'])
 }
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
 
 processResources
 {
@@ -59,5 +48,36 @@ processResources
     // copy everything else, thats not the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+jar {
+
+    manifest {
+        attributes([
+                "Specification-Title"     : "KanadeNoKill",
+                "Specification-Vendor"    : "mcst12345",
+                "Specification-Version"   : "1.0",
+                "Implementation-Title"    : project.name,
+                "Implementation-Version"  : "1.0",
+                "Implementation-Vendor"   : "mcst12345",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+
+        ])
+        attributes([
+                'ForceLoadAsMod'             : 'true',
+                "FMLCorePlugin"              : "kanade.kill.Core",
+                "FMLCorePluginContainsFMLMod": "true",
+                "Premain-Class"              : "kanade.kill.AgentMain",
+                "Can-Redefine-Classes"       : "true",
+                "Can-Retransform-Classes"    : "true",
+                "Main-Class"                 : "kanade.kill.ServerPreMain"
+        ])
+    }
+    from {
     }
 }
