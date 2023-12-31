@@ -18,7 +18,7 @@ public class World {
     public boolean isRemote;
     public List<IWorldAccess> worldAccesses;
 
-    public Chunk getChunk(int x, int z) {
+    public Chunk getChunkFromChunkCoords(int x, int z) {
         return null;
     }
 

@@ -90,7 +90,7 @@ public class Util {
                 Unsafe.instance.putObjectVolatile(world, LateFields.loadedEntityList_offset, new ArrayList<>(world.entities));
             }
             world.entities.remove(entity);
-            Chunk chunk = world.getChunk(entity.chunkCoordX, entity.chunkCoordZ);
+            Chunk chunk = world.getChunkFromChunkCoords(entity.chunkCoordX, entity.chunkCoordZ);
             List[] entities = (List[]) Unsafe.instance.getObjectVolatile(chunk, LateFields.entities_offset);
 
             int index = entity.chunkCoordY;

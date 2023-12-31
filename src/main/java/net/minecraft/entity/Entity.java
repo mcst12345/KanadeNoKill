@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import java.util.UUID;
 
 public abstract class Entity {
+    public boolean HatedByLife;
 
     public boolean isDead;
     public boolean addedToChunk;
