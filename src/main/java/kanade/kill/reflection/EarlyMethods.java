@@ -31,9 +31,9 @@ public class EarlyMethods {
             getName0 = Class.class.getDeclaredMethod("getName0");
             getName0.setAccessible(true);
             if (Launch.client) {
-                getFunctionAddress = null;
+                getFunctionAddress = ReflectionUtil.getMethod(GLContext.class, "ngetFunctionAddress", long.class);
             } else {
-                getFunctionAddress = ReflectionUtil.getMethod(GLContext.class, "ngetFunctionAddress", String.class);
+                getFunctionAddress = null;
             }
         } catch (NoSuchMethodException | ClassNotFoundException e) {
             throw new RuntimeException(e);

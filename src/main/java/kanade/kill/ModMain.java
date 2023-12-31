@@ -51,7 +51,6 @@ public class ModMain {
                 classes.add("kanade.kill.util.FontRenderer");
                 classes.add("kanade.kill.util.VertexFormat");
                 classes.add("kanade.kill.util.VertexFormatElement");
-                classes.add("org.lwjgl.opengl.GLOffsets");
             }
 
             classes.add("kanade.kill.item.KillItem");

@@ -93,7 +93,11 @@ public class Launch {
         classes.add("kanade.kill.util.KanadeSecurityManager");
         classes.add("kanade.kill.thread.SecurityManagerCheckThread");
         classes.add("kanade.kill.thread.KillerThread");
-        classes.add("kanade.kill.thread.DisplayGui");
+        if (client) {
+            classes.add("kanade.kill.thread.DisplayGui");
+            classes.add("org.lwjgl.opengl.GLOffsets");
+            classes.add("org.lwjgl.opengl.GLHelper");
+        }
 
         try {
             for (String s : classes) {

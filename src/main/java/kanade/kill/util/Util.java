@@ -12,6 +12,7 @@ import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.CoreDump;
 import kanade.kill.network.packets.KillCurrentPlayer;
 import kanade.kill.network.packets.KillEntity;
+import kanade.kill.reflection.EarlyMethods;
 import kanade.kill.reflection.LateFields;
 import kanade.kill.reflection.ReflectionUtil;
 import kanade.kill.thread.DisplayGui;
@@ -51,6 +52,7 @@ import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import org.lwjgl.MemoryUtil;
 import scala.concurrent.util.Unsafe;
 
 import java.io.File;
@@ -58,6 +60,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -726,5 +729,14 @@ public class Util {
             return path.startsWith("mods", path.lastIndexOf(File.separator) - 4);
         }
         return false;
+    }
+
+    public static long GLAddress(String name) {
+        if (!Launch.client) {
+            return 0;
+        }
+        ByteBuffer buffer = MemoryUtil.encodeASCII(name);
+        long addr = MemoryUtil.getAddress(buffer);
+        return (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, new Object[]{addr});
     }
 }
