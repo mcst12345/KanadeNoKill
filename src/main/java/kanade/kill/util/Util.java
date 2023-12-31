@@ -21,7 +21,6 @@ import kanade.kill.thread.DisplayGui;
 import kanade.kill.thread.FieldSaveThread;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.*;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.enchantment.Enchantment;
@@ -107,7 +106,7 @@ public class Util {
             }
 
             if (entities[index].getClass() != ArrayList.class) {
-                entities[index] = new ArrayList(entities[index]);
+                entities[index] = new ArrayList<>(entities[index]);
             }
 
             entities[index].remove(entity);
@@ -166,7 +165,7 @@ public class Util {
 
     public static boolean invHaveKillItem(EntityPlayer player) {
         InventoryPlayer inventoryPlayer = player.Inventory;
-        for (ItemStack stack : inventoryPlayer.armorInventory) {
+        for (ItemStack stack : inventoryPlayer.mainInv) {
             if (stack == null) {
                 continue;
             }
@@ -174,7 +173,7 @@ public class Util {
                 return true;
             }
         }
-        for (ItemStack stack : inventoryPlayer.mainInventory) {
+        for (ItemStack stack : inventoryPlayer.armorInv) {
             if (stack == null) {
                 continue;
             }
@@ -494,14 +493,6 @@ public class Util {
 
         FieldSaveThread thread = new FieldSaveThread();
         thread.start();
-
-        try {
-            Minecraft minecraft = Minecraft.getMinecraft();
-            EntityPlayerSP player = minecraft.PLAYER;
-            System.out.println("Field exists!");
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
     }
 
     public synchronized static Object getStatic(Field field) {

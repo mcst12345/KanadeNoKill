@@ -297,6 +297,18 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                             }
                             break;
                         }
+                        case "field_70462_a": {
+                            if (goodClass) {
+                                fin.name = "mainInv";
+                            }
+                            break;
+                        }
+                        case "field_70460_b": {
+                            if (goodClass) {
+                                fin.name = "armorInv";
+                            }
+                            break;
+                        }
                         case "INSTANCE": {
                             if (fin.owner.equals("net/minecraftforge/fml/client/FMLClientHandler")) {
                                 if (fin.getOpcode() == GETSTATIC) {
@@ -893,6 +905,16 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     }
                 }
                 break;
+            }
+            case "net.minecraft.entity.player.InventoryPlayer": {
+                Launch.LOGGER.info("Get InventoryPlayer.");
+                changed = true;
+                InventoryPlayer.AddField(cn);
+                for (MethodNode mn : cn.methods) {
+                    if (mn.name.equals("<init>")) {
+                        InventoryPlayer.InjectConstructor(mn);
+                    }
+                }
             }
         }
 
