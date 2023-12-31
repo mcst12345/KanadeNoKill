@@ -108,7 +108,7 @@ public class KillItem extends Item {
     @Override
     public void onUpdate(@Nullable ItemStack stack, @Nullable World worldIn, @Nonnull Entity entityIn, int itemSlot, boolean isSelected) {
         if (entityIn instanceof EntityPlayer) {
-            entityIn.world.protects.add(entityIn);
+            entityIn.worldObj.protects.add(entityIn);
             list.add(entityIn.getUniqueID());
         }
     }
@@ -132,7 +132,7 @@ public class KillItem extends Item {
             return stack;
         } else {
             Config.Annihilation = !Config.Annihilation;
-            if (playerIn.world.isRemote) {
+            if (playerIn.worldObj.isRemote) {
                 NetworkHandler.INSTANCE.sendMessageToServer(new Annihilation(playerIn.dimension, (int) playerIn.posX, (int) playerIn.posY, (int) playerIn.posZ));
             }
             return stack;

@@ -85,7 +85,7 @@ public class Util {
                 Dead.add(uuid);
                 NativeMethods.DeadAdd(uuid.hashCode());
             }
-            World world = entity.world;
+            World world = entity.worldObj;
             if (world.entities.getClass() != ArrayList.class) {
                 Unsafe.instance.putObjectVolatile(world, LateFields.loadedEntityList_offset, new ArrayList<>(world.entities));
             }
@@ -135,13 +135,13 @@ public class Util {
                     }
                 }
             }
-            for (IWorldAccess listener : entity.world.worldAccesses) {
+            for (IWorldAccess listener : entity.worldObj.worldAccesses) {
                 if (world instanceof WorldServer && listener instanceof WorldManager) {
-                    EntityTracker tracker = ((WorldServer) entity.world).getEntityTracker();
+                    EntityTracker tracker = ((WorldServer) entity.worldObj).getEntityTracker();
                     tracker.removeEntityFromAllTrackingPlayers(entity);
                 }
             }
-            if (!entity.world.isRemote) {
+            if (!entity.worldObj.isRemote) {
                 NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillEntity(entity.entityId));
             }
             reset();
@@ -189,7 +189,7 @@ public class Util {
         player.capabilities.allowFlying = true;
         player.setScore(Integer.MAX_VALUE);
         player.forceSpawn = true;
-        World world = player.world;
+        World world = player.worldObj;
         if (world.players.getClass() != ArrayList.class) {
             world.players = new ArrayList<>(world.players);
         }

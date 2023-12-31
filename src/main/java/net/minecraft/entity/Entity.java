@@ -12,7 +12,7 @@ public abstract class Entity {
     public boolean isDead;
     public boolean addedToChunk;
     public boolean forceSpawn;
-    public World world;
+    public World worldObj;
     public int chunkCoordX;
     public int chunkCoordZ;
     public int entityId;
@@ -50,12 +50,12 @@ public abstract class Entity {
     protected abstract void writeEntityToNBT(NBTTagCompound compound);
 
     public World getEntityWorld() {
-        return this.world;
+        return this.worldObj;
     }
 
     @Nullable
     public MinecraftServer getServer() {
-        return this.world.getMinecraftServer();
+        return this.worldObj.getMinecraftServer();
     }
 
     public boolean canUseCommand(int permLevel, String commandName) {
