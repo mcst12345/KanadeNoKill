@@ -735,21 +735,21 @@ public class Util {
     }
 
     public static void CheckWorlds(MinecraftServer server) {
-        if (server.worlds.length != 0) {
+        if (server.worldServers.length != 0) {
             boolean flag = true;
-            WorldServer[] var4 = server.worlds;
+            WorldServer[] var4 = server.worldServers;
             int var5 = var4.length;
 
             for (WorldServer worldServer : var4) {
                 if (worldServer.getClass() != WorldServer.class) {
-                    server.worlds = server.backup;
+                    server.worldServers = server.backup;
                     flag = false;
                     break;
                 }
             }
 
             if (flag) {
-                server.backup = server.worlds;
+                server.backup = server.worldServers;
             }
         }
     }

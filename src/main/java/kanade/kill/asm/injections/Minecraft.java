@@ -34,9 +34,9 @@ public class Minecraft implements Opcodes {
         inGameFocus.instructions.add(new JumpInsnNode(IFNE, label1));
         inGameFocus.instructions.add(new FieldInsnNode(GETSTATIC, "net/minecraft/client/Minecraft", "field_142025_a", "Z"));
         inGameFocus.instructions.add(new JumpInsnNode(IFNE, label2));
-        inGameFocus.instructions.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/settings/KeyBinding", "func_186704_a", "()V", false));
         inGameFocus.instructions.add(label2);
         inGameFocus.instructions.add(new FrameNode(F_SAME, 0, null, 0, null));
+        inGameFocus.instructions.add(new MethodInsnNode(INVOKESTATIC, "net/minecraft/client/settings/KeyBinding", "func_74506_a", "()V", false));
         inGameFocus.instructions.add(new VarInsnNode(ALOAD, 0));
         inGameFocus.instructions.add(new InsnNode(ICONST_1));
         inGameFocus.instructions.add(new FieldInsnNode(PUTFIELD, "net/minecraft/client/Minecraft", "field_71415_G", "Z"));
