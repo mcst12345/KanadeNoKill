@@ -17,6 +17,7 @@ import net.minecraftforge.fml.common.Loader;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.opengl.GL11;
 import scala.concurrent.util.Unsafe;
 
 import java.io.ByteArrayOutputStream;
@@ -58,6 +59,8 @@ public class Launch {
 
         final List<String> classes = new ArrayList<>();
         ProtectionDomain domain = Loader.class.getProtectionDomain();
+        ProtectionDomain gl = client ? GL11.class.getProtectionDomain() : null;
+        ClassLoader glLoader = client ? GL11.class.getClassLoader() : null;
 
         classes.add("kanade.kill.Config");
         classes.add("kanade.kill.util.Util");
@@ -112,7 +115,12 @@ public class Launch {
                         output.write(buffer, 0, n);
                     }
                     byte[] bytes = output.toByteArray();
-                    Class<?> Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, classLoader, domain);
+                    Class<?> Clazz;
+                    if (s.startsWith("org.lwjgl")) {
+                        Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, glLoader, gl);
+                    } else {
+                        Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, classLoader, domain);
+                    }
                     ((Map<String, Class>) Unsafe.instance.getObjectVolatile(classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
                 }
             }
