@@ -37,7 +37,7 @@ public class KillCurrentPlayer implements IMessage {
             }
             Minecraft.getMinecraft().skipRenderWorld = true;
             Minecraft.getMinecraft().pointedEntity = null;
-            Minecraft.getMinecraft().scheduledTasks.clear();
+            Minecraft.getMinecraft().field_152351_aB.clear();
             return null;
         }
     }

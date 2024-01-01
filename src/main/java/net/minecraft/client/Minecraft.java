@@ -21,12 +21,12 @@ import java.io.File;
 import java.net.Proxy;
 import java.util.Queue;
 import java.util.concurrent.Callable;
-import java.util.concurrent.FutureTask;
 
 public class Minecraft {
     public static boolean dead;
     public static Logger LOGGER;
-    public final Queue<FutureTask<?>> scheduledTasks = Queues.newArrayDeque();
+    public final Queue field_152351_aB = Queues.newArrayDeque();
+    public Thread field_152352_aC = Thread.currentThread();
     public Entity pointedEntity;
     public EntityClientPlayerMP PLAYER;
     public WorldClient WORLD;
@@ -135,8 +135,8 @@ public class Minecraft {
         } else {
             ListenableFutureTask<V> listenablefuturetask = ListenableFutureTask.create(callableToSchedule);
 
-            synchronized (this.scheduledTasks) {
-                this.scheduledTasks.add(listenablefuturetask);
+            synchronized (this.field_152351_aB) {
+                this.field_152351_aB.add(listenablefuturetask);
                 return listenablefuturetask;
             }
         }

@@ -49,18 +49,14 @@ public class ASMUtil implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
-        Launch.LOGGER.info("Insert return in " + mn.name);
+        Launch.LOGGER.info("Insert return in " + mn.name + ".");
     }
 
-    public static void InsertReturn(MethodNode mn, Type type) {
+    public static void InsertReturn1(MethodNode mn, Type type) {
         InsnList list = new InsnList();
         LabelNode label = new LabelNode();
         list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Config", "allReturn", "Z"));
         list.add(new JumpInsnNode(IFEQ, label));
-        if (mn.name.startsWith("func_")) {
-            list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Config", "Annihilation", "Z"));
-            list.add(new JumpInsnNode(IFEQ, label));
-        }
         switch (type.getSort()) {
             case Type.VOID: {
                 list.add(new InsnNode(RETURN));
@@ -102,7 +98,58 @@ public class ASMUtil implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
-        Launch.LOGGER.info("Insert return in " + mn.name + ".");
+        Launch.LOGGER.info("Insert return in " + mn.name + ",type:1.");
+    }
+
+    public static void InsertReturn3(MethodNode mn, Type type) {
+        InsnList list = new InsnList();
+        LabelNode label = new LabelNode();
+        list.add(new FieldInsnNode(GETSTATIC, "net/minecraft/client/Minecraft", "field_71432_P", "Lnet/minecraft/client/Minecraft;"));
+        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "PLAYER", "Lnet/minecraft/client/entity/EntityClientPlayerMP;"));
+        list.add(inList());
+        list.add(new JumpInsnNode(IFEQ, label));
+        switch (type.getSort()) {
+            case Type.VOID: {
+                list.add(new InsnNode(RETURN));
+                break;
+            }
+            case Type.SHORT:
+            case Type.CHAR:
+            case Type.BYTE:
+            case Type.INT:
+            case Type.BOOLEAN: {
+                list.add(new InsnNode(ICONST_0));
+                list.add(new InsnNode(IRETURN));
+                break;
+            }
+            case Type.FLOAT: {
+                list.add(new InsnNode(FCONST_0));
+                list.add(new InsnNode(FRETURN));
+                break;
+            }
+            case Type.LONG: {
+                list.add(new InsnNode(LCONST_0));
+                list.add(new InsnNode(LRETURN));
+                break;
+            }
+            case Type.DOUBLE: {
+                list.add(new InsnNode(DCONST_0));
+                list.add(new InsnNode(DRETURN));
+                break;
+            }
+            case Type.OBJECT: {
+                list.add(new InsnNode(ACONST_NULL));
+                list.add(new InsnNode(ARETURN));
+                break;
+            }
+            default: {
+                throw new IllegalStateException("The fuck?");
+            }
+        }
+        list.add(label);
+        list.add(new FrameNode(F_SAME, 0, null, 0, null));
+        mn.instructions.insert(list);
+        Launch.LOGGER.info("Insert return in " + mn.name + ",type:3.");
     }
 
     public static void clearMethod(MethodNode mn) {
@@ -251,6 +298,54 @@ public class ASMUtil implements Opcodes {
         }
     }
 
+    public static void InsertReturn2(MethodNode mn, Type type) {
+        InsnList list = new InsnList();
+        LabelNode label = new LabelNode();
+        list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Config", "Annihilation", "Z"));
+        list.add(new JumpInsnNode(IFEQ, label));
+        switch (type.getSort()) {
+            case Type.VOID: {
+                list.add(new InsnNode(RETURN));
+                break;
+            }
+            case Type.SHORT:
+            case Type.CHAR:
+            case Type.BYTE:
+            case Type.INT:
+            case Type.BOOLEAN: {
+                list.add(new InsnNode(ICONST_0));
+                list.add(new InsnNode(IRETURN));
+                break;
+            }
+            case Type.FLOAT: {
+                list.add(new InsnNode(FCONST_0));
+                list.add(new InsnNode(FRETURN));
+                break;
+            }
+            case Type.LONG: {
+                list.add(new InsnNode(LCONST_0));
+                list.add(new InsnNode(LRETURN));
+                break;
+            }
+            case Type.DOUBLE: {
+                list.add(new InsnNode(DCONST_0));
+                list.add(new InsnNode(DRETURN));
+                break;
+            }
+            case Type.OBJECT: {
+                list.add(new InsnNode(ACONST_NULL));
+                list.add(new InsnNode(ARETURN));
+                break;
+            }
+            default: {
+                throw new IllegalStateException("The fuck?");
+            }
+        }
+        list.add(label);
+        list.add(new FrameNode(F_SAME, 0, null, 0, null));
+        mn.instructions.insert(list);
+        Launch.LOGGER.info("Insert return in " + mn.name + ",type:2.");
+    }
     public static void InsertReturn(MethodNode mn, @Nullable Object type, @Nullable Object getReturn, Object getField, AbstractInsnNode shouldReturn) {
         InsnList list = new InsnList();
         LabelNode label = new LabelNode();
