@@ -33,4 +33,6 @@ public class World {
     public MinecraftServer getMinecraftServer() {
         return null;
     }
+
+    public WorldInfo worldInfo;
 }
