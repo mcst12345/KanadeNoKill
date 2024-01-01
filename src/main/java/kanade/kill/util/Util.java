@@ -45,10 +45,13 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.storage.WorldInfo;
+import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.ForgeInternalHandler;
 import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.eventhandler.Event;
@@ -717,7 +720,20 @@ public class Util {
                 GuiOpenEvent guiOpenEvent = (GuiOpenEvent) event;
                 GuiScreen gui = guiOpenEvent.getGui();
                 return !ModMain.GUI.isInstance(gui) && !(gui instanceof GuiGameOver) && !(gui instanceof GuiChat) && !(gui instanceof GuiIngameMenu) && !(gui instanceof GuiMainMenu);
+            } else if (event instanceof EntityViewRenderEvent) {
+                EntityViewRenderEvent cameraSetup = (EntityViewRenderEvent) event;
+                return !KillItem.inList(cameraSetup.getEntity());
             }
+        }
+        if (event instanceof PlayerEvent) {
+            PlayerEvent playerEvent = (PlayerEvent) event;
+            return !KillItem.inList(playerEvent.getEntityPlayer());
+        } else if (event instanceof net.minecraftforge.fml.common.gameevent.PlayerEvent) {
+            net.minecraftforge.fml.common.gameevent.PlayerEvent playerEvent = (net.minecraftforge.fml.common.gameevent.PlayerEvent) event;
+            return !KillItem.inList(playerEvent.player);
+        } else if (event instanceof EntityEvent) {
+            EntityEvent entityEvent = (EntityEvent) event;
+            return !KillItem.inList(entityEvent.getEntity());
         }
         return true;
     }

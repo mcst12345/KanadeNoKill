@@ -367,21 +367,37 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     }
                 }
             }
-            if (!goodClass && !(mn.name.equals("<init>") || mn.name.equals("<clinit>") || Modifier.isAbstract(mn.access) || Modifier.isNative(mn.access))) {
+            if (!goodClass) {
                 Type type = Type.getReturnType(mn.desc);
                 if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY) {
-                    ASMUtil.InsertReturn1(mn, type);
-                    if (mn.name.startsWith("func_")) {
-                        ASMUtil.InsertReturn2(mn, type);
+                    if (!(mn.name.equals("<init>") || mn.name.equals("<clinit>") || Modifier.isAbstract(mn.access) || Modifier.isNative(mn.access))) {
+                        ASMUtil.InsertReturn1(mn, type);
+                        if (mn.name.startsWith("func_")) {
+                            ASMUtil.InsertReturn2(mn, type);
+                        }
                     }
                 }
-            }
-            if (mn.localVariables != null && !goodClass) {
-                for (LocalVariableNode lvn : mn.localVariables) {
-                    if (lvn.desc.startsWith("net/minecraftforge/") && lvn.desc.contains("/event/")) {
-                        kanade.kill.Launch.LOGGER.info("Find event listsner:" + transformedName);
-                        event_listeners.add(cn.name.replace('/', '.'));
-                        break;
+                if (mn.localVariables != null) {
+                    for (LocalVariableNode lvn : mn.localVariables) {
+                        if (lvn.desc.startsWith("net/minecraftforge/") && lvn.desc.contains("/event/")) {
+                            kanade.kill.Launch.LOGGER.info("Find event listsner:" + transformedName);
+                            if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY) {
+                                ASMUtil.InsertReturn2(mn, type);
+                            }
+                            event_listeners.add(cn.name.replace('/', '.'));
+                            break;
+                        }
+                    }
+                }
+                if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY) {
+                    for (AbstractInsnNode ain : mn.instructions.toArray()) {
+                        if (ain instanceof MethodInsnNode) {
+                            MethodInsnNode min = (MethodInsnNode) ain;
+                            if (min.owner.startsWith("org/lwjgl") || min.owner.startsWith("net/minecraft/client/renderer")) {
+                                Launch.LOGGER.info("Find render method.");
+                                ASMUtil.InsertReturn3(mn, type);
+                            }
+                        }
                     }
                 }
             }

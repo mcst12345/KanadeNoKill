@@ -60,8 +60,9 @@ public class Launch {
         final List<String> classes = new ArrayList<>();
         ProtectionDomain domain = Loader.class.getProtectionDomain();
         ProtectionDomain gl = client ? GL11.class.getProtectionDomain() : null;
-        ClassLoader glLoader = client ? GL11.class.getClassLoader() : null;
+        ClassLoader appClassLoader = client ? GL11.class.getClassLoader() : null;
 
+        classes.add("net.minecraftforge.fml.relauncher.CoreModManager");
         classes.add("kanade.kill.Config");
         classes.add("kanade.kill.util.Util");
         classes.add("kanade.kill.util.KanadeArrayList");
@@ -117,7 +118,9 @@ public class Launch {
                     byte[] bytes = output.toByteArray();
                     Class<?> Clazz;
                     if (s.startsWith("org.lwjgl")) {
-                        Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, glLoader, gl);
+                        Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, appClassLoader, gl);
+                    } else if (s.startsWith("net.minecraftforge.fml.relauncher")) {
+                        Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, appClassLoader, domain);
                     } else {
                         Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, classLoader, domain);
                     }
