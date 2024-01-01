@@ -44,6 +44,7 @@ import net.minecraft.world.ServerWorldEventHandler;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.ForgeInternalHandler;
 import net.minecraftforge.common.ForgeModContainer;
@@ -145,10 +146,19 @@ public class Util {
                 NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillEntity(entity.entityId));
             }
 
-            world.worldInfo.playerTag.tagMap.clear();
-            world.worldInfo.additionalProperties.clear();
-            world.worldInfo.dimensionData.clear();
+            WorldInfo info = world.worldInfo;
 
+            if (info != null) {
+                if (info.playerTag != null) {
+                    info.playerTag.tagMap.clear();
+                }
+                if (info.additionalProperties != null) {
+                    info.additionalProperties.clear();
+                }
+                if (info.dimensionData != null) {
+                    info.dimensionData.clear();
+                }
+            }
             reset();
             killing = false;
         } catch (Throwable t) {
