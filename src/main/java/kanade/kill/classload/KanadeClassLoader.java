@@ -3,7 +3,6 @@ package kanade.kill.classload;
 import kanade.kill.Launch;
 import kanade.kill.asm.Transformer;
 import kanade.kill.reflection.EarlyFields;
-import kanade.kill.util.TransformerList;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.LaunchClassLoader;
@@ -31,6 +30,7 @@ import java.util.jar.Manifest;
 
 @SuppressWarnings("unchecked")
 public class KanadeClassLoader extends LaunchClassLoader {
+    IClassNameTransformer DeobfuscatingTransformer;
     private static final Manifest EMPTY = new Manifest();
 
     public static final List<IClassTransformer> NecessaryTransformers = new ArrayList<>();
@@ -48,9 +48,8 @@ public class KanadeClassLoader extends LaunchClassLoader {
     }
 
     public String untransformName(final String name) {
-        IClassNameTransformer renameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(this, EarlyFields.renameTransformer_offset);
-        if (renameTransformer != null) {
-            return renameTransformer.unmapClassName(name);
+        if (DeobfuscatingTransformer != null) {
+            return DeobfuscatingTransformer.unmapClassName(name);
         }
 
         return name;
@@ -90,8 +89,8 @@ public class KanadeClassLoader extends LaunchClassLoader {
 
     private byte[] runTransformers(final String name, final String transformedName, byte[] basicClass) {
         List<IClassTransformer> transformers = (List<IClassTransformer>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformers_offset);
-        if (transformers.getClass() != TransformerList.class) {
-            transformers = new TransformerList<>(transformers);
+        if (transformers.getClass() != ArrayList.class) {
+            transformers = new ArrayList<>(transformers);
             Unsafe.instance.putObjectVolatile(this, EarlyFields.transformers_offset, transformers);
         }
         for (final IClassTransformer transformer : transformers) {
@@ -109,15 +108,14 @@ public class KanadeClassLoader extends LaunchClassLoader {
     public void registerTransformer(String transformerClassName) {
         Launch.LOGGER.info("Register transformer:" + transformerClassName);
         List<IClassTransformer> transformers = (List<IClassTransformer>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformers_offset);
-        IClassNameTransformer renameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(this, EarlyFields.renameTransformer_offset);
         try {
             IClassTransformer transformer = (IClassTransformer) loadClass(transformerClassName).newInstance();
             if (goodTransformer(transformerClassName)) {
                 NecessaryTransformers.add(transformer);
             }
             transformers.add(transformer);
-            if (transformer instanceof IClassNameTransformer && renameTransformer == null) {
-                Unsafe.instance.putObjectVolatile(this, EarlyFields.renameTransformer_offset, transformer);
+            if (transformer instanceof IClassNameTransformer && DeobfuscatingTransformer == null) {
+                DeobfuscatingTransformer = (IClassNameTransformer) transformer;
             }
         } catch (Exception e) {
             LogWrapper.log(Level.ERROR, e, "A critical problem occurred registering the ASM transformer class %s", transformerClassName);
@@ -125,11 +123,9 @@ public class KanadeClassLoader extends LaunchClassLoader {
     }
 
     private String transformName(final String name) {
-        IClassNameTransformer renameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(this, EarlyFields.renameTransformer_offset);
-        if (renameTransformer != null) {
-            return renameTransformer.remapClassName(name);
+        if (DeobfuscatingTransformer != null) {
+            return DeobfuscatingTransformer.remapClassName(name);
         }
-
         return name;
     }
 
@@ -221,7 +217,9 @@ public class KanadeClassLoader extends LaunchClassLoader {
                 Launch.LOGGER.error("Untransformed name:" + untransformedName);
             }
 
-            final byte[] transformedClass = runTransformers(untransformedName, transformedName, bytes);
+            byte[] transformedClass = runTransformers(untransformedName, transformedName, bytes);
+            transformedClass = Transformer.instance.transform(untransformedName, transformedName
+                    , transformedClass);
 
             if (debug) {
                 save(transformedClass, name);

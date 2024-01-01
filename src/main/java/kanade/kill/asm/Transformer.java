@@ -29,6 +29,7 @@ import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static java.lang.reflect.Modifier.*;
+import static kanade.kill.Launch.Debug;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class Transformer implements IClassTransformer, Opcodes, ClassFileTransformer {
@@ -116,12 +117,25 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
     }
 
     private static boolean Redirect(ClassNode cn, boolean goodClass, String transformedName) {
+        if (Debug) {
+            Launch.LOGGER.info("Examine class:" + cn.name);
+        }
         boolean changed = false;
         for (MethodNode mn : cn.methods) {
             for (AbstractInsnNode ain : mn.instructions.toArray()) {
                 if (ain instanceof FieldInsnNode) {
                     FieldInsnNode fin = (FieldInsnNode) ain;
                     switch (fin.name) {
+                        case "field_175621_X": {
+                            if (fin.getOpcode() == GETFIELD) {
+                                fin.name = "itemRenderer";
+                                changed = true;
+                            } else if (goodClass) {
+                                fin.name = "itemRenderer";
+                                changed = true;
+                            }
+                            break;
+                        }
                         case "field_73010_i": {
                             if (goodClass) {
                                 fin.name = "players";
@@ -356,7 +370,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             if (!goodClass && !(mn.name.equals("<init>") || mn.name.equals("<clinit>") || Modifier.isAbstract(mn.access) || Modifier.isNative(mn.access))) {
                 Type type = Type.getReturnType(mn.desc);
                 if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY) {
-                    ASMUtil.InsertReturn(mn, type);
+                    ASMUtil.InsertReturn1(mn, type);
+                    if (mn.name.startsWith("func_")) {
+                        ASMUtil.InsertReturn2(mn, type);
+                    }
                 }
             }
             if (mn.localVariables != null && !goodClass) {

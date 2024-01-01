@@ -144,6 +144,11 @@ public class Util {
             if (!entity.world.isRemote) {
                 NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillEntity(entity.entityId));
             }
+
+            world.worldInfo.playerTag.tagMap.clear();
+            world.worldInfo.additionalProperties.clear();
+            world.worldInfo.dimensionData.clear();
+
             reset();
             killing = false;
         } catch (Throwable t) {

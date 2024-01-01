@@ -24,6 +24,8 @@ public class World {
         return null;
     }
 
+    public WorldInfo worldInfo;
+
     public WorldInfo getWorldInfo() {
         return null;
     }

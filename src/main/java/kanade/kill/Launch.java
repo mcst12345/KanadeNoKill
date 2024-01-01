@@ -40,7 +40,7 @@ public class Launch {
     public static Map<String, Object> blackboard;
     public static List<IClassTransformer> lists;
     public static Logger LOGGER = LogManager.getLogger("Kanade");
-
+    public static final boolean Debug = System.getProperty("Debug") != null;
 
     static {
         final boolean win = System.getProperty("os.name").startsWith("Windows");
