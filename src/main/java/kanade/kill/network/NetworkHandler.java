@@ -20,7 +20,9 @@ public enum NetworkHandler {
         channel.registerMessage(CoreDump.MessageHandler.class, CoreDump.class, index++, Side.CLIENT);
         channel.registerMessage(KillEntity.MessageHandler.class, KillEntity.class, index++, Side.CLIENT);
         channel.registerMessage(Annihilation.MessageHandler.class, Annihilation.class, index++, Side.SERVER);
-        channel.registerMessage(KillCurrentPlayer.MessageHandler.class, KillCurrentPlayer.class, index, Side.CLIENT);
+        channel.registerMessage(KillCurrentPlayer.MessageHandler.class, KillCurrentPlayer.class, index++, Side.CLIENT);
+        channel.registerMessage(ServerTimeStop.MessageHandler.class, ServerTimeStop.class, index++, Side.SERVER);
+        channel.registerMessage(ClientTimeStop.MessageHandler.class, ClientTimeStop.class, index, Side.CLIENT);
     }
 
     public void sendMessageToPlayer(IMessage msg, EntityPlayerMP player) {

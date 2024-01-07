@@ -5,6 +5,8 @@ import kanade.kill.Launch;
 import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.Annihilation;
 import kanade.kill.network.packets.KillAllEntities;
+import kanade.kill.network.packets.ServerTimeStop;
+import kanade.kill.timemanagement.TimeStop;
 import kanade.kill.util.NativeMethods;
 import kanade.kill.util.Util;
 import net.minecraft.client.Minecraft;
@@ -30,6 +32,8 @@ import java.util.*;
 
 @SuppressWarnings("unused")
 public class KillItem extends Item {
+    public static int mode;
+    private short timeStopCounter = 0;
     private static final Set<UUID> list = new HashSet<>();
     public KillItem(){
         this.setRegistryName("kanade:kill");
@@ -95,6 +99,11 @@ public class KillItem extends Item {
 
     public static boolean inList(Object obj) {
         if (obj instanceof Entity) {
+            if (Config.allPlayerProtect) {
+                if (obj instanceof EntityPlayer) {
+                    return true;
+                }
+            }
             UUID uuid = ((Entity) obj).getUniqueID();
             return list.contains(uuid) || (uuid != null && NativeMethods.ProtectContain(uuid.hashCode())) || (obj instanceof EntityItem && Util.NoRemove(((EntityItem) obj).getItem()));
         } else if (Launch.client) {
@@ -115,6 +124,9 @@ public class KillItem extends Item {
             entityIn.world.protects.add(entityIn);
             list.add(entityIn.getUniqueID());
         }
+        if (timeStopCounter > 0) {
+            timeStopCounter--;
+        }
     }
 
     @Nonnull
@@ -133,13 +145,22 @@ public class KillItem extends Item {
             if (FMLCommonHandler.instance().getMinecraftServerInstance().isCallingFromMinecraftThread()) {
                 NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillAllEntities());
             }
-            return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
         } else {
-            Config.Annihilation = !Config.Annihilation;
-            if (playerIn.world.isRemote) {
-                NetworkHandler.INSTANCE.sendMessageToServer(new Annihilation(playerIn.dimension, (int) playerIn.posX, (int) playerIn.posY, (int) playerIn.posZ));
+            if (mode == 0) {
+                Config.Annihilation = !Config.Annihilation;
+                if (playerIn.world.isRemote) {
+                    NetworkHandler.INSTANCE.sendMessageToServer(new Annihilation(playerIn.dimension, (int) playerIn.posX, (int) playerIn.posY, (int) playerIn.posZ));
+                }
+            } else if (mode == 1) {
+                if (playerIn.world.isRemote) {
+                    if (timeStopCounter == 0) {
+                        TimeStop.SetTimeStop(!TimeStop.isTimeStop());
+                        NetworkHandler.INSTANCE.sendMessageToServer(new ServerTimeStop(TimeStop.isTimeStop()));
+                        timeStopCounter = 10;
+                    }
+                }
             }
-            return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
         }
+        return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
     }
 }

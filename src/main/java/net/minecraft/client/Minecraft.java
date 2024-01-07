@@ -14,12 +14,14 @@ import net.minecraft.client.main.GameConfiguration;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.Entity;
 import net.minecraft.profiler.ISnooperInfo;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.profiler.Snooper;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.FrameTimer;
 import net.minecraft.util.Session;
 import net.minecraft.util.Timer;
@@ -43,19 +45,27 @@ public class Minecraft implements ISnooperInfo {
     public Framebuffer framebuffer;
     public GuiScreen field_71462_r;
     public SoundHandler soundHandler;
-    public EntityRenderer entityRenderer;
-    public Profiler profiler;
+    public static int debugFPS;
+    public EntityRenderer EntityRenderer;
     public Timer timer;
     public FontRenderer fontRenderer;
     public int leftClickCounter;
     public boolean isGamePaused;
     public int displayWidth;
     public int displayHeight;
-    public int startNanoTime;
+    public Profiler Profiler;
     public FrameTimer frameTimer;
     public int rightClickDelayTimer;
     public GuiToast toastGui;
-
+    public long startNanoTime;
+    public GameSettings gameSettings;
+    public long prevFrameTime;
+    public int fpsCounter;
+    public GuiScreen CurrentScreen;
+    public IntegratedServer integratedServer;
+    public float renderPartialTicksPaused;
+    public long debugUpdateTime;
+    public String debug;
     public Minecraft() {
     }
 
@@ -95,6 +105,7 @@ public class Minecraft implements ISnooperInfo {
     }
 
     public void runGameLoop() {
+        kanade.kill.asm.hooks.Minecraft.RunGameLoop(this);
     }
 
     public void shutdown() {
@@ -178,5 +189,13 @@ public class Minecraft implements ISnooperInfo {
 
     public IResourceManager getResourceManager() {
         return null;
+    }
+
+    public void displayDebugInfo(long i1) {
+
+    }
+
+    public boolean isSingleplayer() {
+        return false;
     }
 }

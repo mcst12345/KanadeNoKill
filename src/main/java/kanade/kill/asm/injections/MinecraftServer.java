@@ -25,6 +25,14 @@ public class MinecraftServer implements Opcodes {
 
     public static void InjectTick(MethodNode mn) {
         InsnList list = new InsnList();
+        LabelNode label = new LabelNode();
+        LabelNode l = new LabelNode();
+        list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/util/Util", "killing", "Z"));
+        list.add(new JumpInsnNode(IFNE, label));
+        list.add(new JumpInsnNode(GOTO, l));
+        list.add(label);
+        list.add(new InsnNode(RETURN));
+        list.add(l);
         LabelNode label0 = new LabelNode();
         LabelNode label1 = new LabelNode();
         LabelNode label2 = new LabelNode();

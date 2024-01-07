@@ -1,8 +1,8 @@
 package kanade.kill.asm;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import kanade.kill.Empty;
 import kanade.kill.Launch;
+import kanade.kill.asm.injections.Timer;
 import kanade.kill.asm.injections.*;
 import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.reflection.EarlyFields;
@@ -17,10 +17,8 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 import scala.concurrent.util.Unsafe;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
@@ -38,8 +36,6 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
     private static final ObjectOpenHashSet<String> event_listeners = new ObjectOpenHashSet<>();
     private static final Queue<FieldInfo> fields = new LinkedBlockingQueue<>();
     private Transformer(){}
-
-    public static final Set<String> Kanade = new HashSet<>();
 
 
 
@@ -68,50 +64,6 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
 
     private static final Set<String> modClasses = new HashSet<>();
 
-    static {
-        Kanade.add("kanade.kill.Core");
-        Kanade.add("kanade.kill.reflection.EarlyMethods");
-        Kanade.add("kanade.kill.reflection.ReflectionUtil");
-        Kanade.add("kanade.kill.reflection.EarlyFields");
-        Kanade.add("kanade.kill.asm.ASMUtil");
-        Kanade.add("kanade.kill.asm.injections.DimensionManager");
-        Kanade.add("kanade.kill.asm.injections.Entity");
-        Kanade.add("kanade.kill.asm.injections.EntityLivingBase");
-        Kanade.add("kanade.kill.asm.injections.EntityPlayer");
-        Kanade.add("kanade.kill.asm.injections.FMLClientHandler");
-        Kanade.add("kanade.kill.asm.injections.ForgeHooksClient");
-        Kanade.add("kanade.kill.asm.injections.ItemStack");
-        Kanade.add("kanade.kill.asm.injections.Minecraft");
-        Kanade.add("kanade.kill.asm.injections.MinecraftForge");
-        Kanade.add("kanade.kill.asm.injections.MinecraftServer");
-        Kanade.add("kanade.kill.asm.injections.NonNullList");
-        Kanade.add("kanade.kill.asm.injections.RenderGlobal");
-        Kanade.add("kanade.kill.asm.injections.ServerCommandManager");
-        Kanade.add("kanade.kill.asm.injections.World");
-        Kanade.add("kanade.kill.asm.injections.WorldClient");
-        Kanade.add("kanade.kill.asm.injections.WorldServer");
-        Kanade.add("kanade.kill.asm.Transformer");
-        Kanade.add("kanade.kill.util.TransformerList");
-        Kanade.add("kanade.kill.thread.TransformersCheckThread");
-        Kanade.add("kanade.kill.thread.ClassLoaderCheckThread");
-        Kanade.add("kanade.kill.classload.KanadeClassLoader");
-        Kanade.add("kanade.kill.util.FieldInfo");
-        Kanade.add("kanade.kill.util.KanadeSecurityManager");
-        Kanade.add("kanade.kill.thread.SecurityManagerCheckThread");
-        Kanade.add("kanade.kill.thread.KillerThread");
-        Kanade.add("kanade.kill.thread.GuiThread");
-        Kanade.add("kanade.kill.AgentMain");
-        Kanade.add("kanade.kill.Attach");
-        Kanade.add("kanade.kill.ModMain");
-        Kanade.add("kanade.kill.item.KillItem");
-        Kanade.add("kanade.kill.item.DeathItem");
-        Kanade.add("kanade.kill.reflection.LateFields");
-        Kanade.add("kanade.kill.network.packets.KillAllEntities");
-        Kanade.add("kanade.kill.network.NetworkHandler");
-        Kanade.add("kanade.kill.command.KanadeKillCommand");
-        Kanade.add("kanade.kill.ClientMain");
-    }
-
     public static boolean isModClass(String s) {
         return modClasses.contains(s);
     }
@@ -122,6 +74,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         }
         boolean changed = false;
         for (MethodNode mn : cn.methods) {
+            if (Modifier.isAbstract(mn.access) || Modifier.isNative(mn.access)) {
+                continue;
+            }
             for (AbstractInsnNode ain : mn.instructions.toArray()) {
                 if (ain instanceof FieldInsnNode) {
                     FieldInsnNode fin = (FieldInsnNode) ain;
@@ -217,20 +172,20 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71424_I": {
                             if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "profiler";
+                                fin.name = "Profiler";
                                 changed = true;
                             } else if (goodClass) {
-                                fin.name = "profiler";
+                                fin.name = "Profiler";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_71460_t": {
                             if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "entityRenderer";
+                                fin.name = "EntityRenderer";
                                 changed = true;
                             } else if (goodClass) {
-                                fin.name = "entityRenderer";
+                                fin.name = "EntityRenderer";
                                 changed = true;
                             }
                             break;
@@ -381,7 +336,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     for (LocalVariableNode lvn : mn.localVariables) {
                         if (lvn.desc.startsWith("net/minecraftforge/") && lvn.desc.contains("/event/")) {
                             kanade.kill.Launch.LOGGER.info("Find event listsner:" + transformedName);
-                            if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY) {
+                            if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY && !(mn.name.equals("<init>") || mn.name.equals("<clinit>"))) {
                                 ASMUtil.InsertReturn2(mn, type);
                             }
                             event_listeners.add(cn.name.replace('/', '.'));
@@ -393,6 +348,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     for (AbstractInsnNode ain : mn.instructions.toArray()) {
                         if (ain instanceof MethodInsnNode) {
                             MethodInsnNode min = (MethodInsnNode) ain;
+                            if (mn.name.equals("<init>") || mn.name.equals("<clinit>")) {
+                                continue;
+                            }
                             if (min.owner.startsWith("org/lwjgl") || min.owner.startsWith("net/minecraft/client/renderer")) {
                                 Launch.LOGGER.info("Find render method.");
                                 ASMUtil.InsertReturn3(mn, type);
@@ -401,27 +359,26 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     }
                 }
             }
+            if (mn.name.equals("func_70071_h_") || mn.name.equals("func_73660_a")) {
+                InsnList list = new InsnList();
+                LabelNode label0 = new LabelNode();
+                list.add(ASMUtil.isTimeStop());
+                list.add(new JumpInsnNode(IFEQ, label0));
+                list.add(new VarInsnNode(ALOAD, 0));
+                list.add(ASMUtil.inList());
+                list.add(new JumpInsnNode(IFNE, label0));
+                list.add(new InsnNode(RETURN));
+                list.add(label0);
+                list.add(new FrameNode(F_SAME, 0, null, 0, null));
+                mn.instructions.insert(list);
+                changed = true;
+            }
         }
         return changed;
     }
 
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
-        if (Kanade.contains(name)) {
-            try (InputStream is = Empty.class.getResourceAsStream('/' + name.replace('.', '/') + ".class")) {
-                assert is != null;
-                //6 lines below are from Apache common io.
-                final ByteArrayOutputStream output = new ByteArrayOutputStream();
-                final byte[] buffer = new byte[8024];
-                int n;
-                while (-1 != (n = is.read(buffer))) {
-                    output.write(buffer, 0, n);
-                }
-                return output.toByteArray();
-            } catch (Throwable t) {
-                return basicClass;
-            }
-        }
         if (basicClass == null) {
             return null;
         }
@@ -532,10 +489,16 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                             Minecraft.InjectDisplayGuiScreen(mn);
                             break;
                         }
-                        case "func_71411_J":
+                        case "func_71411_J": {
+                            Minecraft.OverwriteRunGameLoop(mn);
+                            break;
+                        }
                         case "func_71407_l": {
                             ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "kanade/kill/util/Util", "killing", "Z"));
                             ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "net/minecraft/client/Minecraft", "dead", "Z"));
+                            if (mn.name.equals("func_71407_l")) {
+                                Minecraft.InjectRunTick(mn);
+                            }
                             break;
                         }
                         case "func_71381_h":
@@ -617,6 +580,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                             World.InjectUpdateEntities(mn);
                             break;
                         }
+                        case "func_72866_a": {
+                            World.InjectUpdateEntityWithOptionalForce(mn);
+                            break;
+                        }
                     }
                 }
                 break;
@@ -636,7 +603,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "func_110138_aP":
                         case "func_110143_aJ": {
-                            ASMUtil.InsertReturn(mn, Type.FLOAT_TYPE, 20.0f, 0, ASMUtil.inList());
+                            ASMUtil.InsertReturn(mn, Type.FLOAT_TYPE, new Float(20.0f), 0, ASMUtil.inList());
                             break;
                         }
                         case "func_70097_a": {
@@ -844,6 +811,18 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 changed = true;
                 kanade.kill.Launch.LOGGER.info("Get RenderGlobal");
                 RenderGlobal.AddField(cn);
+                for (MethodNode mn : cn.methods) {
+                    switch (mn.name) {
+                        case "func_72726_b": {
+                            ASMUtil.InsertReturn(mn, null, null, -1, new FieldInsnNode(GETSTATIC, "kanade/kill/Config", "disableParticle", "Z"));
+                            break;
+                        }
+                        case "func_72734_e": {
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "kanade/kill/Config", "disableParticle", "Z"));
+                            break;
+                        }
+                    }
+                }
                 break;
             }
             case "net.minecraft.client.renderer.entity.RenderManager": {
@@ -934,6 +913,94 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "<init>": {
                             Chunk.InjectConstructor(mn);
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case "net.minecraft.util.Timer": {
+                Launch.LOGGER.info("Get Timer.");
+                changed = true;
+                for (MethodNode mn : cn.methods) {
+                    if (mn.name.equals("func_74275_a")) {
+                        Timer.OverwriteUpdateTimer(mn);
+                    }
+                }
+                break;
+            }
+            case "net.minecraft.client.renderer.texture.TextureManager": {
+                Launch.LOGGER.info("Get TextureManager.");
+                changed = true;
+                for (MethodNode mn : cn.methods) {
+                    if (mn.name.equals("func_110550_d")) {
+                        ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, ASMUtil.isTimeStop());
+                    }
+                }
+                break;
+            }
+            case "net.minecraft.client.renderer.EntityRenderer": {
+                Launch.LOGGER.info("Get EntityRenderer.");
+                changed = true;
+                for (MethodNode mn : cn.methods) {
+                    switch (mn.name) {
+                        case "func_181560_a": {
+                            EntityRenderer.InjectUpdateCameraAndRender(mn);
+                            break;
+                        }
+                        case "func_78464_a": {
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, ASMUtil.isTimeStop());
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case "net.minecraft.client.particle.ParticleManager": {
+                Launch.LOGGER.info("Get ParticleManager.");
+                changed = true;
+                for (MethodNode mn : cn.methods) {
+                    switch (mn.name) {
+                        case "func_178927_a": {
+                            ASMUtil.InsertReturn(mn, null, null, -1, ASMUtil.isTimeStop());
+                        }
+                        case "func_78868_a": {
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, ASMUtil.isTimeStop());
+                        }
+                    }
+                }
+                break;
+            }
+            case "net.minecraft.network.NetHandlerPlayServer": {
+                changed = true;
+                Launch.LOGGER.info("Get NetHandlerPlayServer.");
+                for (MethodNode mn : cn.methods) {
+                    if (mn.name.equals("func_147360_c")) {
+                        InsnList list = new InsnList();
+                        list.add(new VarInsnNode(ALOAD, 0));
+                        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/network/NetHandlerPlayServer", "field_147369_b", "Lnet/minecraft/entity/player/EntityPlayerMP;"));
+                        ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, list, ASMUtil.inList());
+                    }
+                }
+                break;
+            }
+            case "net.minecraft.entity.player.InventoryPlayer": {
+                Launch.LOGGER.info("Get InventoryPlayer.");
+                changed = true;
+                for (MethodNode mn : cn.methods) {
+                    switch (mn.name) {
+                        case "func_146027_a": {
+                            InsnList list = new InsnList();
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/entity/player/InventoryPlayer", "field_70458_d", "Lnet/minecraft/entity/player/EntityPlayer;"));
+                            ASMUtil.InsertReturn(mn, Type.INT_TYPE, 0, list, ASMUtil.inList());
+                            break;
+                        }
+                        case "func_70436_m": {
+                            InsnList list = new InsnList();
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/entity/player/InventoryPlayer", "field_70458_d", "Lnet/minecraft/entity/player/EntityPlayer;"));
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, list, ASMUtil.inList());
                             break;
                         }
                     }

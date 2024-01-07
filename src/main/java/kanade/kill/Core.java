@@ -1,6 +1,5 @@
 package kanade.kill;
 
-import net.minecraftforge.fml.common.TracingPrintStream;
 import net.minecraftforge.fml.relauncher.FMLCorePlugin;
 
 import javax.annotation.Nullable;
@@ -95,10 +94,10 @@ public class Core extends FMLCorePlugin {
                 PrintStream output = null;
 
                 try {
-                    TracingPrintStream tps = (TracingPrintStream) System.out;
+                    Object obj = System.out;
                     Field field = FilterOutputStream.class.getDeclaredField("out");
                     field.setAccessible(true);
-                    output = (PrintStream) field.get(tps);
+                    output = (PrintStream) field.get(obj);
                 } catch (Throwable ignored) {
                 }
 
@@ -148,7 +147,6 @@ public class Core extends FMLCorePlugin {
                     method.setAccessible(true);
                     method.invoke(null, 0);
                 } catch (Throwable t) {
-                    t.printStackTrace();
                     flag = true;
                 }
 

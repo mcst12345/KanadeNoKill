@@ -33,6 +33,11 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     public double motionX;
     public double motionY;
     public double motionZ;
+    public float prevRotationYaw;
+    public float rotationYaw;
+    public float prevRotationPitch;
+    public float rotationPitch;
+    public int ticksExisted;
 
     @Nullable
     public UUID getUniqueID() {
@@ -85,5 +90,17 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     }
 
     public void deserializeNBT(NBTTagCompound nbt) {
+    }
+
+    public boolean isRiding() {
+        return false;
+    }
+
+    public void updateRidden() {
+
+    }
+
+    public void onUpdate() {
+
     }
 }

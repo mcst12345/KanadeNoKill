@@ -70,11 +70,15 @@ public class Launch {
         classes.add("kanade.kill.reflection.ReflectionUtil");
         classes.add("kanade.kill.reflection.EarlyFields");
         classes.add("kanade.kill.asm.ASMUtil");
+        classes.add("kanade.kill.asm.hooks.Timer");
+        classes.add("kanade.kill.asm.hooks.Minecraft");
+        classes.add("kanade.kill.asm.hooks.World");
         classes.add("kanade.kill.asm.injections.Chunk");
         classes.add("kanade.kill.asm.injections.DimensionManager");
         classes.add("kanade.kill.asm.injections.Entity");
         classes.add("kanade.kill.asm.injections.EntityLivingBase");
         classes.add("kanade.kill.asm.injections.EntityPlayer");
+        classes.add("kanade.kill.asm.injections.EntityRenderer");
         classes.add("kanade.kill.asm.injections.EventBus");
         classes.add("kanade.kill.asm.injections.FMLClientHandler");
         classes.add("kanade.kill.asm.injections.ForgeHooksClient");
@@ -85,6 +89,7 @@ public class Launch {
         classes.add("kanade.kill.asm.injections.NonNullList");
         classes.add("kanade.kill.asm.injections.RenderGlobal");
         classes.add("kanade.kill.asm.injections.ServerCommandManager");
+        classes.add("kanade.kill.asm.injections.Timer");
         classes.add("kanade.kill.asm.injections.World");
         classes.add("kanade.kill.asm.injections.WorldClient");
         classes.add("kanade.kill.asm.injections.WorldServer");
@@ -92,6 +97,7 @@ public class Launch {
         classes.add("kanade.kill.util.TransformerList");
         classes.add("kanade.kill.thread.ClassLoaderCheckThread");
         classes.add("kanade.kill.thread.FieldSaveThread");
+        classes.add("kanade.kill.timemanagement.TimeStop");
         classes.add("kanade.kill.classload.KanadeClassLoader");
         classes.add("kanade.kill.util.FieldInfo");
         classes.add("kanade.kill.util.KanadeSecurityManager");
@@ -100,7 +106,7 @@ public class Launch {
         if (client) {
             classes.add("kanade.kill.thread.DisplayGui");
             classes.add("org.lwjgl.opengl.GLOffsets");
-            classes.add("org.lwjgl.opengl.GLHelper");
+            classes.add("org.lwjgl.opengl.OpenGLHelper");
         }
 
         try {
@@ -121,6 +127,7 @@ public class Launch {
                         Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, appClassLoader, gl);
                     } else if (s.startsWith("net.minecraftforge.fml.relauncher")) {
                         Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, appClassLoader, domain);
+                        Unsafe.instance.defineClass(s, bytes, 0, bytes.length, classLoader, domain);
                     } else {
                         Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, classLoader, domain);
                     }
@@ -225,11 +232,15 @@ public class Launch {
                 for (final Iterator<ITweaker> it = tweakers.iterator(); it.hasNext(); ) {
                     final ITweaker tweaker = it.next();
                     LogWrapper.log(Level.INFO, "Calling tweak class %s", tweaker.getClass().getName());
-                    tweaker.acceptOptions(options.valuesOf(nonOption), minecraftHome, assetsDir, profileName);
-                    tweaker.injectIntoClassLoader(classLoader);
-                    allTweakers.add(tweaker);
-                    // again, remove from the list once we've processed it, so we don't get duplicates
-                    it.remove();
+                    try {
+                        tweaker.acceptOptions(options.valuesOf(nonOption), minecraftHome, assetsDir, profileName);
+                        tweaker.injectIntoClassLoader(classLoader);
+                        allTweakers.add(tweaker);
+                        // again, remove from the list once we've processed it, so we don't get duplicates
+                        it.remove();
+                    } catch (Throwable t) {
+                        LOGGER.warn("Catch exception:", t);
+                    }
                 }
                 // continue around the loop until there's no tweak classes
             } while (!tweakClassNames.isEmpty());

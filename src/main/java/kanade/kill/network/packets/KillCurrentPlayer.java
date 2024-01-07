@@ -1,8 +1,10 @@
 package kanade.kill.network.packets;
 
 import io.netty.buffer.ByteBuf;
+import kanade.kill.Config;
 import kanade.kill.Launch;
 import kanade.kill.reflection.LateFields;
+import kanade.kill.thread.DisplayGui;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -38,6 +40,9 @@ public class KillCurrentPlayer implements IMessage {
             Minecraft.getMinecraft().skipRenderWorld = true;
             Minecraft.getMinecraft().pointedEntity = null;
             Minecraft.getMinecraft().scheduledTasks.clear();
+            if (Config.forceRender) {
+                DisplayGui.display();
+            }
             return null;
         }
     }

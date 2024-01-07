@@ -56,17 +56,21 @@ public class ModMain {
             classes.add("kanade.kill.item.KillItem");
             classes.add("kanade.kill.item.DeathItem");
             classes.add("kanade.kill.reflection.LateFields");
-            classes.add("kanade.kill.network.packets.KillAllEntities");
             classes.add("kanade.kill.network.NetworkHandler");
             classes.add("kanade.kill.network.packets.Annihilation");
             classes.add("kanade.kill.network.packets.Annihilation$MessageHandler");
+            classes.add("kanade.kill.network.packets.ClientTimeStop");
+            classes.add("kanade.kill.network.packets.ClientTimeStop$MessageHandler");
             classes.add("kanade.kill.network.packets.CoreDump");
             classes.add("kanade.kill.network.packets.CoreDump$MessageHandler");
             classes.add("kanade.kill.network.packets.KillCurrentPlayer");
             classes.add("kanade.kill.network.packets.KillCurrentPlayer$MessageHandler");
             classes.add("kanade.kill.network.packets.KillEntity");
             classes.add("kanade.kill.network.packets.KillEntity$MessageHandler");
+            classes.add("kanade.kill.network.packets.ServerTimeStop");
+            classes.add("kanade.kill.network.packets.ServerTimeStop$MessageHandler");
             classes.add("kanade.kill.command.KanadeKillCommand");
+            classes.add("kanade.kill.network.packets.KillAllEntities");
             classes.add("kanade.kill.network.packets.KillAllEntities$MessageHandler");
 
 

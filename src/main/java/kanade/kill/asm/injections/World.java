@@ -1,6 +1,7 @@
 package kanade.kill.asm.injections;
 
 import kanade.kill.Launch;
+import kanade.kill.asm.ASMUtil;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -252,15 +253,20 @@ public class World implements Opcodes {
     public static void InjectUpdateEntities(MethodNode mn) {
         InsnList list = new InsnList();
         LabelNode label = new LabelNode();
+        LabelNode label6 = new LabelNode();
 
         list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/util/Util", "killing", "Z"));
-        list.add(new JumpInsnNode(IFEQ, label));
+        list.add(new JumpInsnNode(IFNE, label));
         list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Launch", "client", "Z"));
-        list.add(new JumpInsnNode(IFEQ, label));
+        list.add(new JumpInsnNode(IFEQ, label6));
         list.add(new FieldInsnNode(GETSTATIC, "net/minecraft/client/Minecraft", "dead", "Z"));
-        list.add(new JumpInsnNode(IFEQ, label));
-        list.add(new InsnNode(RETURN));
+        list.add(new JumpInsnNode(IFNE, label));
+        list.add(new JumpInsnNode(GOTO, label6));
         list.add(label);
+        list.add(new InsnNode(RETURN));
+        list.add(label6);
+
+
 
         LabelNode label0 = new LabelNode();
         LabelNode label1 = new LabelNode();
@@ -310,5 +316,19 @@ public class World implements Opcodes {
         list.add(label2);
         mn.instructions.insert(list);
         Launch.LOGGER.info("Inject into updateEntities().");
+    }
+
+    public static void InjectUpdateEntityWithOptionalForce(MethodNode mn) {
+        InsnList list = new InsnList();
+        LabelNode label0 = new LabelNode();
+        list.add(ASMUtil.isTimeStop());
+        list.add(new JumpInsnNode(IFEQ, label0));
+        list.add(new VarInsnNode(ALOAD, 1));
+        list.add(ASMUtil.inList());
+        list.add(new JumpInsnNode(IFNE, label0));
+        list.add(new InsnNode(RETURN));
+        list.add(label0);
+        mn.instructions.insert(list);
+        Launch.LOGGER.info("Inject into InjectUpdateEntityWithOptionalForce().");
     }
 }

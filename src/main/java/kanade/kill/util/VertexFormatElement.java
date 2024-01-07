@@ -8,8 +8,8 @@ package kanade.kill.util;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.MemoryUtil;
-import org.lwjgl.opengl.GLHelper;
 import org.lwjgl.opengl.GLOffsets;
+import org.lwjgl.opengl.OpenGLHelper;
 
 import java.nio.ByteBuffer;
 
@@ -123,31 +123,31 @@ public class VertexFormatElement {
             buffer.position(format.getOffset(element));
             switch (this) {
                 case POSITION:
-                    GLHelper.nglVertexPointer(count, constant, stride, MemoryUtil.getAddress0(buffer) + (long) buffer.position(), GLOffsets.glVertexPointer);
-                    GLHelper.nglEnableClientState(32884, GLOffsets.glEnableClientState);
+                    OpenGLHelper.nglVertexPointer(count, constant, stride, MemoryUtil.getAddress0(buffer) + (long) buffer.position(), GLOffsets.glVertexPointer);
+                    OpenGLHelper.nglEnableClientState(32884, GLOffsets.glEnableClientState);
                     break;
                 case NORMAL:
                     if (count != 3) {
                         throw new IllegalArgumentException("Normal attribute should have the size 3: " + attr);
                     }
 
-                    GLHelper.nglNormalPointer(constant, stride, MemoryUtil.getAddress0(buffer) + (long) buffer.position(), GLOffsets.glNormalPointer);
-                    GLHelper.nglEnableClientState(32885, GLOffsets.glEnableClientState);
+                    OpenGLHelper.nglNormalPointer(constant, stride, MemoryUtil.getAddress0(buffer) + (long) buffer.position(), GLOffsets.glNormalPointer);
+                    OpenGLHelper.nglEnableClientState(32885, GLOffsets.glEnableClientState);
                     break;
                 case COLOR:
-                    GLHelper.nglColorPointer(count, constant, stride, MemoryUtil.getAddress0(buffer) + (long) buffer.position(), GLOffsets.glColorPointer);
-                    GLHelper.nglEnableClientState(32886, GLOffsets.glEnableClientState);
+                    OpenGLHelper.nglColorPointer(count, constant, stride, MemoryUtil.getAddress0(buffer) + (long) buffer.position(), GLOffsets.glColorPointer);
+                    OpenGLHelper.nglEnableClientState(32886, GLOffsets.glEnableClientState);
                     break;
                 case UV:
-                    GLHelper.nglClientActiveTexture('蓀' + attr.getIndex(), GLOffsets.glClientActiveTexture);
-                    GLHelper.nglTexCoordPointer(count, constant, stride, MemoryUtil.getAddress0(buffer) + (long) buffer.position(), GLOffsets.glTexCoordPointer);
-                    GLHelper.nglEnableClientState(32888, GLOffsets.glEnableClientState);
-                    GLHelper.nglClientActiveTexture(33984, GLOffsets.glClientActiveTexture);
+                    OpenGLHelper.nglClientActiveTexture('蓀' + attr.getIndex(), GLOffsets.glClientActiveTexture);
+                    OpenGLHelper.nglTexCoordPointer(count, constant, stride, MemoryUtil.getAddress0(buffer) + (long) buffer.position(), GLOffsets.glTexCoordPointer);
+                    OpenGLHelper.nglEnableClientState(32888, GLOffsets.glEnableClientState);
+                    OpenGLHelper.nglClientActiveTexture(33984, GLOffsets.glClientActiveTexture);
                 case PADDING:
                     break;
                 case GENERIC:
-                    GLHelper.nglEnableVertexAttribArray(attr.getIndex(), GLOffsets.glEnableVertexAttribArray);
-                    GLHelper.nglVertexAttribPointer(attr.getIndex(), count, constant, false, stride, MemoryUtil.getAddress0(buffer) + (long) buffer.position(), GLOffsets.glVertexAttribPointer);
+                    OpenGLHelper.nglEnableVertexAttribArray(attr.getIndex(), GLOffsets.glEnableVertexAttribArray);
+                    OpenGLHelper.nglVertexAttribPointer(attr.getIndex(), count, constant, false, stride, MemoryUtil.getAddress0(buffer) + (long) buffer.position(), GLOffsets.glVertexAttribPointer);
                     break;
                 default:
                     throw new RuntimeException("Unimplemented vanilla attribute upload: " + this.getDisplayName());
@@ -159,22 +159,22 @@ public class VertexFormatElement {
             VertexFormatElement attr = format.getElement(element);
             switch (this) {
                 case POSITION:
-                    GLHelper.nglDisableClientState(32884, GLOffsets.glDisableClientState);
+                    OpenGLHelper.nglDisableClientState(32884, GLOffsets.glDisableClientState);
                     break;
                 case NORMAL:
-                    GLHelper.nglDisableClientState(32885, GLOffsets.glDisableClientState);
+                    OpenGLHelper.nglDisableClientState(32885, GLOffsets.glDisableClientState);
                     break;
                 case COLOR:
-                    GLHelper.nglDisableClientState(32886, GLOffsets.glDisableClientState);
+                    OpenGLHelper.nglDisableClientState(32886, GLOffsets.glDisableClientState);
                     break;
                 case UV:
-                    GLHelper.nglClientActiveTexture('蓀' + attr.getIndex(), GLOffsets.glClientActiveTexture);
-                    GLHelper.nglDisableClientState(32888, GLOffsets.glDisableClientState);
-                    GLHelper.nglClientActiveTexture(33984, GLOffsets.glClientActiveTexture);
+                    OpenGLHelper.nglClientActiveTexture('蓀' + attr.getIndex(), GLOffsets.glClientActiveTexture);
+                    OpenGLHelper.nglDisableClientState(32888, GLOffsets.glDisableClientState);
+                    OpenGLHelper.nglClientActiveTexture(33984, GLOffsets.glClientActiveTexture);
                 case PADDING:
                     break;
                 case GENERIC:
-                    GLHelper.nglDisableVertexAttribArray(attr.getIndex(), GLOffsets.glDisableVertexAttribArray);
+                    OpenGLHelper.nglDisableVertexAttribArray(attr.getIndex(), GLOffsets.glDisableVertexAttribArray);
                     break;
                 default:
                     throw new RuntimeException("Unimplemented vanilla attribute upload: " + this.getDisplayName());

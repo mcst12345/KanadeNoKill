@@ -9,8 +9,8 @@ public class Minecraft implements Opcodes {
     public static void AddField(ClassNode cn) {
         Launch.LOGGER.info("Adding field.");
         cn.fields.add(new FieldNode(ACC_PUBLIC, "PLAYER", "Lnet/minecraft/client/entity/EntityPlayerSP;", null, null));
-        cn.fields.add(new FieldNode(ACC_PUBLIC, "profiler", "Lnet/minecraft/profiler/Profiler;", null, null));
-        cn.fields.add(new FieldNode(ACC_PUBLIC, "entityRenderer", "Lnet/minecraft/client/renderer/EntityRenderer;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "Profiler", "Lnet/minecraft/profiler/Profiler;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "EntityRenderer", "Lnet/minecraft/client/renderer/EntityRenderer;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "renderManager", "Lnet/minecraft/client/renderer/entity/RenderManager;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "mouseHelper", "Lnet/minecraft/util/MouseHelper;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "WORLD", "Lnet/minecraft/client/multiplayer/WorldClient;", null, null));
@@ -110,7 +110,6 @@ public class Minecraft implements Opcodes {
         list.add(new InsnNode(RETURN));
         list.add(label);
 
-
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
         Launch.LOGGER.info("Inject into displayGuiScreen(GuiScreen).");
@@ -147,5 +146,25 @@ public class Minecraft implements Opcodes {
         list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/thread/DisplayGui", "run", "()V", false));
         mn.instructions.insert(index, list);
         Launch.LOGGER.info("Inject into run().");
+    }
+
+    public static void InjectRunTick(MethodNode mn) {
+        InsnList list = new InsnList();
+        list.add(new VarInsnNode(ALOAD, 0));
+        list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/Minecraft", "runTick", "(Lnet/minecraft/client/Minecraft;)V", false));
+        mn.instructions.insert(list);
+        Launch.LOGGER.info("Inject into runTick().");
+    }
+
+    public static void OverwriteRunGameLoop(MethodNode mn) {
+        mn.tryCatchBlocks.clear();
+        mn.instructions.clear();
+        mn.instructions.add(new VarInsnNode(ALOAD, 0));
+        mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/Minecraft", "RunGameLoop", "(Lnet/minecraft/client/Minecraft;)V", false));
+        mn.instructions.add(new InsnNode(RETURN));
+        mn.localVariables.clear();
+        mn.maxLocals = 1;
+        mn.maxStack = 1;
+        Launch.LOGGER.info("Overwrite runGameLoop()V.");
     }
 }
