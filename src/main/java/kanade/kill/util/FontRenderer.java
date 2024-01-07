@@ -16,8 +16,8 @@ import net.minecraft.client.resources.IResource;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.MemoryUtil;
-import org.lwjgl.opengl.GLHelper;
 import org.lwjgl.opengl.GLOffsets;
+import org.lwjgl.opengl.OpenGLHelper;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReadParam;
@@ -237,16 +237,16 @@ public class FontRenderer {
             float f3 = (float) ((ch & 255) / 16 * 16);
             float f4 = f1 - f - 0.02F;
             float f5 = italic ? 1.0F : 0.0F;
-            GLHelper.nglBegin(5, GLOffsets.glBegin);
-            GLHelper.nglTexCoord2f(f2 / 256.0F, f3 / 256.0F, GLOffsets.glTexCoord2f);
-            GLHelper.nglVertex3f(this.posX + f5, this.posY, 0.0F, GLOffsets.glVertex3f);
-            GLHelper.nglTexCoord2f(f2 / 256.0F, (f3 + 15.98F) / 256.0F, GLOffsets.glTexCoord2f);
-            GLHelper.nglVertex3f(this.posX - f5, this.posY + 7.99F, 0.0F, GLOffsets.glVertex3f);
-            GLHelper.nglTexCoord2f((f2 + f4) / 256.0F, f3 / 256.0F, GLOffsets.glTexCoord2f);
-            GLHelper.nglVertex3f(this.posX + f4 / 2.0F + f5, this.posY, 0.0F, GLOffsets.glVertex3f);
-            GLHelper.nglTexCoord2f((f2 + f4) / 256.0F, (f3 + 15.98F) / 256.0F, GLOffsets.glTexCoord2f);
-            GLHelper.nglVertex3f(this.posX + f4 / 2.0F - f5, this.posY + 7.99F, 0.0F, GLOffsets.glVertex3f);
-            GLHelper.nglEnd(GLOffsets.glEnd);
+            OpenGLHelper.nglBegin(5, GLOffsets.glBegin);
+            OpenGLHelper.nglTexCoord2f(f2 / 256.0F, f3 / 256.0F, GLOffsets.glTexCoord2f);
+            OpenGLHelper.nglVertex3f(this.posX + f5, this.posY, 0.0F, GLOffsets.glVertex3f);
+            OpenGLHelper.nglTexCoord2f(f2 / 256.0F, (f3 + 15.98F) / 256.0F, GLOffsets.glTexCoord2f);
+            OpenGLHelper.nglVertex3f(this.posX - f5, this.posY + 7.99F, 0.0F, GLOffsets.glVertex3f);
+            OpenGLHelper.nglTexCoord2f((f2 + f4) / 256.0F, f3 / 256.0F, GLOffsets.glTexCoord2f);
+            OpenGLHelper.nglVertex3f(this.posX + f4 / 2.0F + f5, this.posY, 0.0F, GLOffsets.glVertex3f);
+            OpenGLHelper.nglTexCoord2f((f2 + f4) / 256.0F, (f3 + 15.98F) / 256.0F, GLOffsets.glTexCoord2f);
+            OpenGLHelper.nglVertex3f(this.posX + f4 / 2.0F - f5, this.posY + 7.99F, 0.0F, GLOffsets.glVertex3f);
+            OpenGLHelper.nglEnd(GLOffsets.glEnd);
             return (f1 - f) / 2.0F + 1.0F;
         }
     }
@@ -625,22 +625,22 @@ public class FontRenderer {
 
     private void setHueColor() {
         if (this.shadowRendering) {
-            GLHelper.nglColor4f((float) (this.shadowColor >> 16 & 255) / 255.0F, (float) (this.shadowColor >> 8 & 255) / 255.0F, (float) (this.shadowColor & 255) / 255.0F, (float) (this.shadowColor >> 24 & 255) / 255.0F, GLOffsets.glColor4f);
+            OpenGLHelper.nglColor4f((float) (this.shadowColor >> 16 & 255) / 255.0F, (float) (this.shadowColor >> 8 & 255) / 255.0F, (float) (this.shadowColor & 255) / 255.0F, (float) (this.shadowColor >> 24 & 255) / 255.0F, GLOffsets.glColor4f);
         } else {
-            GLHelper.nglColor4f(this.r, this.g, this.b, this.a, GLOffsets.glColor4f);
+            OpenGLHelper.nglColor4f(this.r, this.g, this.b, this.a, GLOffsets.glColor4f);
         }
 
     }
 
     protected void enableAlpha() {
-        GLHelper.nglEnable(3008, GLOffsets.glEnable);
+        OpenGLHelper.nglEnable(3008, GLOffsets.glEnable);
     }
 
     public void bindTexDirect(String location) {
         try {
             for (String[] loadedTexture : this.loadedTextures) {
                 if (location.equals(loadedTexture[0])) {
-                    GLHelper.nglBindTexture(3553, Integer.parseInt(loadedTexture[1]), GLOffsets.glBindTexture);
+                    OpenGLHelper.nglBindTexture(3553, Integer.parseInt(loadedTexture[1]), GLOffsets.glBindTexture);
                     return;
                 }
             }
@@ -663,24 +663,24 @@ public class FontRenderer {
             } catch (IOException var18) {
             }
 
-            IntBuffer textures = GLHelper.getBufferInt(GLOffsets.caps);
-            GLHelper.nglGenTextures(1, MemoryUtil.getAddress0(textures) + (long) ((long) textures.position() << 2), GLOffsets.glGenTextures);
+            IntBuffer textures = OpenGLHelper.getBufferInt(GLOffsets.caps);
+            OpenGLHelper.nglGenTextures(1, MemoryUtil.getAddress0(textures) + ((long) textures.position() << 2), GLOffsets.glGenTextures);
             int textureId = textures.get(0);
-            GLHelper.nglBindTexture(3553, textureId, GLOffsets.glBindTexture);
-            GLHelper.nglTexParameteri(3553, 33085, 0, GLOffsets.glTexParameteri);
-            GLHelper.nglTexParameteri(3553, 33082, 0, GLOffsets.glTexParameteri);
-            GLHelper.nglTexParameteri(3553, 33083, 0, GLOffsets.glTexParameteri);
-            GLHelper.nglTexParameterf(3553, 34049, 0.0F, GLOffsets.glTexParameterf);
-            GLHelper.nglTexImage2D(3553, 0, 6408, bufferedimage.getWidth(), bufferedimage.getHeight(), 0, 32993, 33639, 0L, GLOffsets.glTexImage2D);
-            GLHelper.nglBindTexture(3553, textureId, GLOffsets.glBindTexture);
+            OpenGLHelper.nglBindTexture(3553, textureId, GLOffsets.glBindTexture);
+            OpenGLHelper.nglTexParameteri(3553, 33085, 0, GLOffsets.glTexParameteri);
+            OpenGLHelper.nglTexParameteri(3553, 33082, 0, GLOffsets.glTexParameteri);
+            OpenGLHelper.nglTexParameteri(3553, 33083, 0, GLOffsets.glTexParameteri);
+            OpenGLHelper.nglTexParameterf(3553, 34049, 0.0F, GLOffsets.glTexParameterf);
+            OpenGLHelper.nglTexImage2D(3553, 0, 6408, bufferedimage.getWidth(), bufferedimage.getHeight(), 0, 32993, 33639, 0L, GLOffsets.glTexImage2D);
+            OpenGLHelper.nglBindTexture(3553, textureId, GLOffsets.glBindTexture);
             int i = bufferedimage.getWidth();
             int j = bufferedimage.getHeight();
             int k = 4194304 / i;
             int[] aint = new int[k * i];
-            GLHelper.nglTexParameteri(3553, 10241, 9728, GLOffsets.glTexParameteri);
-            GLHelper.nglTexParameteri(3553, 10240, 9728, GLOffsets.glTexParameteri);
-            GLHelper.nglTexParameteri(3553, 10242, 10497, GLOffsets.glTexParameteri);
-            GLHelper.nglTexParameteri(3553, 10243, 10497, GLOffsets.glTexParameteri);
+            OpenGLHelper.nglTexParameteri(3553, 10241, 9728, GLOffsets.glTexParameteri);
+            OpenGLHelper.nglTexParameteri(3553, 10240, 9728, GLOffsets.glTexParameteri);
+            OpenGLHelper.nglTexParameteri(3553, 10242, 10497, GLOffsets.glTexParameteri);
+            OpenGLHelper.nglTexParameteri(3553, 10243, 10497, GLOffsets.glTexParameteri);
 
             for (int l = 0; l < i * j; l += i * k) {
                 int i1 = l / i;
@@ -690,10 +690,10 @@ public class FontRenderer {
                 DATA_BUFFER.clear();
                 DATA_BUFFER.put(aint, 0, k1);
                 DATA_BUFFER.position(0).limit(k1);
-                GLHelper.nglTexSubImage2D(3553, 0, 0, i1, i, j1, 32993, 33639, MemoryUtil.getAddress0(DATA_BUFFER) + (long) ((long) DATA_BUFFER.position() << 2), GLOffsets.glTexSubImage2D);
+                OpenGLHelper.nglTexSubImage2D(3553, 0, 0, i1, i, j1, 32993, 33639, MemoryUtil.getAddress0(DATA_BUFFER) + ((long) DATA_BUFFER.position() << 2), GLOffsets.glTexSubImage2D);
             }
 
-            GLHelper.nglBindTexture(3553, textureId, GLOffsets.glBindTexture);
+            OpenGLHelper.nglBindTexture(3553, textureId, GLOffsets.glBindTexture);
             this.loadedTextures[this.textureIndex][0] = location;
             this.loadedTextures[this.textureIndex][1] = String.valueOf(textureId);
             ++textureId;

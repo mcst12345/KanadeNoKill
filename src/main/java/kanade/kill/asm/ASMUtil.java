@@ -9,6 +9,9 @@ import javax.annotation.Nullable;
 import java.lang.reflect.Modifier;
 
 public class ASMUtil implements Opcodes {
+    public static MethodInsnNode isTimeStop() {
+        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/timemanagement/TimeStop", "isTimeStop", "()Z", false);
+    }
     public static void InsertReturn(MethodNode mn, @Nullable Object type, @Nullable Object getReturn, int Var, AbstractInsnNode shouldReturn) {
         InsnList list = new InsnList();
         LabelNode label = new LabelNode();
@@ -107,6 +110,8 @@ public class ASMUtil implements Opcodes {
         list.add(new FieldInsnNode(GETSTATIC, "net/minecraft/client/Minecraft", "field_71432_P", "Lnet/minecraft/client/Minecraft;"));
         list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "PLAYER", "Lnet/minecraft/client/entity/EntityClientPlayerMP;"));
         list.add(inList());
+        list.add(new JumpInsnNode(IFEQ, label));
+        list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Config", "renderProtection", "Z"));
         list.add(new JumpInsnNode(IFEQ, label));
         switch (type.getSort()) {
             case Type.VOID: {

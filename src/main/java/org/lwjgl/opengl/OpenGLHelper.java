@@ -2,7 +2,7 @@ package org.lwjgl.opengl;
 
 import java.nio.IntBuffer;
 
-public class GLHelper {
+public class OpenGLHelper {
     public static void nglPushMatrix(long function_pointer) {
         GL11.nglPushMatrix(function_pointer);
     }

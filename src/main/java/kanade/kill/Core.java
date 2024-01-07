@@ -1,6 +1,5 @@
 package kanade.kill;
 
-import cpw.mods.fml.common.TracingPrintStream;
 import cpw.mods.fml.relauncher.FMLCorePlugin;
 
 import javax.annotation.Nullable;
@@ -95,10 +94,10 @@ public class Core extends FMLCorePlugin {
                 PrintStream output = null;
 
                 try {
-                    TracingPrintStream tps = (TracingPrintStream) System.out;
+                    Object obj = System.out;
                     Field field = FilterOutputStream.class.getDeclaredField("out");
                     field.setAccessible(true);
-                    output = (PrintStream) field.get(tps);
+                    output = (PrintStream) field.get(obj);
                 } catch (Throwable ignored) {
                 }
 

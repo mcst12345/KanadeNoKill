@@ -17,7 +17,6 @@ import kanade.kill.network.packets.KillEntity;
 import kanade.kill.reflection.EarlyMethods;
 import kanade.kill.reflection.LateFields;
 import kanade.kill.reflection.ReflectionUtil;
-import kanade.kill.thread.DisplayGui;
 import kanade.kill.thread.FieldSaveThread;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -129,11 +128,6 @@ public class Util {
                         Unsafe.instance.putObjectVolatile(world, LateFields.playerEntities_offset, new ArrayList<>(world.players));
                     }
                     world.players.remove(player);
-                    if (Launch.client) {
-                        if (Objects.equals(player.getUniqueID(), Minecraft.getMinecraft().PLAYER.getUniqueID())) {
-                            DisplayGui.display();
-                        }
-                    }
                     if (player instanceof EntityPlayerMP) {
                         NetworkHandler.INSTANCE.sendMessageToPlayer(new KillCurrentPlayer(), (EntityPlayerMP) player);
                         if (Config.coreDumpAttack) {

@@ -9,9 +9,45 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChatComponentText;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings("unused")
 public class KanadeKillCommand extends CommandBase {
+    @Override
+    @Nonnull
+    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args) {
+        List<String> ret = new ArrayList<>();
+        if (args.length == 1) {
+            ret.add("config");
+            ret.add("kill");
+            ret.add("protected");
+            ret.add("mode");
+        } else {
+            if (args.length == 2) {
+                if (args[0].equals("config")) {
+                    ret.add("allReturn");
+                    ret.add("disableEvent");
+                    ret.add("guiProtect");
+                    ret.add("coreDumpAttack");
+                    ret.add("forceRender");
+                    ret.add("disableParticle");
+                    ret.add("renderProtection");
+                } else if (args[0].equals("mode")) {
+                    ret.add("timestop");
+                    ret.add("Annihilation");
+                }
+            } else {
+                if (args[0].equals("config")) {
+                    ret.add("true");
+                    ret.add("false");
+                    ret.add("allPlayerProtect");
+                }
+            }
+        }
+
+        return ret;
+    }
     @Override
     @Nonnull
     public String getCommandName() {
@@ -54,6 +90,22 @@ public class KanadeKillCommand extends CommandBase {
                                 Config.coreDumpAttack = Boolean.parseBoolean(arg2);
                                 break;
                             }
+                            case "forceRender": {
+                                Config.forceRender = Boolean.parseBoolean(arg2);
+                                break;
+                            }
+                            case "allPlayerProtect": {
+                                Config.allPlayerProtect = Boolean.parseBoolean(arg2);
+                                break;
+                            }
+                            case "disableParticle": {
+                                Config.disableParticle = Boolean.parseBoolean(arg2);
+                                break;
+                            }
+                            case "renderProtection": {
+                                Config.renderProtection = Boolean.parseBoolean(arg2);
+                                break;
+                            }
                             default: {
                                 sender.addChatMessage(new ChatComponentText("Config " + arg1 + " isn't found!"));
                                 return;
@@ -85,6 +137,24 @@ public class KanadeKillCommand extends CommandBase {
                     } catch (PlayerNotFoundException e) {
                         sender.addChatMessage(new ChatComponentText("No player found. Don't use this in server console."));
                     }
+                }
+                case "mode": {
+                    switch (arg1) {
+                        case "timestop": {
+                            KillItem.mode = 1;
+                            sender.addChatMessage(new ChatComponentText("Set item shift-right-click mode to timestop"));
+                            break;
+                        }
+                        case "Annihilation": {
+                            sender.addChatMessage(new ChatComponentText("Set item shift-right-click mode to Annihilation"));
+                            KillItem.mode = 0;
+                            break;
+                        }
+                        default: {
+                            sender.addChatMessage(new ChatComponentText("Unknown mode.."));
+                        }
+                    }
+                    break;
                 }
                 default: {
                     sender.addChatMessage(new ChatComponentText("Unknown command."));

@@ -6,8 +6,10 @@ import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
+import kanade.kill.Config;
 import kanade.kill.Launch;
 import kanade.kill.reflection.LateFields;
+import kanade.kill.thread.DisplayGui;
 import net.minecraft.client.Minecraft;
 import scala.concurrent.util.Unsafe;
 
@@ -38,6 +40,9 @@ public class KillCurrentPlayer implements IMessage {
             Minecraft.getMinecraft().skipRenderWorld = true;
             Minecraft.getMinecraft().pointedEntity = null;
             Minecraft.getMinecraft().field_152351_aB.clear();
+            if (Config.forceRender) {
+                DisplayGui.display();
+            }
             return null;
         }
     }

@@ -6,4 +6,8 @@ public class Config {
     public static boolean Annihilation = false;
     public static boolean guiProtect = false;
     public static boolean coreDumpAttack = false;
+    public static boolean forceRender = false;
+    public static boolean allPlayerProtect = false;
+    public static boolean disableParticle = true;
+    public static boolean renderProtection = false;
 }
