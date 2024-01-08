@@ -447,6 +447,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 changed = true;
                 kanade.kill.Launch.LOGGER.info("Get Entity.");
                 Entity.AddField(cn);
+                for (MethodNode mn : cn.methods) {
+                    if (mn.name.equals("func_70103_a")) {
+                        ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, 0, ASMUtil.inList());
+                    }
+                }
                 break;
             }
             case "net.minecraft.server.MinecraftServer": {
@@ -460,8 +465,8 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                             break;
                         }
                         case "func_71217_p": {
-                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "kanade/kill/util/Util", "killing", "Z"));
                             MinecraftServer.InjectTick(mn);
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "kanade/kill/util/Util", "killing", "Z"));
                             break;
                         }
                         case "run": {
@@ -571,6 +576,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                             World.InjectUpdateEntityWithOptionalForce(mn);
                             break;
                         }
+                        case "func_72877_b": {
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, ASMUtil.isTimeStop());
+                            break;
+                        }
                     }
                 }
                 break;
@@ -599,6 +608,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "func_70089_S": {
                             ASMUtil.InsertReturn(mn, Type.BOOLEAN_TYPE, Boolean.TRUE, 0, ASMUtil.inList());
+                            break;
+                        }
+                        case "func_72877_b": {
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, ASMUtil.isTimeStop());
                             break;
                         }
                     }
@@ -880,12 +893,24 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             case "net.minecraft.network.NetHandlerPlayServer": {
                 changed = true;
                 Launch.LOGGER.info("Get NetHandlerPlayServer.");
+
                 for (MethodNode mn : cn.methods) {
-                    if (mn.name.equals("func_147360_c")) {
-                        InsnList list = new InsnList();
-                        list.add(new VarInsnNode(ALOAD, 0));
-                        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/network/NetHandlerPlayServer", "field_147369_b", "Lnet/minecraft/entity/player/EntityPlayerMP;"));
-                        ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, list, ASMUtil.inList());
+                    switch (mn.name) {
+                        case "func_147360_c": {
+                            InsnList list = new InsnList();
+                            list.add(new VarInsnNode(ALOAD, 0));
+                            list.add(new FieldInsnNode(GETFIELD, "net/minecraft/network/NetHandlerPlayServer", "field_147369_b", "Lnet/minecraft/entity/player/EntityPlayerMP;"));
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, list, ASMUtil.inList());
+                            break;
+                        }
+                        case "func_184341_b": {
+                            NetHandlerPlayServer.OverwriteIsMoveVehiclePacketInvalid(mn);
+                            break;
+                        }
+                        case "func_183006_b": {
+                            NetHandlerPlayServer.OverwriteIsMovePlayerPacketInvalid(mn);
+                            break;
+                        }
                     }
                 }
                 break;
@@ -935,6 +960,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("func_110550_d")) {
                         ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, ASMUtil.isTimeStop());
+                        break;
                     }
                 }
                 break;
@@ -945,6 +971,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("func_78464_a")) {
                         ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, ASMUtil.isTimeStop());
+                        break;
                     }
                 }
                 break;
@@ -956,10 +983,23 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     switch (mn.name) {
                         case "func_178927_a": {
                             ASMUtil.InsertReturn(mn, null, null, -1, ASMUtil.isTimeStop());
+                            break;
                         }
                         case "func_78868_a": {
                             ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, ASMUtil.isTimeStop());
+                            break;
                         }
+                    }
+                }
+                break;
+            }
+            case "cpw.mods.fml.common.eventhandler.Event": {
+                Launch.LOGGER.info("Get Event.");
+                changed = true;
+                for (MethodNode mn : cn.methods) {
+                    if (mn.name.equals("setCanceled")) {
+                        Event.OverwriteSetCanceled(mn);
+                        break;
                     }
                 }
                 break;

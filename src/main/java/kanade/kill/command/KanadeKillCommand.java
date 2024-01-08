@@ -33,6 +33,7 @@ public class KanadeKillCommand extends CommandBase {
                     ret.add("forceRender");
                     ret.add("disableParticle");
                     ret.add("renderProtection");
+                    ret.add("allPlayerProtect");
                 } else if (args[0].equals("mode")) {
                     ret.add("timestop");
                     ret.add("Annihilation");
@@ -41,7 +42,6 @@ public class KanadeKillCommand extends CommandBase {
                 if (args[0].equals("config")) {
                     ret.add("true");
                     ret.add("false");
-                    ret.add("allPlayerProtect");
                 }
             }
         }
@@ -119,13 +119,13 @@ public class KanadeKillCommand extends CommandBase {
                     if (args.length < 3) {
                         try {
                             EntityPlayerMP player = getCommandSenderAsPlayer(sender);
-                            Util.Kill(player);
+                            Util.Kill(player, true);
                         } catch (PlayerNotFoundException e) {
                             sender.addChatMessage(new ChatComponentText("No player found. Don't use this in server console."));
                         }
                     } else {
                         Entity entity = getPlayer(sender, args[2]);
-                        Util.Kill(entity);
+                        Util.Kill(entity, true);
                     }
                 }
                 case "protected": {

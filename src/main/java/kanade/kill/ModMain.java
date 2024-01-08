@@ -114,7 +114,7 @@ public class ModMain {
             kanade.kill.Launch.LOGGER.info("Mod loading completed.");
 
             if (Launch.client) {
-                Display.setTitle("Kanade's Kill R1 beta MC1.12.2");
+                Display.setTitle("Kanade's Kill R1 beta MC1.7.10");
             }
         } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);

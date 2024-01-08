@@ -71,6 +71,7 @@ public class Launch {
         classes.add("kanade.kill.asm.injections.Entity");
         classes.add("kanade.kill.asm.injections.EntityLivingBase");
         classes.add("kanade.kill.asm.injections.EntityPlayer");
+        classes.add("kanade.kill.asm.injections.Event");
         classes.add("kanade.kill.asm.injections.EventBus");
         classes.add("kanade.kill.asm.injections.FMLClientHandler");
         classes.add("kanade.kill.asm.injections.ForgeHooksClient");
@@ -78,6 +79,7 @@ public class Launch {
         classes.add("kanade.kill.asm.injections.Minecraft");
         classes.add("kanade.kill.asm.injections.MinecraftForge");
         classes.add("kanade.kill.asm.injections.MinecraftServer");
+        classes.add("kanade.kill.asm.injections.NetHandlerPlayServer");
         classes.add("kanade.kill.asm.injections.RenderGlobal");
         classes.add("kanade.kill.asm.injections.ServerCommandManager");
         classes.add("kanade.kill.asm.injections.Timer");

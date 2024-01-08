@@ -50,7 +50,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
     }
 
     private static void save(byte[] clazz, String file) {
-        if (!debug) {
+        if (!debug || clazz == null || file == null || file.isEmpty()) {
             return;
         }
         try {

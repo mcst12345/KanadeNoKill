@@ -44,7 +44,7 @@ public class KillEntity implements IMessage {
             if (world != null) {
                 Entity entity = world.getEntityByID(message.id);
                 if (entity != null) {
-                    Util.Kill(entity);
+                    Util.Kill(entity, true);
                 }
             }
             return null;
