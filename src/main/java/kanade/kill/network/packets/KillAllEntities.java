@@ -43,7 +43,7 @@ public class KillAllEntities implements IMessage {
             targets.addAll(world.players);
             targets.addAll((Collection) Unsafe.instance.getObjectVolatile(world, LateFields.entityLists_offset));
             for (Entity e : targets) {
-                Util.Kill(e);
+                Util.Kill(e, true);
             }
             return null;
         }

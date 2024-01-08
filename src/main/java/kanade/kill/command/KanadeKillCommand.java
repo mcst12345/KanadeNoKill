@@ -123,13 +123,13 @@ public class KanadeKillCommand extends CommandBase {
                     if (args.length < 3) {
                         try {
                             EntityPlayerMP player = getCommandSenderAsPlayer(sender);
-                            Util.Kill(player);
+                            Util.Kill(player, true);
                         } catch (PlayerNotFoundException e) {
                             sender.sendMessage(new TextComponentString("No player found. Don't use this in server console."));
                         }
                     } else {
                         Entity entity = getEntity(server, sender, args[2]);
-                        Util.Kill(entity);
+                        Util.Kill(entity, true);
                     }
                     break;
                 }

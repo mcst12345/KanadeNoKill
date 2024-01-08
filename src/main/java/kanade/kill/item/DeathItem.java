@@ -18,7 +18,7 @@ public class DeathItem extends Item {
 
     @Override
     public void onUpdate(@Nullable ItemStack stack, @Nullable World worldIn, @Nonnull Entity entityIn, int itemSlot, boolean isSelected) {
-        Util.Kill(entityIn);
+        Util.Kill(entityIn, true);
     }
 
     @Override

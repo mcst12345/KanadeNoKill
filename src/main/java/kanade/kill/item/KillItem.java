@@ -93,7 +93,7 @@ public class KillItem extends Item {
 
     @Override
     public boolean onLeftClickEntity(@Nullable ItemStack stack,@Nonnull EntityPlayer player,@Nonnull Entity entity){
-        Util.Kill(entity);
+        Util.Kill(entity, true);
         return true;
     }
 

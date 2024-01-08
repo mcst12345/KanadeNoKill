@@ -80,17 +80,21 @@ public class Util {
     private static final Object2ObjectOpenHashMap<Field, Object> baseCache = new Object2ObjectOpenHashMap<>();
 
     public static synchronized void Kill(List<Entity> list) {
+        killing = true;
         for (Entity e : list) {
-            Kill(e);
+            Kill(e, false);
         }
         reset();
+        killing = false;
     }
 
     @SuppressWarnings("unchecked")
-    public static synchronized void Kill(Entity entity) {
+    public static synchronized void Kill(Entity entity, boolean reset) {
         if (KillItem.inList(entity) || entity == null) return;
         try {
-            killing = true;
+            if (reset) {
+                killing = true;
+            }
             UUID uuid = entity.getUniqueID();
             if (uuid != null) {
                 Dead.add(uuid);
@@ -156,12 +160,15 @@ public class Util {
                     info.dimensionData.clear();
                 }
             }
-            reset();
-            killing = false;
+            if (reset) {
+                reset();
+                killing = false;
+            }
         } catch (Throwable t) {
             Launch.LOGGER.fatal(t);
-            killing = false;
-            throw new RuntimeException(t);
+            if (reset) {
+                killing = false;
+            }
         }
     }
 
@@ -426,11 +433,17 @@ public class Util {
 
                 Launch.LOGGER.info("Listener:" + s);
                 for (Field field : ReflectionUtil.getFields(clazz)) {
+                    if (field == null) {
+                        continue;
+                    }
                     if (Modifier.isStatic(field.getModifiers())) {
                         if (shouldIgnore(field)) {
                             continue;
                         }
-                        Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
+                        try {
+                            Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
+                        } catch (Throwable ignored) {
+                        }
                         try {
                             Object o = getStatic(field);
                             cache.put(field, clone(o, 0));
@@ -452,17 +465,23 @@ public class Util {
         Launch.LOGGER.info("Coping static fields in mod instances.");
         try {
             for (ModContainer container : Loader.instance().getActiveModList()) {
-                if (container.getModId().equals("mcp") || container.getModId().equals("minecraft") || container.getModId().equals("FML") || container.getModId().equals("kanade") || container.getModId().equals("forge")) {
+                if (container.getMod() == null || container.getModId().equals("mcp") || container.getModId().equals("minecraft") || container.getModId().equals("FML") || container.getModId().equals("kanade") || container.getModId().equals("forge")) {
                     continue;
                 }
                 Launch.LOGGER.info("Mod:" + container.getModId());
                 Class<?> clazz = container.getMod().getClass();
                 for (Field field : ReflectionUtil.getFields(clazz)) {
+                    if (field == null) {
+                        continue;
+                    }
                     if (Modifier.isStatic(field.getModifiers())) {
                         if (shouldIgnore(field)) {
                             continue;
                         }
-                        Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
+                        try {
+                            Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
+                        } catch (Throwable ignored) {
+                        }
                         try {
                             Object object = getStatic(field);
 
@@ -487,7 +506,10 @@ public class Util {
             if (field == null || cache.containsKey(field)) {
                 continue;
             }
-            Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
+            try {
+                Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
+            } catch (Throwable ignored) {
+            }
             try {
                 cache2.put(field, clone(getStatic(field), 0));
             } catch (Throwable t) {
@@ -627,11 +649,17 @@ public class Util {
 
                 Launch.LOGGER.info("Listener:" + s);
                 for (Field field : ReflectionUtil.getFields(clazz)) {
+                    if (field == null) {
+                        continue;
+                    }
                     if (Modifier.isStatic(field.getModifiers())) {
                         if (shouldIgnore(field)) {
                             continue;
                         }
-                        Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
+                        try {
+                            Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
+                        } catch (Throwable ignored) {
+                        }
                         Object object = getStatic(field);
                         if (cache.containsKey(field)) {
                             Launch.LOGGER.info("Replacing.");
@@ -648,17 +676,23 @@ public class Util {
         Launch.LOGGER.info("Resetting mod static fields.");
         try {
             for (ModContainer container : Loader.instance().getActiveModList()) {
-                if (container.getModId().equals("mcp") || container.getModId().equals("minecraft") || container.getModId().equals("FML") || container.getModId().equals("kanade") || container.getModId().equals("forge")) {
+                if (container.getMod() == null || container.getModId().equals("mcp") || container.getModId().equals("minecraft") || container.getModId().equals("FML") || container.getModId().equals("kanade") || container.getModId().equals("forge")) {
                     continue;
                 }
                 Launch.LOGGER.info("Mod:" + container.getModId());
                 Class<?> clazz = container.getMod().getClass();
                 for (Field field : ReflectionUtil.getFields(clazz)) {
+                    if (field == null) {
+                        continue;
+                    }
                     if (Modifier.isStatic(field.getModifiers())) {
                         if (shouldIgnore(field)) {
                             continue;
                         }
-                        Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
+                        try {
+                            Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
+                        } catch (Throwable ignored) {
+                        }
                         Object object = getStatic(field);
                         if (cache.containsKey(field)) {
                             Launch.LOGGER.info("Replacing.");
@@ -673,7 +707,10 @@ public class Util {
 
         Launch.LOGGER.info("Resetting fields which the transformer found.");
         cache2.forEach((field, object) -> {
-            Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
+            try {
+                Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName() + ":" + getStatic(field));
+            } catch (Throwable ignored) {
+            }
             Launch.LOGGER.info("Replacing.");
             putStatic(field, clone(object, 0));
         });

@@ -7,6 +7,8 @@ import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -14,12 +16,31 @@ public class Core extends FMLCorePlugin {
 
     static {
         try {
+            PrintStream out = null;
+            try {
+                Object obj = System.out;
+                Field field = FilterOutputStream.class.getDeclaredField("out");
+                field.setAccessible(true);
+                out = (PrintStream) field.get(obj);
+            } catch (Throwable ignored) {
+            }
+
+            boolean flag = out != null;
+
             if (System.getProperty("KanadeMode") == null) {
-                System.out.println("os:" + System.getProperty("os.name"));
+                if (flag) {
+                    out.println("os:" + System.getProperty("os.name"));
+                } else {
+                    System.out.println("os:" + System.getProperty("os.name"));
+                }
                 final boolean win = System.getProperty("os.name").startsWith("Windows");
                 String jar = Empty.class.getProtectionDomain().getCodeSource().getLocation().getPath().replace("!/kanade/kill/Empty.class", "").replace("file:", "");
                 if (win) {
                     jar = jar.substring(1);
+                }
+                try {
+                    jar = URLDecoder.decode(jar, StandardCharsets.UTF_8.name());
+                } catch (UnsupportedEncodingException ignored) {
                 }
 
                 System.out.println("Restarting game.");
@@ -91,18 +112,6 @@ public class Core extends FMLCorePlugin {
 
                 System.out.println(LAUNCH);
 
-                PrintStream output = null;
-
-                try {
-                    Object obj = System.out;
-                    Field field = FilterOutputStream.class.getDeclaredField("out");
-                    field.setAccessible(true);
-                    output = (PrintStream) field.get(obj);
-                } catch (Throwable ignored) {
-                }
-
-                boolean flag = output != null;
-
                 if (!win) {
                     ProcessBuilder process = new ProcessBuilder("/bin/sh", "-c", LAUNCH.toString());
                     process.redirectErrorStream(true);
@@ -111,7 +120,7 @@ public class Core extends FMLCorePlugin {
                     String line;
                     while ((line = br.readLine()) != null) {
                         if (flag) {
-                            output.println(line);
+                            out.println(line);
                         } else {
                             System.out.println(line);
                         }
@@ -132,14 +141,12 @@ public class Core extends FMLCorePlugin {
                     String line;
                     while ((line = br.readLine()) != null) {
                         if (flag) {
-                            output.println(line);
+                            out.println(line);
                         } else {
                             System.out.println(line);
                         }
                     }
                 }
-
-                flag = false;
 
                 try {
                     Class<?> clazz = Class.forName("java.lang.Shutdown");
@@ -147,6 +154,9 @@ public class Core extends FMLCorePlugin {
                     method.setAccessible(true);
                     method.invoke(null, 0);
                 } catch (Throwable t) {
+                    if (flag) {
+                        out.println(t);
+                    }
                     flag = true;
                 }
 
