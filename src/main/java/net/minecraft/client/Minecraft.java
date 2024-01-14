@@ -4,7 +4,7 @@ import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
-import kanade.kill.util.Util;
+import kanade.kill.util.ObjectUtil;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
@@ -13,6 +13,9 @@ import net.minecraft.client.gui.toasts.GuiToast;
 import net.minecraft.client.main.GameConfiguration;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.renderer.RenderItem;
+import net.minecraft.client.renderer.color.ItemColors;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.shader.Framebuffer;
@@ -162,7 +165,7 @@ public class Minecraft implements ISnooperInfo {
     }
 
     public <V> ListenableFuture<V> addScheduledTask(Callable<V> callableToSchedule) {
-        if (Util.FromModClass(callableToSchedule)) {
+        if (ObjectUtil.FromModClass(callableToSchedule)) {
             return Futures.immediateFuture(null);
         }
         Validate.notNull(callableToSchedule);
@@ -197,5 +200,17 @@ public class Minecraft implements ISnooperInfo {
 
     public boolean isSingleplayer() {
         return false;
+    }
+
+    public RenderManager getRenderManager() {
+        return null;
+    }
+
+    public ItemColors getItemColors() {
+        return null;
+    }
+
+    public RenderItem getRenderItem() {
+        return null;
     }
 }

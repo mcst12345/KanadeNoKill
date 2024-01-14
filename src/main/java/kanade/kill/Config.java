@@ -10,4 +10,6 @@ public class Config {
     public static boolean allPlayerProtect = false;
     public static boolean disableParticle = true;
     public static boolean renderProtection = false;
+    public static boolean fieldReset = true;
+    public static boolean AllowAttach = Boolean.parseBoolean(System.getProperty("AllowAttach"));
 }

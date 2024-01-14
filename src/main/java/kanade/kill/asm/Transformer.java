@@ -1,13 +1,14 @@
 package kanade.kill.asm;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import kanade.kill.Empty;
 import kanade.kill.Launch;
 import kanade.kill.asm.injections.Timer;
 import kanade.kill.asm.injections.*;
 import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.reflection.EarlyFields;
 import kanade.kill.util.FieldInfo;
-import kanade.kill.util.Util;
+import kanade.kill.util.ObjectUtil;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.ClassReader;
@@ -16,11 +17,12 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 import scala.concurrent.util.Unsafe;
+import sun.misc.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.instrument.ClassFileTransformer;
-import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.security.ProtectionDomain;
 import java.util.*;
@@ -31,13 +33,21 @@ import static kanade.kill.Launch.Debug;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class Transformer implements IClassTransformer, Opcodes, ClassFileTransformer {
-    private static final IClassNameTransformer classNameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(kanade.kill.Launch.classLoader, EarlyFields.renameTransformer_offset);
+    private static final IClassNameTransformer classNameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(Launch.classLoader, EarlyFields.renameTransformer_offset);
     public static final Transformer instance = new Transformer();
     private static final ObjectOpenHashSet<String> event_listeners = new ObjectOpenHashSet<>();
     private static final Queue<FieldInfo> fields = new LinkedBlockingQueue<>();
     private Transformer(){}
 
+    private static final Set<String> classes = new HashSet<>();
+    private static final Set<String> Kanade = new HashSet<>();
 
+    static {
+        classes.add("morph.avaritia.proxy.ProxyClient");
+        classes.add("ic2.core.uu.LeanItemStack");
+        classes.add("codechicken.lib.internal.proxy.ProxyClient");
+        Kanade.add("kanade.kill.ModMain");
+    }
 
     static {
         File file = new File("transformedClasses");
@@ -74,7 +84,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         }
         boolean changed = false;
         for (MethodNode mn : cn.methods) {
-            if (Modifier.isAbstract(mn.access) || Modifier.isNative(mn.access)) {
+            if (isAbstract(mn.access) || isNative(mn.access)) {
                 continue;
             }
             for (AbstractInsnNode ain : mn.instructions.toArray()) {
@@ -325,7 +335,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             if (!goodClass) {
                 Type type = Type.getReturnType(mn.desc);
                 if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY) {
-                    if (!(mn.name.equals("<init>") || mn.name.equals("<clinit>") || Modifier.isAbstract(mn.access) || Modifier.isNative(mn.access))) {
+                    if (!(mn.name.equals("<init>") || mn.name.equals("<clinit>") || isAbstract(mn.access) || isNative(mn.access))) {
                         ASMUtil.InsertReturn1(mn, type);
                         if (mn.name.startsWith("func_")) {
                             ASMUtil.InsertReturn2(mn, type);
@@ -335,7 +345,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 if (mn.localVariables != null) {
                     for (LocalVariableNode lvn : mn.localVariables) {
                         if (lvn.desc.startsWith("net/minecraftforge/") && lvn.desc.contains("/event/")) {
-                            kanade.kill.Launch.LOGGER.info("Find event listsner:" + transformedName);
+                            Launch.LOGGER.info("Find event listsner:" + transformedName);
                             if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY && !(mn.name.equals("<init>") || mn.name.equals("<clinit>"))) {
                                 ASMUtil.InsertReturn2(mn, type);
                             }
@@ -348,6 +358,16 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     for (AbstractInsnNode ain : mn.instructions.toArray()) {
                         if (ain instanceof MethodInsnNode) {
                             MethodInsnNode min = (MethodInsnNode) ain;
+                            if (min.owner.equals("sun/misc/Unsafe")) {
+                                if (min.name.startsWith("put")) {
+                                    mn.instructions.set(min, new InsnNode(POP));
+                                }
+                            }
+                            if (min.owner.equals("java/lang/System")) {
+                                if (min.name.equals("load")) {
+                                    mn.instructions.set(min, new InsnNode(POP));
+                                }
+                            }
                             if (mn.name.equals("<init>") || mn.name.equals("<clinit>")) {
                                 continue;
                             }
@@ -382,6 +402,24 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         if (basicClass == null) {
             return null;
         }
+        if (classes.contains(name)) {
+            InputStream is = Empty.class.getResourceAsStream("/" + name.replace('.', '/') + ".class");
+            try {
+                assert is != null;
+                basicClass = IOUtils.readAllBytes(is);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (Kanade.contains(name)) {
+            InputStream is = Empty.class.getResourceAsStream("/" + name.replace('.', '/') + ".class");
+            try {
+                assert is != null;
+                return IOUtils.readAllBytes(is);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
         byte[] originalBytes = null;
         try {
             originalBytes = Launch.classLoader.getClassBytes(name);
@@ -401,12 +439,15 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             cr = new ClassReader(originalBytes);
             changedClass = new ClassNode();
             cr.accept(changedClass, 0);
+        } else if (originalBytes == null) {
+            Launch.LOGGER.warn("Failed to get bytes of class:" + name + ":" + transformedName);
         }
         byte[] transformed;
-        boolean changed, compute_all = false;
+        boolean changed = false;
+        int compute = ClassWriter.COMPUTE_MAXS;
         boolean goodClass = true;
         if (name.equals(transformedName)) {
-            if (Util.ModClass(name)) {
+            if (ObjectUtil.ModClass(name)) {
                 goodClass = false;
                 modClasses.add(name);
             }
@@ -421,7 +462,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     }
                 }
             }
-            cn.methods.addAll(methods);
+            if (!methods.isEmpty()) {
+                changed = true;
+                cn.methods.addAll(methods);
+            }
             final List<FieldNode> fields = new ArrayList<>(changedClass.fields);
             for (FieldNode fn1 : changedClass.fields) {
                 for (FieldNode fn2 : cn.fields) {
@@ -430,16 +474,54 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                     }
                 }
             }
-            cn.fields.addAll(fields);
+            if (!fields.isEmpty()) {
+                changed = true;
+                cn.fields.addAll(fields);
+            }
         }
 
-        changed = Redirect(cn, goodClass, transformedName);
+        changed = changed || Redirect(cn, goodClass, transformedName);
 
         switch (transformedName) {
+            case "net.minecraft.client.audio.SoundManager$SoundSystemStarterThread": {
+                compute = 0;
+                changed = true;
+                Launch.LOGGER.info("Get SoundManager$SoundSystemStarterThread.");
+                for (MethodNode mn : cn.methods) {
+                    if (mn.name.equals("playing")) {
+                        mn.instructions.clear();
+                        mn.instructions.add(new VarInsnNode(ALOAD, 0));
+                        mn.instructions.add(new VarInsnNode(ALOAD, 1));
+                        mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/SoundSystemStarterThread", "playing", "(Lpaulscode/sound/SoundSystem;Ljava/lang/String;)Z", false));
+                    }
+                }
+                break;
+            }
+            case "net.minecraft.util.MouseHelper": {
+                changed = true;
+                Launch.LOGGER.info("Get MouseHelper");
+                for (MethodNode mn : cn.methods) {
+                    switch (mn.name) {
+                        case "func_74372_a": {
+                            MouseHelper.OverwriteGrabMouseCursor(mn);
+                            break;
+                        }
+                        case "func_74373_b": {
+                            MouseHelper.OverwriteUngrabMouseCursor(mn);
+                            break;
+                        }
+                        case "func_74374_c": {
+                            MouseHelper.OverwriteMouseXYChange(mn);
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
             case "net.minecraftforge.common.DimensionManager": {
 
                 changed = true;
-                kanade.kill.Launch.LOGGER.info("Get DimensionManager.");
+                Launch.LOGGER.info("Get DimensionManager.");
 
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("setWorld")) {
@@ -451,14 +533,14 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.entity.Entity": {
                 changed = true;
-                kanade.kill.Launch.LOGGER.info("Get Entity.");
+                Launch.LOGGER.info("Get Entity.");
                 Entity.AddField(cn);
                 break;
             }
             case "net.minecraft.server.MinecraftServer": {
                 changed = true;
-                compute_all = true;
-                kanade.kill.Launch.LOGGER.info("Get MinecraftServer.");
+                compute = ClassWriter.COMPUTE_FRAMES;
+                Launch.LOGGER.info("Get MinecraftServer.");
                 MinecraftServer.AddField(cn);
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -481,7 +563,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.client.Minecraft": {
                 changed = true;
-                kanade.kill.Launch.LOGGER.info("Get Minecraft.");
+                Launch.LOGGER.info("Get Minecraft.");
                 Minecraft.AddField(cn);
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -525,7 +607,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.item.ItemStack": {
                 changed = true;
-                kanade.kill.Launch.LOGGER.info("Get ItemStack.");
+                Launch.LOGGER.info("Get ItemStack.");
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("func_190926_b")) {
                         ASMUtil.InsertReturn(mn, Type.BOOLEAN_TYPE, Boolean.FALSE, 0, ASMUtil.NoRemove());
@@ -537,8 +619,8 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.world.World": {
                 changed = true;
-                compute_all = true;
-                kanade.kill.Launch.LOGGER.info("Get World.");
+                compute = ClassWriter.COMPUTE_FRAMES;
+                Launch.LOGGER.info("Get World.");
                 World.AddField(cn);
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -594,7 +676,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.entity.EntityLivingBase": {
                 changed = true;
-                kanade.kill.Launch.LOGGER.info("Get EntityLivingBase.");
+                Launch.LOGGER.info("Get EntityLivingBase.");
                 EntityLivingBase.AddField(cn);
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -628,7 +710,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.entity.player.EntityPlayer": {
                 changed = true;
-                kanade.kill.Launch.LOGGER.info("Get EntityPlayer.");
+                Launch.LOGGER.info("Get EntityPlayer.");
                 EntityPlayer.AddField(cn);
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -665,7 +747,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraftforge.client.ForgeHooksClient": {
                 changed = true;
-                kanade.kill.Launch.LOGGER.info("Get ForgeHooksClient.");
+                Launch.LOGGER.info("Get ForgeHooksClient.");
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("drawScreen")) {
                         ForgeHooksClient.InjectDrawScreen(mn);
@@ -675,7 +757,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.entity.player.EntityPlayerSP": {
                 changed = true;
-                kanade.kill.Launch.LOGGER.info("Get EntityPlayerSP.");
+                Launch.LOGGER.info("Get EntityPlayerSP.");
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
                         case "func_70097_a": {
@@ -700,7 +782,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.entity.player.EntityPlayerMP": {
                 changed = true;
-                kanade.kill.Launch.LOGGER.info("Get EntityPlayerMP.");
+                Launch.LOGGER.info("Get EntityPlayerMP.");
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
                         case "func_70645_a": {
@@ -721,7 +803,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.util.NonNullList": {
                 changed = true;
-                kanade.kill.Launch.LOGGER.info("Get NonNullList.");
+                Launch.LOGGER.info("Get NonNullList.");
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
                         case "remove": {
@@ -743,7 +825,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.world.WorldServer": {
                 changed = true;
-                kanade.kill.Launch.LOGGER.info("Get WorldServer.");
+                Launch.LOGGER.info("Get WorldServer.");
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
                         case "func_72838_d": {
@@ -770,7 +852,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.world.WorldClient": {
                 changed = true;
-                kanade.kill.Launch.LOGGER.info("Get WorldClient.");
+                Launch.LOGGER.info("Get WorldClient.");
 
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -807,7 +889,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraftforge.common.ForgeHooks": {
                 changed = true;
-                kanade.kill.Launch.LOGGER.info("Get ForgeHooks.");
+                Launch.LOGGER.info("Get ForgeHooks.");
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("onLivingUpdate")) {
                         ASMUtil.InsertReturn(mn, Type.BOOLEAN_TYPE, Boolean.FALSE, 0, ASMUtil.inList());
@@ -817,7 +899,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.client.renderer.RenderGlobal": {
                 changed = true;
-                kanade.kill.Launch.LOGGER.info("Get RenderGlobal");
+                Launch.LOGGER.info("Get RenderGlobal");
                 RenderGlobal.AddField(cn);
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -835,8 +917,8 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraft.client.renderer.entity.RenderManager": {
                 changed = true;
-                compute_all = true;
-                kanade.kill.Launch.LOGGER.info("Get RenderManager");
+                compute = ClassWriter.COMPUTE_FRAMES;
+                Launch.LOGGER.info("Get RenderManager");
                 RenderManager.AddField(cn);
                 for (MethodNode mn : cn.methods) {
                     switch (mn.name) {
@@ -854,12 +936,12 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             case "net.minecraftforge.common.MinecraftForge": {
                 changed = true;
-                kanade.kill.Launch.LOGGER.info("Get MinecraftForge.");
+                Launch.LOGGER.info("Get MinecraftForge.");
                 MinecraftForge.AddField(cn);
                 break;
             }
             case "net.minecraftforge.fml.server.FMLServerHandler": {
-                kanade.kill.Launch.LOGGER.info("Get FMLServerHandler.");
+                Launch.LOGGER.info("Get FMLServerHandler.");
                 changed = true;
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("finishServerLoading")) {
@@ -873,19 +955,19 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                                 }
                             }
                         }
-                        kanade.kill.Launch.LOGGER.info("Inject into " + mn.name);
+                        Launch.LOGGER.info("Inject into " + mn.name);
                     }
                 }
                 break;
             }
             case "net.minecraftforge.fml.client.FMLClientHandler": {
-                kanade.kill.Launch.LOGGER.info("Get FMLClientHandler.");
+                Launch.LOGGER.info("Get FMLClientHandler.");
                 changed = true;
                 FMLClientHandler.AddField(cn);
                 break;
             }
             case "net.minecraft.command.ServerCommandManager": {
-                kanade.kill.Launch.LOGGER.info("Get ServerCommandManager.");
+                Launch.LOGGER.info("Get ServerCommandManager.");
                 changed = true;
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("<init>")) {
@@ -895,7 +977,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 break;
             }
             case "net.minecraftforge.fml.common.eventhandler.EventBus": {
-                kanade.kill.Launch.LOGGER.info("Get EventBus.");
+                Launch.LOGGER.info("Get EventBus.");
                 changed = true;
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("post")) {
@@ -1044,12 +1126,12 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
 
         if (!goodClass) {
             for (FieldNode fn : cn.fields) {
-                if (Modifier.isStatic(fn.access)) {
+                if (isStatic(fn.access)) {
                     fields.add(new FieldInfo(cn, fn));
                 }
             }
 
-            if (kanade.kill.Launch.funny) {
+            if (Launch.funny) {
                 Iterator<MethodNode> iterator = cn.methods.listIterator();
                 while (iterator.hasNext()) {
                     MethodNode mn = iterator.next();
@@ -1134,7 +1216,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
 
 
         if (changed) {
-            ClassWriter cw = new ClassWriter(compute_all ? ClassWriter.COMPUTE_FRAMES : ClassWriter.COMPUTE_MAXS);
+            ClassWriter cw = new ClassWriter(compute);
             cn.accept(cw);
             transformed = cw.toByteArray();
             return transformed;

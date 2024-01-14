@@ -2,7 +2,7 @@ package kanade.kill.command;
 
 import kanade.kill.Config;
 import kanade.kill.item.KillItem;
-import kanade.kill.util.Util;
+import kanade.kill.util.EntityUtil;
 import net.minecraft.command.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -37,6 +37,7 @@ public class KanadeKillCommand extends CommandBase {
                     ret.add("allPlayerProtect");
                     ret.add("disableParticle");
                     ret.add("renderProtection");
+                    ret.add("fieldReset");
                 } else if (args[0].equals("mode")) {
                     ret.add("timestop");
                     ret.add("Annihilation");
@@ -49,7 +50,7 @@ public class KanadeKillCommand extends CommandBase {
             }
         }
 
-        return ret;
+        return getListOfStringsMatchingLastWord(args, ret);
     }
 
     @Override
@@ -110,6 +111,10 @@ public class KanadeKillCommand extends CommandBase {
                                 Config.renderProtection = Boolean.parseBoolean(arg2);
                                 break;
                             }
+                            case "fieldReset": {
+                                Config.fieldReset = Boolean.parseBoolean(arg2);
+                                break;
+                            }
                             default: {
                                 sender.sendMessage(new TextComponentString("Config " + arg1 + " isn't found!"));
                                 return;
@@ -123,13 +128,13 @@ public class KanadeKillCommand extends CommandBase {
                     if (args.length < 3) {
                         try {
                             EntityPlayerMP player = getCommandSenderAsPlayer(sender);
-                            Util.Kill(player, true);
+                            EntityUtil.Kill(player, true);
                         } catch (PlayerNotFoundException e) {
                             sender.sendMessage(new TextComponentString("No player found. Don't use this in server console."));
                         }
                     } else {
                         Entity entity = getEntity(server, sender, args[2]);
-                        Util.Kill(entity, true);
+                        EntityUtil.Kill(entity, true);
                     }
                     break;
                 }

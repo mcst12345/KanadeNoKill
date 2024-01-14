@@ -31,7 +31,7 @@ public class WorldServer implements Opcodes {
         list.add(new VarInsnNode(ASTORE, 2));
         list.add(label1);
         list.add(new VarInsnNode(ALOAD, 2));
-        list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/util/Util", "isDead", "(Lnet/minecraft/entity/Entity;)Z", false), Type.getType("(Lnet/minecraft/entity/Entity;)Z")));
+        list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/util/EntityUtil", "isDead", "(Lnet/minecraft/entity/Entity;)Z", false), Type.getType("(Lnet/minecraft/entity/Entity;)Z")));
         list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "removeIf", "(Ljava/util/function/Predicate;)Z", true));
         list.add(new InsnNode(POP));
         list.add(label2);

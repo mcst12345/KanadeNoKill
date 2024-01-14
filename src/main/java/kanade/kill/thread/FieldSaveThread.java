@@ -3,6 +3,7 @@ package kanade.kill.thread;
 import kanade.kill.Launch;
 import kanade.kill.asm.Transformer;
 import kanade.kill.util.FieldInfo;
+import kanade.kill.util.ObjectUtil;
 import kanade.kill.util.Util;
 
 import java.lang.reflect.Field;
@@ -19,7 +20,7 @@ public class FieldSaveThread extends Thread {
                 }
                 Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName());
                 try {
-                    Util.cache2.put(field, Util.clone(Util.getStatic(field), 0));
+                    Util.cache2.put(field, ObjectUtil.clone(ObjectUtil.getStatic(field), 0));
                 } catch (Throwable t) {
                     if (t instanceof StackOverflowError) {
                         Launch.LOGGER.warn("Too deep. Ignoring this field.");

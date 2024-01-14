@@ -37,4 +37,8 @@ public class World {
     public MinecraftServer getMinecraftServer() {
         return null;
     }
+
+    public boolean addWeatherEffect(Entity entityLightningBolt) {
+        return false;
+    }
 }

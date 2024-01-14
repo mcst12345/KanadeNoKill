@@ -9,14 +9,12 @@ import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.Display;
-import org.lwjgl.opengl.GLContext;
 import scala.concurrent.util.Unsafe;
 
 import javax.swing.*;
@@ -24,25 +22,38 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.Timer;
+import java.util.*;
 
 @Mod(modid = "kanade")
 @Mod.EventBusSubscriber
 @SuppressWarnings("unchecked")
 public class ModMain {
+    public static final Item EMPTY = new Item();
     public static final Item kill_item;
     public static final Item death_item;
     public static final Class<?> GUI;
+    public static int tooltip = 0;
+
+    @SubscribeEvent
+    public static void RegItem(RegistryEvent.Register<Item> event) {
+        event.getRegistry().register(kill_item);
+        event.getRegistry().register(death_item);
+    }
+
+    @SubscribeEvent
+    @SideOnly(Side.CLIENT)
+    public static void RegModel(ModelRegistryEvent event) {
+        ModelLoader.setCustomModelResourceLocation(kill_item, 0, new ModelResourceLocation(Objects.requireNonNull(kill_item.getRegistryName()), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(death_item, 0, new ModelResourceLocation(Objects.requireNonNull(death_item.getRegistryName()), "inventory"));
+    }
+
     static {
         try {
             kanade.kill.Launch.LOGGER.info("Defining classes.");
 
             final List<String> classes = new ArrayList<>();
             ProtectionDomain domain = Loader.class.getProtectionDomain();
-            ProtectionDomain gl = GLContext.class.getProtectionDomain();
 
             if (Launch.client) {
                 classes.add("kanade.kill.util.Gui");
@@ -53,6 +64,7 @@ public class ModMain {
                 classes.add("kanade.kill.util.VertexFormatElement");
             }
 
+            classes.add("kanade.kill.util.EntityUtil");
             classes.add("kanade.kill.item.KillItem");
             classes.add("kanade.kill.item.DeathItem");
             classes.add("kanade.kill.reflection.LateFields");
@@ -96,12 +108,7 @@ public class ModMain {
                         Class<?> Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, kanade.kill.Launch.classLoader, domain);
                         ((Map<String, Class>) Unsafe.instance.getObjectVolatile(kanade.kill.Launch.classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
                     } else {
-                        if (s.equals("org.lwjgl.opengl.GLOffsets")) {
-                            Class<?> Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, kanade.kill.Launch.classLoader, gl);
-                            ((Map<String, Class>) Unsafe.instance.getObjectVolatile(kanade.kill.Launch.classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
-                        } else {
-                            tmp = Unsafe.instance.defineAnonymousClass(GuiScreen.class, bytes, null);
-                        }
+                        tmp = Unsafe.instance.defineAnonymousClass(GuiScreen.class, bytes, null);
                     }
 
                 }
@@ -126,26 +133,15 @@ public class ModMain {
         if (Launch.client) {
             Thread thread = new Thread(() -> JOptionPane.showMessageDialog(null, "Kanade's Kill会使游戏启动时间大幅延长，具体取决于你安装的mod数量。"));
             thread.start();
-        }
-    }
+            (new Timer()).schedule(new TimerTask() {
+                public void run() {
+                    ++tooltip;
+                    if (tooltip > 22) {
+                        tooltip = 0;
+                    }
 
-    @SubscribeEvent
-    public static void RegItem(RegistryEvent.Register<Item> event) {
-        event.getRegistry().register(kill_item);
-        event.getRegistry().register(death_item);
-    }
-
-    @SubscribeEvent
-    @SideOnly(Side.CLIENT)
-    public static void RegModel(ModelRegistryEvent event) {
-        ModelLoader.setCustomModelResourceLocation(kill_item, 0, new ModelResourceLocation(Objects.requireNonNull(kill_item.getRegistryName()), "inventory"));
-        ModelLoader.setCustomModelResourceLocation(death_item, 0, new ModelResourceLocation(Objects.requireNonNull(death_item.getRegistryName()), "inventory"));
-    }
-
-    @SubscribeEvent
-    public static void ToolTip(ItemTooltipEvent event) {
-        if (event.getItemStack().getITEM() == kill_item) {
-            event.getToolTip().add("§f僕らは命に嫌われている。");
+                }
+            }, 2500L, 2500L);
         }
     }
 }

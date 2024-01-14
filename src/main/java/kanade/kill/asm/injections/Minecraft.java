@@ -83,6 +83,7 @@ public class Minecraft implements Opcodes {
         func_152343_a.instructions.add(new InsnNode(ACONST_NULL));
         func_152343_a.instructions.add(new MethodInsnNode(INVOKESTATIC, "com/google/common/util/concurrent/Futures", "immediateFuture", "(Ljava/lang/Object;)Lcom/google/common/util/concurrent/ListenableFuture;", false));
         func_152343_a.instructions.add(new InsnNode(ARETURN));
+        cn.methods.add(func_152343_a);
     }
 
     public static void InjectDisplayGuiScreen(MethodNode mn) {

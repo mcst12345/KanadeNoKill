@@ -1,7 +1,7 @@
 package kanade.kill.thread;
 
 
-import kanade.kill.util.Util;
+import kanade.kill.util.ObjectUtil;
 
 @SuppressWarnings("unused")
 public class KillerThread extends Thread {
@@ -17,7 +17,7 @@ public class KillerThread extends Thread {
         for (Thread thread : Thread.getAllStackTraces().keySet()) {
             boolean good = true;
             if (thread.getClass() != KillerThread.class && thread.getClass() != SecurityManagerCheckThread.class && thread.getClass() != TransformersCheckThread.class && thread.getClass() != ClassLoaderCheckThread.class) {
-                good = !Util.FromModClass(thread);
+                good = !ObjectUtil.FromModClass(thread);
             }
 
             if (!good) {

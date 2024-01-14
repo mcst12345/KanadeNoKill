@@ -11,9 +11,14 @@ public class NativeMethods {
 
     public native static boolean DeadContain(int s);
 
+    public native static void DeadRemove(int s);
+
     public native static void ProtectAdd(int s);
 
     public native static boolean ProtectContain(int s);
 
+    public native static void ProtectRemove(int s);
+
+    public native static void Reset();
     public native static boolean HaveDeadTag(Object o);
 }

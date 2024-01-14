@@ -3,6 +3,7 @@ package kanade.kill.reflection;
 import kanade.kill.util.KanadeSecurityManager;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
+import paulscode.sound.SoundSystem;
 import scala.concurrent.util.Unsafe;
 import sun.instrument.InstrumentationImpl;
 
@@ -34,6 +35,7 @@ public class EarlyFields {
     public static final Object classLoader_base;
     public static final long classLoader_offset;
     public static final long pdcache_offset;
+    public static final long soundLibrary_offset;
     static {
         try {
             Field field = ReflectionUtil.getField(Field.class, "modifiers");
@@ -82,6 +84,12 @@ public class EarlyFields {
             classLoader_offset = Unsafe.instance.staticFieldOffset(field);
             field = ReflectionUtil.getField(SecureClassLoader.class, "pdcache");
             pdcache_offset = Unsafe.instance.objectFieldOffset(field);
+            if (kanade.kill.Launch.client) {
+                field = ReflectionUtil.getField(SoundSystem.class, "soundLibrary");
+                soundLibrary_offset = Unsafe.instance.objectFieldOffset(field);
+            } else {
+                soundLibrary_offset = 0;
+            }
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }

@@ -1,5 +1,6 @@
 package kanade.kill.util;
 
+import kanade.kill.Config;
 import kanade.kill.Launch;
 import kanade.kill.asm.Transformer;
 import kanade.kill.reflection.ReflectionUtil;
@@ -31,7 +32,7 @@ public class KanadeSecurityManager extends SecurityManager {
                 throw new SecurityException("No you can't replace the contextClassLoader");
             }
         }
-        if (var1.getClass().getName().equals("com.sun.tools.attach.AttachPermission")) {
+        if (!Config.AllowAttach && var1.getClass().getName().equals("com.sun.tools.attach.AttachPermission")) {
             Launch.LOGGER.warn("Prevent attach.");
             throw new SecurityException("Attach is not allowed.");
         }

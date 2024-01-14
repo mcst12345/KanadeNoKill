@@ -63,6 +63,7 @@ public class Launch {
         ClassLoader appClassLoader = client ? GL11.class.getClassLoader() : null;
 
         classes.add("net.minecraftforge.fml.relauncher.CoreModManager");
+        classes.add("kanade.kill.util.ObjectUtil");
         classes.add("kanade.kill.Config");
         classes.add("kanade.kill.util.Util");
         classes.add("kanade.kill.util.KanadeArrayList");
@@ -70,8 +71,6 @@ public class Launch {
         classes.add("kanade.kill.reflection.ReflectionUtil");
         classes.add("kanade.kill.reflection.EarlyFields");
         classes.add("kanade.kill.asm.ASMUtil");
-        classes.add("kanade.kill.asm.hooks.Timer");
-        classes.add("kanade.kill.asm.hooks.Minecraft");
         classes.add("kanade.kill.asm.hooks.World");
         classes.add("kanade.kill.asm.injections.Chunk");
         classes.add("kanade.kill.asm.injections.DimensionManager");
@@ -87,6 +86,7 @@ public class Launch {
         classes.add("kanade.kill.asm.injections.Minecraft");
         classes.add("kanade.kill.asm.injections.MinecraftForge");
         classes.add("kanade.kill.asm.injections.MinecraftServer");
+        classes.add("kanade.kill.asm.injections.MouseHelper");
         classes.add("kanade.kill.asm.injections.NetHandlerPlayServer");
         classes.add("kanade.kill.asm.injections.NonNullList");
         classes.add("kanade.kill.asm.injections.RenderGlobal");
@@ -106,9 +106,13 @@ public class Launch {
         classes.add("kanade.kill.thread.SecurityManagerCheckThread");
         classes.add("kanade.kill.thread.KillerThread");
         if (client) {
+            classes.add("kanade.kill.asm.hooks.Timer");
+            classes.add("kanade.kill.asm.hooks.Minecraft");
+            classes.add("kanade.kill.asm.hooks.MouseHelper");
             classes.add("kanade.kill.thread.DisplayGui");
             classes.add("org.lwjgl.opengl.GLOffsets");
             classes.add("org.lwjgl.opengl.OpenGLHelper");
+            classes.add("kanade.kill.asm.hooks.SoundSystemStarterThread");
         }
 
         try {
