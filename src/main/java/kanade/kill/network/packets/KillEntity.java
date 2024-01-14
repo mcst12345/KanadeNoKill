@@ -7,7 +7,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 import kanade.kill.Launch;
-import kanade.kill.util.Util;
+import kanade.kill.util.EntityUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
@@ -44,7 +44,7 @@ public class KillEntity implements IMessage {
             if (world != null) {
                 Entity entity = world.getEntityByID(message.id);
                 if (entity != null) {
-                    Util.Kill(entity, true);
+                    EntityUtil.Kill(entity, true);
                 }
             }
             return null;

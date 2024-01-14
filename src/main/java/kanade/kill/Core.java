@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Core extends FMLCorePlugin {
+    public static final boolean isDemo = false;
 
     static {
         try {
@@ -25,6 +26,8 @@ public class Core extends FMLCorePlugin {
             } catch (Throwable ignored) {
             }
 
+            boolean AllowAgent = Boolean.parseBoolean(System.getProperty("AllowAgent"));
+
             boolean flag = out != null;
 
             if (System.getProperty("KanadeMode") == null) {
@@ -35,7 +38,7 @@ public class Core extends FMLCorePlugin {
                 }
                 final boolean win = System.getProperty("os.name").startsWith("Windows");
                 String jar = Empty.class.getProtectionDomain().getCodeSource().getLocation().getPath().replace("!/kanade/kill/Empty.class", "").replace("file:", "");
-                if (win) {
+                if (win && jar.startsWith("\\")) {
                     jar = jar.substring(1);
                 }
                 try {
@@ -87,7 +90,7 @@ public class Core extends FMLCorePlugin {
                 }
 
                 for (String s : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
-                    if (s.contains("-javaagent:") || s.contains("-agentpath:") || s.contains("-agentlib:") || s.contains("-D")) {
+                    if ((!AllowAgent && s.contains("-javaagent:")) || s.contains("-agentpath:") || s.contains("-agentlib:") || s.contains("-D")) {
                         continue;
                     }
                     if (s.contains("=")) {

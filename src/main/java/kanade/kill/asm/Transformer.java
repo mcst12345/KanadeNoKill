@@ -6,7 +6,7 @@ import kanade.kill.asm.injections.*;
 import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.reflection.EarlyFields;
 import kanade.kill.util.FieldInfo;
-import kanade.kill.util.Util;
+import kanade.kill.util.ObjectUtil;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.ClassReader;
@@ -343,6 +343,16 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 for (AbstractInsnNode ain : mn.instructions.toArray()) {
                     if (ain instanceof MethodInsnNode) {
                         MethodInsnNode min = (MethodInsnNode) ain;
+                        if (min.owner.equals("sun/misc/Unsafe")) {
+                            if (min.name.startsWith("put")) {
+                                mn.instructions.set(min, new InsnNode(POP));
+                            }
+                        }
+                        if (min.owner.equals("java/lang/System")) {
+                            if (min.name.equals("load")) {
+                                mn.instructions.set(min, new InsnNode(POP));
+                            }
+                        }
                         if (mn.name.equals("<init>") || mn.name.equals("<clinit>")) {
                             continue;
                         }
@@ -400,7 +410,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         boolean changed, compute_all = false;
         boolean goodClass = true;
         if (name.equals(transformedName)) {
-            if (Util.ModClass(name)) {
+            if (ObjectUtil.ModClass(name)) {
                 goodClass = false;
                 modClasses.add(name);
             }
@@ -430,6 +440,27 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         changed = Redirect(cn, goodClass, transformedName);
 
         switch (transformedName) {
+            case "net.minecraft.util.MouseHelper": {
+                changed = true;
+                Launch.LOGGER.info("Get MouseHelper");
+                for (MethodNode mn : cn.methods) {
+                    switch (mn.name) {
+                        case "func_74372_a": {
+                            MouseHelper.OverwriteGrabMouseCursor(mn);
+                            break;
+                        }
+                        case "func_74373_b": {
+                            MouseHelper.OverwriteUngrabMouseCursor(mn);
+                            break;
+                        }
+                        case "func_74374_c": {
+                            MouseHelper.OverwriteMouseXYChange(mn);
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
             case "net.minecraftforge.common.DimensionManager": {
 
                 changed = true;

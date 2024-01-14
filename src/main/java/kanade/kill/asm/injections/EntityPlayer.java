@@ -9,12 +9,12 @@ public class EntityPlayer implements Opcodes {
         InsnList list = new InsnList();
         LabelNode label = new LabelNode();
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "invHaveKillItem", "(Lnet/minecraft/entity/player/EntityPlayer;)Z"));
+        list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/EntityUtil", "invHaveKillItem", "(Lnet/minecraft/entity/player/EntityPlayer;)Z", false));
         list.add(new JumpInsnNode(IFEQ, label));
         list.add(new VarInsnNode(ALOAD, 0));
         list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/item/KillItem", "AddToList", "(Ljava/lang/Object;)V", false));
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "updatePlayer", "(Lnet/minecraft/entity/player/EntityPlayer;)V", false));
+        list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/EntityUtil", "updatePlayer", "(Lnet/minecraft/entity/player/EntityPlayer;)V", false));
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);

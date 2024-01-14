@@ -18,6 +18,9 @@ public class World {
     public boolean isRemote;
     public List<IWorldAccess> worldAccesses;
 
+    public boolean addWeatherEffect(Entity p_72942_1_) {
+        return true;
+    }
     public Chunk getChunkFromChunkCoords(int x, int z) {
         return null;
     }

@@ -2,16 +2,13 @@ package kanade.kill;
 
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.reflection.EarlyFields;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.item.Item;
 import net.minecraft.launchwrapper.IClassTransformer;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import org.lwjgl.opengl.Display;
-import org.lwjgl.opengl.GLContext;
 import scala.concurrent.util.Unsafe;
 
 import javax.swing.*;
@@ -19,9 +16,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.Timer;
+import java.util.*;
 
 @Mod(modid = "kanade")
 @SuppressWarnings("unchecked")
@@ -30,13 +26,14 @@ public class ModMain {
     public static final Item death_item;
     public static final Class<?> GUI;
 
+    public static int tooltip = 0;
+
     static {
         try {
             kanade.kill.Launch.LOGGER.info("Defining classes.");
 
             final List<String> classes = new ArrayList<>();
             ProtectionDomain domain = Loader.class.getProtectionDomain();
-            ProtectionDomain gl = GLContext.class.getProtectionDomain();
 
             if (Launch.client) {
                 classes.add("kanade.kill.util.Gui");
@@ -47,6 +44,7 @@ public class ModMain {
                 classes.add("kanade.kill.util.VertexFormatElement");
             }
 
+            classes.add("kanade.kill.util.EntityUtil");
             classes.add("kanade.kill.item.KillItem");
             classes.add("kanade.kill.item.DeathItem");
             classes.add("kanade.kill.reflection.LateFields");
@@ -90,12 +88,7 @@ public class ModMain {
                         Class<?> Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, kanade.kill.Launch.classLoader, domain);
                         ((Map<String, Class<?>>) Unsafe.instance.getObjectVolatile(kanade.kill.Launch.classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
                     } else {
-                        if (s.equals("org.lwjgl.opengl.GLOffsets")) {
-                            Class<?> Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, kanade.kill.Launch.classLoader, gl);
-                            ((Map<String, Class<?>>) Unsafe.instance.getObjectVolatile(kanade.kill.Launch.classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
-                        } else {
-                            tmp = Unsafe.instance.defineAnonymousClass(GuiScreen.class, bytes, null);
-                        }
+                        tmp = Unsafe.instance.defineAnonymousClass(GuiScreen.class, bytes, null);
                     }
 
                 }
@@ -123,14 +116,15 @@ public class ModMain {
         if (Launch.client) {
             Thread thread = new Thread(() -> JOptionPane.showMessageDialog(null, "Kanade's Kill会使游戏启动时间大幅延长，具体取决于你安装的mod数量。"));
             thread.start();
-        }
-    }
+            (new Timer()).schedule(new TimerTask() {
+                public void run() {
+                    ++tooltip;
+                    if (tooltip > 22) {
+                        tooltip = 0;
+                    }
 
-
-    @SubscribeEvent
-    public static void ToolTip(ItemTooltipEvent event) {
-        if (event.itemStack.getITEM() == kill_item) {
-            event.toolTip.add("§f僕らは命に嫌われている。");
+                }
+            }, 2500L, 2500L);
         }
     }
 }

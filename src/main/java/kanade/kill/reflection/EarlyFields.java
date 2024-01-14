@@ -4,7 +4,6 @@ import kanade.kill.util.KanadeSecurityManager;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import scala.concurrent.util.Unsafe;
-import sun.instrument.InstrumentationImpl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -55,7 +54,7 @@ public class EarlyFields {
             Unsafe.instance.putObjectVolatile(security_base, security_offset, KanadeSecurityManager.INSTANCE);
             field = ReflectionUtil.getField(Thread.class, "uncaughtExceptionHandler");
             uncaughtExceptionHandler_offset = Unsafe.instance.objectFieldOffset(field);
-            field = ReflectionUtil.getField(InstrumentationImpl.class, "mNativeAgent");
+            field = ReflectionUtil.getField(Class.forName("sun.instrument.InstrumentationImpl"), "mNativeAgent");
             mNativeAgent_offset = Unsafe.instance.objectFieldOffset(field);
             field = ReflectionUtil.getField(LaunchClassLoader.class, "invalidClasses");
             invalidClasses_offset = Unsafe.instance.objectFieldOffset(field);
@@ -86,7 +85,7 @@ public class EarlyFields {
             pdcache_offset = Unsafe.instance.objectFieldOffset(field);
             field = ReflectionUtil.getField(Class.class, "classLoader");
             classLoaderOffset = Unsafe.instance.objectFieldOffset(field);
-        } catch (NoSuchFieldException e) {
+        } catch (Throwable e) {
             throw new RuntimeException(e);
         }
     }

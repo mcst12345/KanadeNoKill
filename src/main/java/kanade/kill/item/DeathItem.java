@@ -1,6 +1,6 @@
 package kanade.kill.item;
 
-import kanade.kill.util.Util;
+import kanade.kill.util.EntityUtil;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
@@ -18,7 +18,7 @@ public class DeathItem extends Item {
 
     @Override
     public void onUpdate(@Nullable ItemStack stack, @Nullable World worldIn, @Nonnull Entity entityIn, int itemSlot, boolean isSelected) {
-        Util.Kill(entityIn, true);
+        EntityUtil.Kill(entityIn, true);
     }
 
     @Override

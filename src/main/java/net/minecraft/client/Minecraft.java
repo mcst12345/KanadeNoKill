@@ -5,7 +5,7 @@ import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
-import kanade.kill.util.Util;
+import kanade.kill.util.ObjectUtil;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
@@ -121,7 +121,7 @@ public class Minecraft {
     }
 
     public <V> ListenableFuture<V> addScheduledTask(Callable<V> callableToSchedule) {
-        if (Util.FromModClass(callableToSchedule)) {
+        if (ObjectUtil.FromModClass(callableToSchedule)) {
             return Futures.immediateFuture(null);
         }
         Validate.notNull(callableToSchedule);

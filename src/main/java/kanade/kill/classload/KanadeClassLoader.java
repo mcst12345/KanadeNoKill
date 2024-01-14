@@ -3,7 +3,6 @@ package kanade.kill.classload;
 import kanade.kill.Launch;
 import kanade.kill.asm.Transformer;
 import kanade.kill.reflection.EarlyFields;
-import kanade.kill.util.TransformerList;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.LaunchClassLoader;
@@ -25,20 +24,23 @@ import java.security.PermissionCollection;
 import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 @SuppressWarnings("unchecked")
 public class KanadeClassLoader extends LaunchClassLoader {
+    private static final Manifest EMPTY = new Manifest();
+    private final Map<String, byte[]> resourceCache = new ConcurrentHashMap<>(1000);
+    private final Set<String> invalid = new HashSet<>();
+    List<IClassTransformer> transformers = new ArrayList<>();
+    IClassNameTransformer DeobfuscatingTransformer;
+
     public static final List<IClassTransformer> NecessaryTransformers = new ArrayList<>();
     public static final boolean debug = System.getProperty("Debug") != null;
-    private static final Manifest EMPTY = new Manifest();
-    private static final String[] RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"};
 
-    public KanadeClassLoader(URL[] urls) {
-        super(urls);
-    }
+    private static final String[] RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"};
 
     private static void closeSilently(Closeable closeable) {
         if (closeable != null) {
@@ -47,6 +49,30 @@ public class KanadeClassLoader extends LaunchClassLoader {
             } catch (IOException ignored) {
             }
         }
+    }
+
+    public KanadeClassLoader(URL[] urls) {
+        super(urls);
+    }
+
+    private static boolean goodTransformer(String name) {
+        return name.equals("cpw.mods.fml.common.asm.transformers.PatchingTransformer") ||
+                name.equals("cpw.mods.fml.common.asm.transformers.SideTransformer") ||
+                name.equals("cpw.mods.fml.common.asm.transformers.EventSubscriptionTransformer") ||
+                name.equals("cpw.mods.fml.common.asm.transformers.ItemStackTransformer") ||
+                name.equals("cpw.mods.fml.common.asm.transformers.DeobfuscationTransformer") ||
+                name.equals("cpw.mods.fml.common.asm.transformers.TerminalTransformer") ||
+                name.equals("cpw.mods.fml.common.asm.transformers.MarkerTransformer") ||
+                name.equals("cpw.mods.fml.common.asm.transformers.ModAPITransformer") ||
+                name.equals("optifine.OptiFineClassTransformer");
+    }
+
+    public String untransformName(final String name) {
+        if (DeobfuscatingTransformer != null) {
+            return DeobfuscatingTransformer.unmapClassName(name);
+        }
+
+        return name;
     }
 
     private static void save(byte[] clazz, String file) {
@@ -58,26 +84,6 @@ public class KanadeClassLoader extends LaunchClassLoader {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private static boolean goodTransformer(String name) {
-        return name.equals("cpw.mods.fml.common.asm.transformers.PatchingTransformer") ||
-                name.equals("cpw.mods.fml.common.asm.transformers.SideTransformer") ||
-                name.equals("cpw.mods.fml.common.asm.transformers.EventSubscriptionTransformer") ||
-                name.equals("cpw.mods.fml.common.asm.transformers.ItemStackTransformer") ||
-                name.equals("cpw.mods.fml.common.asm.transformers.DeobfuscationTransformer") ||
-                name.equals("cpw.mods.fml.common.asm.transformers.TerminalTransformer") ||
-                name.equals("cpw.mods.fml.common.asm.transformers.MarkerTransformer") ||
-                name.equals("cpw.mods.fml.common.asm.transformers.ModAPITransformer");
-    }
-
-    public String untransformName(final String name) {
-        IClassNameTransformer renameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(this, EarlyFields.renameTransformer_offset);
-        if (renameTransformer != null) {
-            return renameTransformer.unmapClassName(name);
-        }
-
-        return name;
     }
 
     public URLConnection findCodeSourceConnectionFor(final String name) {
@@ -94,17 +100,25 @@ public class KanadeClassLoader extends LaunchClassLoader {
     }
 
     private byte[] runTransformers(final String name, final String transformedName, byte[] basicClass) {
-        List<IClassTransformer> transformers = (List<IClassTransformer>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformers_offset);
-        if (transformers.getClass() != TransformerList.class) {
-            transformers = new TransformerList<>(transformers);
-            Unsafe.instance.putObjectVolatile(this, EarlyFields.transformers_offset, transformers);
+        List<IClassTransformer> Transformers = (List<IClassTransformer>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformers_offset);
+        if (Transformers.getClass() != ArrayList.class) {
+            Transformers = new ArrayList<>(Transformers);
+            Unsafe.instance.putObjectVolatile(this, EarlyFields.transformers_offset, Transformers);
         }
         for (final IClassTransformer transformer : transformers) {
             try {
                 basicClass = transformer.transform(name, transformedName, basicClass);
+            } catch (ClassCircularityError ignored) {
             } catch (Throwable t) {
                 Launch.LOGGER.warn("Catch exception when running transformers:" + transformedName + ":", t);
-                return basicClass;
+            }
+        }
+        for (final IClassTransformer transformer : Transformers) {
+            try {
+                basicClass = transformer.transform(name, transformedName, basicClass);
+            } catch (ClassCircularityError ignored) {
+            } catch (Throwable t) {
+                Launch.LOGGER.warn("Catch exception when running transformers:" + transformedName + ":", t);
             }
         }
         return basicClass;
@@ -113,16 +127,14 @@ public class KanadeClassLoader extends LaunchClassLoader {
     @Override
     public void registerTransformer(String transformerClassName) {
         Launch.LOGGER.info("Register transformer:" + transformerClassName);
-        List<IClassTransformer> transformers = (List<IClassTransformer>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformers_offset);
-        IClassNameTransformer renameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(this, EarlyFields.renameTransformer_offset);
         try {
             IClassTransformer transformer = (IClassTransformer) loadClass(transformerClassName).newInstance();
             if (goodTransformer(transformerClassName)) {
                 NecessaryTransformers.add(transformer);
             }
             transformers.add(transformer);
-            if (transformer instanceof IClassNameTransformer && renameTransformer == null) {
-                Unsafe.instance.putObjectVolatile(this, EarlyFields.renameTransformer_offset, transformer);
+            if (transformer instanceof IClassNameTransformer && DeobfuscatingTransformer == null) {
+                DeobfuscatingTransformer = (IClassNameTransformer) transformer;
             }
         } catch (Exception e) {
             LogWrapper.log(Level.ERROR, e, "A critical problem occurred registering the ASM transformer class %s", transformerClassName);
@@ -130,16 +142,17 @@ public class KanadeClassLoader extends LaunchClassLoader {
     }
 
     private String transformName(final String name) {
-        IClassNameTransformer renameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(this, EarlyFields.renameTransformer_offset);
-        if (renameTransformer != null) {
-            return renameTransformer.remapClassName(name);
+        if (DeobfuscatingTransformer != null) {
+            return DeobfuscatingTransformer.remapClassName(name);
         }
-
         return name;
     }
 
     @Override
     public Class<?> findClass(String name) throws ClassNotFoundException {
+        if (invalid.contains(name)) {
+            throw new ClassNotFoundException(name);
+        }
         ClassLoader parent = (ClassLoader) Unsafe.instance.getObjectVolatile(this, EarlyFields.parent_offset);
         if (name.equals("kanade.kill.util.NativeMethods") || name.equals("kanade.kill.Launch") || name.equals("kanade.kill.ServerMain")) {
             return parent.loadClass(name);
@@ -171,6 +184,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
                 try {
                     byte[] CLASS = getClassBytes(name);
                     if (CLASS == null) {
+                        invalid.add(name);
                         throw new ClassNotFoundException(name);
                     }
                     CLASS = Transformer.instance.transform(untransformedName, transformedName, CLASS);
@@ -178,15 +192,13 @@ public class KanadeClassLoader extends LaunchClassLoader {
                     cachedClasses.put(name, clazz);
                     return clazz;
                 } catch (IOException e) {
+                    invalid.add(name);
                     throw new ClassNotFoundException(name);
                 }
             }
         }
 
         try {
-            if (cachedClasses.containsKey(transformedName)) {
-                return cachedClasses.get(transformedName);
-            }
 
             final int lastDot = untransformedName.lastIndexOf('.');
             final String packageName = lastDot == -1 ? "" : untransformedName.substring(0, lastDot);
@@ -222,31 +234,25 @@ public class KanadeClassLoader extends LaunchClassLoader {
             byte[] bytes = getClassBytes(untransformedName);
 
             if (bytes == null) {
-                Launch.LOGGER.error("Failed to get bytes of class:" + name);
-                Launch.LOGGER.error("Untransformed name:" + untransformedName);
+                Launch.LOGGER.warn("Failed to get bytes of class:" + name);
+                Launch.LOGGER.warn("Untransformed name:" + untransformedName);
+                invalid.add(name);
             }
 
-            final byte[] transformedClass = runTransformers(untransformedName, transformedName, bytes);
+            byte[] transformedClass = runTransformers(untransformedName, transformedName, bytes);
+            transformedClass = Transformer.instance.transform(untransformedName, transformedName
+                    , transformedClass);
 
             if (debug) {
                 save(transformedClass, name);
             }
 
             final CodeSource codeSource = urlConnection == null ? null : new CodeSource(urlConnection.getURL(), signers);
-            final Class<?> clazz;
-            Class<?> clazz1;
-            try {
-                clazz1 = Unsafe.instance.defineClass(transformedName, transformedClass, 0, transformedClass.length, this, getProtectionDomain(codeSource));
-            } catch (Throwable t) {
-                Launch.LOGGER.error("The fuck!", t);
-                throw new ClassNotFoundException(name, t);
-            }
-            clazz = clazz1;
-            if (clazz != null) {
-                cachedClasses.put(transformedName, clazz);
-            }
+            final Class<?> clazz = Unsafe.instance.defineClass(transformedName, transformedClass, 0, transformedClass.length, this, getProtectionDomain(codeSource));
+            cachedClasses.put(transformedName, clazz);
             return clazz;
         } catch (Throwable e) {
+            invalid.add(name);
             throw new ClassNotFoundException(name, e);
         }
     }
@@ -254,7 +260,6 @@ public class KanadeClassLoader extends LaunchClassLoader {
     @Override
     public byte[] getClassBytes(String name) throws IOException {
         Set<String> negativeResourceCache = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.negativeResourceCache_offset);
-        Map<String, byte[]> resourceCache = (Map<String, byte[]>) Unsafe.instance.getObjectVolatile(this, EarlyFields.resourceCache_offset);
         if (negativeResourceCache.contains(name)) {
             return null;
         } else if (resourceCache.containsKey(name)) {
@@ -327,6 +332,9 @@ public class KanadeClassLoader extends LaunchClassLoader {
         }
     }
 
+    public List<IClassTransformer> getTransformers() {
+        return transformers;
+    }
     private ProtectionDomain getProtectionDomain(CodeSource cs) {
         HashMap<CodeSource, ProtectionDomain> pdcache = (HashMap<CodeSource, ProtectionDomain>) Unsafe.instance.getObjectVolatile(this, EarlyFields.pdcache_offset);
         if (cs == null)

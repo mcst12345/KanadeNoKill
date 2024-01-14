@@ -10,14 +10,14 @@ import java.util.function.UnaryOperator;
 
 public class KanadeArrayList<E> extends ArrayList<E> {
     public boolean add(E e) {
-        if (e instanceof Entity && Util.isDead((Entity) e)) {
+        if (e instanceof Entity && EntityUtil.isDead((Entity) e)) {
             return false;
         }
         return super.add(e);
     }
 
     public void add(int index, E element) {
-        if (element instanceof Entity && Util.isDead((Entity) element)) {
+        if (element instanceof Entity && EntityUtil.isDead((Entity) element)) {
             return;
         }
         super.add(index, element);
@@ -48,7 +48,7 @@ public class KanadeArrayList<E> extends ArrayList<E> {
     public boolean addAll(int index, Collection<? extends E> c) {
         List<E> list = new ArrayList<>();
         for (E e : c) {
-            if (!(e instanceof Entity && Util.isDead((Entity) e))) {
+            if (!(e instanceof Entity && EntityUtil.isDead((Entity) e))) {
                 list.add(e);
             }
         }

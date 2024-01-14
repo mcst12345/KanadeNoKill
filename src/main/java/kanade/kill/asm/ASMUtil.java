@@ -169,7 +169,7 @@ public class ASMUtil implements Opcodes {
     }
 
     public static MethodInsnNode isDead() {
-        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "isDead", "(Lnet/minecraft/entity/Entity;)Z", false);
+        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/EntityUtil", "isDead", "(Lnet/minecraft/entity/Entity;)Z", false);
     }
 
     public static MethodInsnNode inList() {
@@ -181,7 +181,7 @@ public class ASMUtil implements Opcodes {
     }
 
     public static MethodInsnNode ModClass() {
-        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "FromModClass", "(Ljava/lang/Object;)Z", false);
+        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/ObjectUtil", "FromModClass", "(Ljava/lang/Object;)Z", false);
     }
 
     public static int BadMethod(MethodNode mn) {
