@@ -38,7 +38,7 @@ public class Core extends FMLCorePlugin {
                 }
                 final boolean win = System.getProperty("os.name").startsWith("Windows");
                 String jar = Empty.class.getProtectionDomain().getCodeSource().getLocation().getPath().replace("!/kanade/kill/Empty.class", "").replace("file:", "");
-                if (win && jar.startsWith("\\")) {
+                if (win) {
                     jar = jar.substring(1);
                 }
                 try {
