@@ -2,7 +2,6 @@ package kanade.kill;
 
 import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.reflection.EarlyFields;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
 import net.minecraft.launchwrapper.IClassTransformer;
@@ -11,6 +10,7 @@ import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -32,7 +32,6 @@ public class ModMain {
     public static final Item EMPTY = new Item();
     public static final Item kill_item;
     public static final Item death_item;
-    public static final Class<?> GUI;
     public static int tooltip = 0;
 
     @SubscribeEvent
@@ -56,7 +55,6 @@ public class ModMain {
             ProtectionDomain domain = Loader.class.getProtectionDomain();
 
             if (Launch.client) {
-                classes.add("kanade.kill.util.Gui");
                 classes.add("kanade.kill.util.BufferBuilder");
                 classes.add("kanade.kill.util.DefaultVertexFormats");
                 classes.add("kanade.kill.util.FontRenderer");
@@ -81,12 +79,19 @@ public class ModMain {
             classes.add("kanade.kill.network.packets.KillEntity$MessageHandler");
             classes.add("kanade.kill.network.packets.ServerTimeStop");
             classes.add("kanade.kill.network.packets.ServerTimeStop$MessageHandler");
+            classes.add("kanade.kill.network.packets.SwitchTimePoint");
+            classes.add("kanade.kill.network.packets.SwitchTimePoint$MessageHandler");
+            classes.add("kanade.kill.network.packets.SaveTimePoint$MessageHandler");
+            classes.add("kanade.kill.network.packets.SaveTimePoint");
+            classes.add("kanade.kill.network.packets.TimeBack$MessageHandler");
+            classes.add("kanade.kill.network.packets.TimeBack");
+            classes.add("kanade.kill.network.packets.ClientReload$MessageHandler");
+            classes.add("kanade.kill.network.packets.ClientReload");
             classes.add("kanade.kill.command.KanadeKillCommand");
             classes.add("kanade.kill.network.packets.KillAllEntities");
             classes.add("kanade.kill.network.packets.KillAllEntities$MessageHandler");
 
 
-            Class<?> tmp = null;
 
             for (String s : classes) {
                 kanade.kill.Launch.LOGGER.info("Defining class:" + s);
@@ -104,17 +109,11 @@ public class ModMain {
                     for (IClassTransformer transformer : KanadeClassLoader.NecessaryTransformers) {
                         bytes = transformer.transform(s, s, bytes);
                     }
-                    if (!s.equals("kanade.kill.util.Gui")) {
-                        Class<?> Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, kanade.kill.Launch.classLoader, domain);
-                        ((Map<String, Class>) Unsafe.instance.getObjectVolatile(kanade.kill.Launch.classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
-                    } else {
-                        tmp = Unsafe.instance.defineAnonymousClass(GuiScreen.class, bytes, null);
-                    }
+                    Class<?> Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, Launch.classLoader, domain);
+                    ((Map<String, Class>) Unsafe.instance.getObjectVolatile(Launch.classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
 
                 }
             }
-
-            GUI = tmp;
 
             kanade.kill.Launch.LOGGER.info("Constructing items.");
 
@@ -142,6 +141,13 @@ public class ModMain {
 
                 }
             }, 2500L, 2500L);
+        }
+    }
+
+    @Mod.EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
+        if (Launch.client) {
+            Keys.init();
         }
     }
 }

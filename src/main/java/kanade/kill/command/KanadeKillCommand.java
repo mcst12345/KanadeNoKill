@@ -40,6 +40,7 @@ public class KanadeKillCommand extends CommandBase {
                     ret.add("fieldReset");
                 } else if (args[0].equals("mode")) {
                     ret.add("timestop");
+                    ret.add("timeback");
                     ret.add("Annihilation");
                 }
             } else {
@@ -71,9 +72,9 @@ public class KanadeKillCommand extends CommandBase {
             throw new WrongUsageException("/KanadeKill <action> <args>");
         } else {
             String action = args[0];
-            String arg1 = args[1];
             switch (action) {
                 case "config": {
+                    String arg1 = args[1];
                     if (args.length < 3) {
                         sender.sendMessage(new TextComponentString("Wrong usage. /KanadeKill config <name> <value>"));
                     } else {
@@ -150,7 +151,13 @@ public class KanadeKillCommand extends CommandBase {
                     break;
                 }
                 case "mode": {
+                    String arg1 = args[1];
                     switch (arg1) {
+                        case "timeback": {
+                            KillItem.mode = 2;
+                            sender.sendMessage(new TextComponentString("Set item shift-right-click mode to timeback"));
+                            break;
+                        }
                         case "timestop": {
                             KillItem.mode = 1;
                             sender.sendMessage(new TextComponentString("Set item shift-right-click mode to timestop"));

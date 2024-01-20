@@ -5,7 +5,6 @@ import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import paulscode.sound.SoundSystem;
 import scala.concurrent.util.Unsafe;
-import sun.instrument.InstrumentationImpl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -55,7 +54,7 @@ public class EarlyFields {
             Unsafe.instance.putObjectVolatile(security_base, security_offset, KanadeSecurityManager.INSTANCE);
             field = ReflectionUtil.getField(Thread.class, "uncaughtExceptionHandler");
             uncaughtExceptionHandler_offset = Unsafe.instance.objectFieldOffset(field);
-            field = ReflectionUtil.getField(InstrumentationImpl.class, "mNativeAgent");
+            field = ReflectionUtil.getField(Class.forName("sun.instrument.InstrumentationImpl"), "mNativeAgent");
             mNativeAgent_offset = Unsafe.instance.objectFieldOffset(field);
             field = ReflectionUtil.getField(LaunchClassLoader.class, "invalidClasses");
             invalidClasses_offset = Unsafe.instance.objectFieldOffset(field);
@@ -90,7 +89,7 @@ public class EarlyFields {
             } else {
                 soundLibrary_offset = 0;
             }
-        } catch (NoSuchFieldException e) {
+        } catch (NoSuchFieldException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }

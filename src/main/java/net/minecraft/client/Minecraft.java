@@ -12,7 +12,10 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.toasts.GuiToast;
 import net.minecraft.client.main.GameConfiguration;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.renderer.EntityRenderer;
+import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.color.ItemColors;
 import net.minecraft.client.renderer.entity.RenderManager;
@@ -28,6 +31,8 @@ import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.FrameTimer;
 import net.minecraft.util.Session;
 import net.minecraft.util.Timer;
+import net.minecraft.world.WorldSettings;
+import net.minecraft.world.storage.ISaveFormat;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.Logger;
 
@@ -69,6 +74,11 @@ public class Minecraft implements ISnooperInfo {
     public float renderPartialTicksPaused;
     public long debugUpdateTime;
     public String debug;
+    public RenderGlobal renderGlobal;
+    public ParticleManager effectRenderer;
+    public EntityRenderer entityRenderer;
+    public long systemTime;
+
     public Minecraft() {
     }
 
@@ -78,7 +88,15 @@ public class Minecraft implements ISnooperInfo {
     public static Minecraft getMinecraft() {
         return null;
     }
+    public ISaveFormat saveLoader;
 
+    @Nullable
+    public NetHandlerPlayClient getConnection() {
+        return null;
+    }
+
+    public void launchIntegratedServer(String folderName, String worldName, @Nullable WorldSettings worldSettingsIn) {
+    }
     public static long getSystemTime() {
         return 0;
     }

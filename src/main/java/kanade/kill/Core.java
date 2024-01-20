@@ -49,6 +49,13 @@ public class Core extends FMLCorePlugin {
                 System.out.println("Restarting game.");
                 StringBuilder LAUNCH = new StringBuilder();
                 String args = System.getProperty("sun.java.command").replace("net.minecraft.launchwrapper.Launch", "kanade.kill.Launch");
+                if (out != null) {
+                    out.println("Arguments:");
+                    out.println(args);
+                } else {
+                    System.out.println("Arguments:");
+                    System.out.println(args);
+                }
                 String JAVA = System.getProperty("java.home");
                 System.out.println("java.home:" + JAVA);
                 if (JAVA.endsWith("jre")) {
@@ -113,10 +120,13 @@ public class Core extends FMLCorePlugin {
                 LAUNCH.append("\"-DKanadeMode=true\" ");
                 LAUNCH.append("-cp \"").append(classpath).append(win ? ";" : ":").append(jar).append("\" ").append(args);
 
-                System.out.println(LAUNCH);
+                String str = LAUNCH.toString();
+                str = str.replace("C:\\Users\\YHF\\AppData\\Roaming\\PCL\\JavaWrapper.jar", "");
+
+                System.out.println(str);
 
                 if (!win) {
-                    ProcessBuilder process = new ProcessBuilder("/bin/sh", "-c", LAUNCH.toString());
+                    ProcessBuilder process = new ProcessBuilder("/bin/sh", "-c", str);
                     process.redirectErrorStream(true);
                     Process mc = process.start();
                     BufferedReader br = new BufferedReader(new InputStreamReader(mc.getInputStream()));
@@ -135,9 +145,9 @@ public class Core extends FMLCorePlugin {
                         Files.createFile(file.toPath());
                     }
                     try (PrintWriter printWriter = new PrintWriter(file)) {
-                        printWriter.write(LAUNCH.toString());
+                        printWriter.write(str);
                     }
-                    ProcessBuilder process = new ProcessBuilder("cmd /c start \"\" relauncher.bat", LAUNCH.toString());
+                    ProcessBuilder process = new ProcessBuilder("cmd /c start \"\" relauncher.bat");
                     process.redirectErrorStream(true);
                     Process mc = process.start();
                     BufferedReader br = new BufferedReader(new InputStreamReader(mc.getInputStream()));

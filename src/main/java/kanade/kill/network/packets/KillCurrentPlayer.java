@@ -32,7 +32,9 @@ public class KillCurrentPlayer implements IMessage {
             if (!Launch.client) {
                 return null;
             }
-            Minecraft.dead = true;
+            if (Config.forceRender) {
+                Minecraft.dead = true;
+            }
             Minecraft.getMinecraft().isGamePaused = true;
             if (Minecraft.getMinecraft().PLAYER != null) {
                 Unsafe.instance.putBooleanVolatile(Minecraft.getMinecraft().PLAYER, LateFields.HatedByLife_offset, true);

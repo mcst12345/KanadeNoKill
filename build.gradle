@@ -12,10 +12,10 @@ plugins {
 
 
 group = 'kanade'
-version = ''
+version = "R2"
 
 java {
-    archivesBaseName = 'KanadeNoKill'
+    archivesBaseName = "Kanade's Kill mc1.12.2"
     toolchain.languageVersion = JavaLanguageVersion.of(8)
 }
 

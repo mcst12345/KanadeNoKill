@@ -33,8 +33,10 @@ public class Launch {
     public static final boolean funny = System.getProperty("Vanish") != null && System.getProperty("Kanade").equalsIgnoreCase("true");
     public static final LaunchClassLoader classLoader;
     public static final boolean client = System.getProperty("minecraft.client.jar") != null;
+    public static final int BUFFER_SIZE = 1 << 12;
     private static final String DEFAULT_TWEAK = "net.minecraft.launchwrapper.VanillaTweaker";
     private static final ThreadGroup Kanade = new ThreadGroup("Kanade");
+    private static final ThreadLocal<byte[]> loadBuffer = new ThreadLocal<>();
     public static File minecraftHome;
     public static File assetsDir;
     public static Map<String, Object> blackboard;
@@ -71,6 +73,7 @@ public class Launch {
         classes.add("kanade.kill.reflection.ReflectionUtil");
         classes.add("kanade.kill.reflection.EarlyFields");
         classes.add("kanade.kill.asm.ASMUtil");
+        classes.add("kanade.kill.asm.hooks.EventBus");
         classes.add("kanade.kill.asm.hooks.World");
         classes.add("kanade.kill.asm.injections.Chunk");
         classes.add("kanade.kill.asm.injections.DimensionManager");
@@ -100,8 +103,10 @@ public class Launch {
         classes.add("kanade.kill.thread.ClassLoaderCheckThread");
         classes.add("kanade.kill.thread.FieldSaveThread");
         classes.add("kanade.kill.timemanagement.TimeStop");
+        classes.add("kanade.kill.timemanagement.TimeBack");
         classes.add("kanade.kill.classload.KanadeClassLoader");
         classes.add("kanade.kill.util.FieldInfo");
+        classes.add("kanade.kill.util.FileUtils");
         classes.add("kanade.kill.util.KanadeSecurityManager");
         classes.add("kanade.kill.thread.SecurityManagerCheckThread");
         classes.add("kanade.kill.thread.KillerThread");
@@ -160,6 +165,41 @@ public class Launch {
 
     public static void main(String[] args) {
         new Launch().launch(args);
+    }
+
+    public static byte[] readFully(InputStream stream) {
+        try {
+            byte[] buffer = getOrCreateBuffer();
+
+            int read;
+            int totalLength = 0;
+            while ((read = stream.read(buffer, totalLength, buffer.length - totalLength)) != -1) {
+                totalLength += read;
+
+                // Extend our buffer
+                if (totalLength >= buffer.length - 1) {
+                    byte[] newBuffer = new byte[buffer.length + BUFFER_SIZE];
+                    System.arraycopy(buffer, 0, newBuffer, 0, buffer.length);
+                    buffer = newBuffer;
+                }
+            }
+
+            final byte[] result = new byte[totalLength];
+            System.arraycopy(buffer, 0, result, 0, totalLength);
+            return result;
+        } catch (Throwable t) {
+            LogWrapper.log(Level.WARN, t, "Problem loading class");
+            return new byte[0];
+        }
+    }
+
+    private static byte[] getOrCreateBuffer() {
+        byte[] buffer = loadBuffer.get();
+        if (buffer == null) {
+            loadBuffer.set(new byte[BUFFER_SIZE]);
+            buffer = loadBuffer.get();
+        }
+        return buffer;
     }
 
     private void launch(String[] args) {

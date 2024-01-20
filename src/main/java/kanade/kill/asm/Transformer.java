@@ -17,7 +17,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 import scala.concurrent.util.Unsafe;
-import sun.misc.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -404,21 +403,13 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         }
         if (classes.contains(name)) {
             InputStream is = Empty.class.getResourceAsStream("/" + name.replace('.', '/') + ".class");
-            try {
-                assert is != null;
-                basicClass = IOUtils.readAllBytes(is);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            assert is != null;
+            basicClass = Launch.readFully(is);
         }
         if (Kanade.contains(name)) {
             InputStream is = Empty.class.getResourceAsStream("/" + name.replace('.', '/') + ".class");
-            try {
-                assert is != null;
-                return IOUtils.readAllBytes(is);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            assert is != null;
+            return Launch.readFully(is);
         }
         byte[] originalBytes = null;
         try {
@@ -490,6 +481,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("playing")) {
                         mn.instructions.clear();
+                        mn.tryCatchBlocks.clear();
                         mn.instructions.add(new VarInsnNode(ALOAD, 0));
                         mn.instructions.add(new VarInsnNode(ALOAD, 1));
                         mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/SoundSystemStarterThread", "playing", "(Lpaulscode/sound/SoundSystem;Ljava/lang/String;)Z", false));
@@ -575,12 +567,13 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                             Minecraft.OverwriteRunGameLoop(mn);
                             break;
                         }
+                        case "func_184118_az":
                         case "func_71407_l": {
+                            if (mn.name.equals("func_184118_az")) {
+                                Minecraft.InjectRunTickKeyboard(mn);
+                            }
                             ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "kanade/kill/util/Util", "killing", "Z"));
                             ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "net/minecraft/client/Minecraft", "dead", "Z"));
-                            if (mn.name.equals("func_71407_l")) {
-                                Minecraft.InjectRunTick(mn);
-                            }
                             break;
                         }
                         case "func_71381_h":
@@ -972,16 +965,19 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("<init>")) {
                         ServerCommandManager.InjectConstructor(mn);
+                        break;
                     }
                 }
                 break;
             }
             case "net.minecraftforge.fml.common.eventhandler.EventBus": {
+                compute = 0;
                 Launch.LOGGER.info("Get EventBus.");
                 changed = true;
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("post")) {
-                        EventBus.InjectPost(mn);
+                        EventBus.OverwritePost(mn);
+                        break;
                     }
                 }
                 break;
@@ -1231,4 +1227,5 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         s = s.replace('/', '.');
         return transform(s, classNameTransformer.remapClassName(s), bytes);
     }
+
 }

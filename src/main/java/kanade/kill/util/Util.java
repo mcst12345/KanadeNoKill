@@ -262,7 +262,7 @@ public class Util {
         }
         String name = ReflectionUtil.getName(gui.getClass());
         String l = name.toLowerCase();
-        return (Config.guiProtect && (Transformer.isModClass(name) || gui.getClass().getProtectionDomain() == null || gui.getClass().getProtectionDomain().getCodeSource() == null)) || gui.getClass() == ModMain.GUI || l.contains("death") || l.contains("over") || l.contains("die") || l.contains("dead");
+        return (Config.guiProtect && (Transformer.isModClass(name) || gui.getClass().getProtectionDomain() == null || gui.getClass().getProtectionDomain().getCodeSource() == null)) || l.contains("death") || l.contains("over") || l.contains("die") || l.contains("dead");
     }
 
     public static void DisplayDeathGui() {
@@ -270,13 +270,10 @@ public class Util {
     }
 
     public static boolean isKanadeDeathGui(Object o) {
-        return o != null && (o.getClass() == ModMain.GUI || (o instanceof Minecraft && Unsafe.instance.getObjectVolatile(o, LateFields.currentScreen_offset).getClass() == ModMain.GUI));
+        return ((o instanceof Minecraft));
     }
 
     public static boolean isKanadeDeathGuiClosed(Object o) {
-        if (ModMain.GUI.isInstance(o)) {
-            return Unsafe.instance.getBooleanVolatile(o, LateFields.close_offset);
-        }
         return false;
     }
 
@@ -286,7 +283,7 @@ public class Util {
             if (event instanceof GuiOpenEvent) {
                 GuiOpenEvent guiOpenEvent = (GuiOpenEvent) event;
                 GuiScreen gui = guiOpenEvent.getGui();
-                return !ModMain.GUI.isInstance(gui) && !(gui instanceof GuiGameOver) && !(gui instanceof GuiChat) && !(gui instanceof GuiIngameMenu) && !(gui instanceof GuiMainMenu);
+                return !(gui instanceof GuiGameOver) && !(gui instanceof GuiChat) && !(gui instanceof GuiIngameMenu) && !(gui instanceof GuiMainMenu);
             } else if (event instanceof EntityViewRenderEvent) {
                 EntityViewRenderEvent cameraSetup = (EntityViewRenderEvent) event;
                 return !KillItem.inList(cameraSetup.getEntity());

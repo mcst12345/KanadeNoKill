@@ -22,7 +22,11 @@ public enum NetworkHandler {
         channel.registerMessage(Annihilation.MessageHandler.class, Annihilation.class, index++, Side.SERVER);
         channel.registerMessage(KillCurrentPlayer.MessageHandler.class, KillCurrentPlayer.class, index++, Side.CLIENT);
         channel.registerMessage(ServerTimeStop.MessageHandler.class, ServerTimeStop.class, index++, Side.SERVER);
-        channel.registerMessage(ClientTimeStop.MessageHandler.class, ClientTimeStop.class, index, Side.CLIENT);
+        channel.registerMessage(ClientTimeStop.MessageHandler.class, ClientTimeStop.class, index++, Side.CLIENT);
+        channel.registerMessage(SwitchTimePoint.MessageHandler.class, SwitchTimePoint.class, index++, Side.SERVER);
+        channel.registerMessage(SaveTimePoint.MessageHandler.class, SaveTimePoint.class, index++, Side.SERVER);
+        channel.registerMessage(TimeBack.MessageHandler.class, TimeBack.class, index++, Side.SERVER);
+        channel.registerMessage(ClientReload.MessageHandler.class, ClientReload.class, index, Side.CLIENT);
     }
 
     public void sendMessageToPlayer(IMessage msg, EntityPlayerMP player) {

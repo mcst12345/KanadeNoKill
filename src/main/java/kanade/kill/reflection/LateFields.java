@@ -1,7 +1,6 @@
 package kanade.kill.reflection;
 
 import kanade.kill.Launch;
-import kanade.kill.ModMain;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -31,7 +30,6 @@ public class LateFields {
     public static final Object listeners_base;
     public static final long listeners_offset_2;
     public static final long currentScreen_offset;
-    public static final long close_offset;
     public static final long entities_offset;
 
     static {
@@ -69,8 +67,6 @@ public class LateFields {
             } else {
                 currentScreen_offset = -1;
             }
-            field = ReflectionUtil.getField(ModMain.GUI, "close");
-            close_offset = Unsafe.instance.objectFieldOffset(field);
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }

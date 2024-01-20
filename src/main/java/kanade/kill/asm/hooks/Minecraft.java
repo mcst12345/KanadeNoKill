@@ -1,6 +1,9 @@
 package kanade.kill.asm.hooks;
 
-import kanade.kill.item.KillItem;
+import kanade.kill.Keys;
+import kanade.kill.network.NetworkHandler;
+import kanade.kill.network.packets.SaveTimePoint;
+import kanade.kill.network.packets.SwitchTimePoint;
 import kanade.kill.timemanagement.TimeStop;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
@@ -11,22 +14,29 @@ import net.minecraft.util.Util;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.lwjgl.opengl.Display;
 
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
+
 import static net.minecraft.client.Minecraft.*;
 
 public class Minecraft {
-    public static void runTick(net.minecraft.client.Minecraft minecraft) {
-        if (TimeStop.isTimeStop()) {
-            if (minecraft.PLAYER != null) {
-                if (KillItem.inList(minecraft.PLAYER)) {
-                    //minecraft.PLAYER.onUpdate();
-                }
-            }
+    public static final Queue<Runnable> tasks = new LinkedBlockingQueue<>();
+
+    public static void runTickKeyboard(net.minecraft.client.Minecraft minecraft) {
+        if (Keys.SWITCH_TIME_POINT.isKeyDown()) {
+            NetworkHandler.INSTANCE.sendMessageToServer(new SwitchTimePoint(minecraft.PLAYER.getUniqueID()));
+        } else if (Keys.SAVE.isKeyDown()) {
+            NetworkHandler.INSTANCE.sendMessageToServer(new SaveTimePoint(minecraft.PLAYER.getUniqueID()));
         }
     }
 
     public static void RunGameLoop(net.minecraft.client.Minecraft mc) {
         if (dead || kanade.kill.util.Util.killing) {
             return;
+        }
+        while (!tasks.isEmpty()) {
+            Runnable run = tasks.poll();
+            run.run();
         }
         boolean stop = TimeStop.isTimeStop();
         long i = System.nanoTime();

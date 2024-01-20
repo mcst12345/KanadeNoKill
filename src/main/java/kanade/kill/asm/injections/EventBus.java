@@ -2,25 +2,22 @@ package kanade.kill.asm.injections;
 
 import kanade.kill.Launch;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.*;
+import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.VarInsnNode;
 
 public class EventBus implements Opcodes {
-    public static void InjectPost(MethodNode mn) {
-        InsnList list = new InsnList();
-        LabelNode label0 = new LabelNode();
-        LabelNode label1 = new LabelNode();
-        list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Config", "disableEvent", "Z"));
-        list.add(new JumpInsnNode(IFNE, label0));
-        list.add(new VarInsnNode(ALOAD, 1));
-        list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "shouldPostEvent", "(Lnet/minecraftforge/fml/common/eventhandler/Event;)Z", false));
-        list.add(new JumpInsnNode(IFNE, label1));
-        list.add(label0);
-        list.add(new FrameNode(F_SAME, 0, null, 0, null));
-        list.add(new InsnNode(ICONST_0));
-        list.add(new InsnNode(IRETURN));
-        list.add(label1);
-        list.add(new FrameNode(F_SAME, 0, null, 0, null));
-        mn.instructions.insert(list);
-        Launch.LOGGER.info("Inject into post().");
+    public static void OverwritePost(MethodNode mn) {
+        mn.tryCatchBlocks.clear();
+        mn.instructions.clear();
+        mn.instructions.add(new VarInsnNode(ALOAD, 0));
+        mn.instructions.add(new VarInsnNode(ALOAD, 1));
+        mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/EventBus", "post", "(Lnet/minecraftforge/fml/common/eventhandler/EventBus;Lnet/minecraftforge/fml/common/eventhandler/Event;)Z", false));
+        mn.instructions.add(new InsnNode(IRETURN));
+        mn.localVariables.clear();
+        mn.maxStack = 2;
+        mn.maxLocals = 2;
+        Launch.LOGGER.info("Overwrite post(Event).");
     }
 }

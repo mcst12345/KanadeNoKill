@@ -7,6 +7,7 @@ import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.Annihilation;
 import kanade.kill.network.packets.KillAllEntities;
 import kanade.kill.network.packets.ServerTimeStop;
+import kanade.kill.network.packets.TimeBack;
 import kanade.kill.timemanagement.TimeStop;
 import kanade.kill.util.EntityUtil;
 import kanade.kill.util.NativeMethods;
@@ -36,7 +37,7 @@ import java.util.*;
 @SuppressWarnings("unused")
 public class KillItem extends Item {
     public static int mode;
-    private short timeStopCounter = 0;
+    private short shiftRightClickCount = 0;
     private static final Set<UUID> list = new HashSet<>();
     public KillItem(){
         this.setRegistryName("kanade:kill");
@@ -128,8 +129,8 @@ public class KillItem extends Item {
             entityIn.world.protects.add(entityIn);
             list.add(entityIn.getUniqueID());
         }
-        if (timeStopCounter > 0) {
-            timeStopCounter--;
+        if (shiftRightClickCount > 0) {
+            shiftRightClickCount--;
         }
     }
 
@@ -155,18 +156,25 @@ public class KillItem extends Item {
                 if (playerIn.world.isRemote) {
                     NetworkHandler.INSTANCE.sendMessageToServer(new Annihilation(playerIn.dimension, (int) playerIn.posX, (int) playerIn.posY, (int) playerIn.posZ));
                 }
-            } else if (mode == 1) {
-                if (!Core.demo) {
+            } else if (!Core.demo) {
+                if (mode == 1) {
                     if (playerIn.world.isRemote) {
-                        if (timeStopCounter == 0) {
+                        if (shiftRightClickCount == 0) {
                             TimeStop.SetTimeStop(!TimeStop.isTimeStop());
                             NetworkHandler.INSTANCE.sendMessageToServer(new ServerTimeStop(TimeStop.isTimeStop()));
-                            timeStopCounter = 10;
+                            shiftRightClickCount = 15;
                         }
                     }
-                } else {
-                    playerIn.sendMessage(new TextComponentString("当前版本为试用版，完整版请至#QQ2981196615购买。"));
+                } else if (mode == 2) {
+                    if (playerIn.world.isRemote) {
+                        if (shiftRightClickCount == 0) {
+                            NetworkHandler.INSTANCE.sendMessageToServer(new TimeBack());
+                            shiftRightClickCount = 15;
+                        }
+                    }
                 }
+            } else {
+                playerIn.sendMessage(new TextComponentString("当前版本为试用版，完整版请至#QQ2981196615购买。"));
             }
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));

@@ -149,12 +149,24 @@ public class Minecraft implements Opcodes {
         Launch.LOGGER.info("Inject into run().");
     }
 
-    public static void InjectRunTick(MethodNode mn) {
+    public static void InjectRunTickKeyboard(MethodNode mn) {
+        AbstractInsnNode index = null;
+        for (AbstractInsnNode ain : mn.instructions.toArray()) {
+            if (ain instanceof InsnNode) {
+                if (ain.getOpcode() == RETURN) {
+                    index = ain;
+                    break;
+                }
+            }
+        }
+        if (index == null) {
+            throw new IllegalStateException("The fuck?");
+        }
         InsnList list = new InsnList();
         list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/Minecraft", "runTick", "(Lnet/minecraft/client/Minecraft;)V", false));
-        mn.instructions.insert(list);
-        Launch.LOGGER.info("Inject into runTick().");
+        list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/Minecraft", "runTickKeyboard", "(Lnet/minecraft/client/Minecraft;)V", false));
+        mn.instructions.insertBefore(index, list);
+        Launch.LOGGER.info("Inject into runTickKeyboard().");
     }
 
     public static void OverwriteRunGameLoop(MethodNode mn) {
