@@ -1,6 +1,7 @@
 package kanade.kill.asm.injections;
 
 import kanade.kill.Launch;
+import kanade.kill.asm.ASMUtil;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
@@ -48,5 +49,26 @@ public class EntityPlayer implements Opcodes {
         }
         mn.instructions.insertBefore(index, list);
         Launch.LOGGER.info("Inject into <init>.");
+    }
+
+    public static void InjectApplyEntityCollision(MethodNode mn) {
+        InsnList list = new InsnList();
+        LabelNode label = new LabelNode();
+        list.add(new VarInsnNode(ALOAD, 0));
+        list.add(ASMUtil.inList());
+        list.add(new JumpInsnNode(IFEQ, label));
+        list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/util/EntityUtil", "blackHolePlayers", "Ljava/util/Set;"));
+        list.add(new VarInsnNode(ALOAD, 0));
+        list.add(new MethodInsnNode(INVOKEVIRTUAL, "net/minecraft/entity/player/EntityPlayer", "func_110124_au", "()Ljava/util/UUID;", false));
+        list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/Set", "contains", "(Ljava/lang/Object;)Z", true));
+        list.add(new JumpInsnNode(IFEQ, label));
+        list.add(new VarInsnNode(ALOAD, 1));
+        list.add(new InsnNode(ICONST_0));
+        list.add(ASMUtil.SafeKill());
+        list.add(new InsnNode(RETURN));
+        list.add(label);
+        list.add(new FrameNode(F_SAME, 0, null, 0, null));
+        mn.instructions.insert(list);
+        Launch.LOGGER.info("Inject into applyEntityCollision.");
     }
 }

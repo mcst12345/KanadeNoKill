@@ -26,7 +26,12 @@ public enum NetworkHandler {
         channel.registerMessage(SwitchTimePoint.MessageHandler.class, SwitchTimePoint.class, index++, Side.SERVER);
         channel.registerMessage(SaveTimePoint.MessageHandler.class, SaveTimePoint.class, index++, Side.SERVER);
         channel.registerMessage(TimeBack.MessageHandler.class, TimeBack.class, index++, Side.SERVER);
-        channel.registerMessage(ClientReload.MessageHandler.class, ClientReload.class, index, Side.CLIENT);
+        channel.registerMessage(ClientReload.MessageHandler.class, ClientReload.class, index++, Side.CLIENT);
+        channel.registerMessage(BlackHole.MessageHandler.class, BlackHole.class, index++, Side.SERVER);
+        channel.registerMessage(ConfigUpdatePacket.MessageHandler.class, ConfigUpdatePacket.class, index, Side.SERVER);
+        channel.registerMessage(ConfigUpdatePacket.MessageHandler.class, ConfigUpdatePacket.class, index++, Side.CLIENT);
+        channel.registerMessage(UpdatePlayerProtectedState.MessageHandler.class, UpdatePlayerProtectedState.class, index, Side.SERVER);
+        channel.registerMessage(UpdatePlayerProtectedState.MessageHandler.class, UpdatePlayerProtectedState.class, index, Side.CLIENT);
     }
 
     public void sendMessageToPlayer(IMessage msg, EntityPlayerMP player) {

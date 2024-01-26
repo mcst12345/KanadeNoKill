@@ -8,7 +8,8 @@ import net.minecraft.util.EnumHandSide;
 import net.minecraft.world.World;
 
 public class EntityPlayer extends EntityLivingBase {
-    public InventoryPlayer inventory;
+    public void resetCooldown() {
+    }
     public InventoryPlayer Inventory;
     public InventoryEnderChest enderChest;
     public PlayerCapabilities capabilities;

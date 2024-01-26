@@ -11,6 +11,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.toasts.GuiToast;
 import net.minecraft.client.main.GameConfiguration;
+import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.particle.ParticleManager;
@@ -19,6 +20,7 @@ import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.color.ItemColors;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.shader.Framebuffer;
@@ -31,12 +33,14 @@ import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.FrameTimer;
 import net.minecraft.util.Session;
 import net.minecraft.util.Timer;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.storage.ISaveFormat;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
@@ -78,6 +82,8 @@ public class Minecraft implements ISnooperInfo {
     public ParticleManager effectRenderer;
     public EntityRenderer entityRenderer;
     public long systemTime;
+    public RayTraceResult objectMouseOver;
+    public PlayerControllerMP playerController;
 
     public Minecraft() {
     }
@@ -125,7 +131,7 @@ public class Minecraft implements ISnooperInfo {
     public void updateDisplay() {
     }
 
-    public void runGameLoop() {
+    public void runGameLoop() throws IOException {
         kanade.kill.asm.hooks.Minecraft.RunGameLoop(this);
     }
 
@@ -229,6 +235,14 @@ public class Minecraft implements ISnooperInfo {
     }
 
     public RenderItem getRenderItem() {
+        return null;
+    }
+
+    public TextureManager getTextureManager() {
+        return null;
+    }
+
+    public Framebuffer getFramebuffer() {
         return null;
     }
 }

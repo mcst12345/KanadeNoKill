@@ -2,6 +2,8 @@ package kanade.kill.command;
 
 import kanade.kill.Config;
 import kanade.kill.item.KillItem;
+import kanade.kill.network.NetworkHandler;
+import kanade.kill.network.packets.ConfigUpdatePacket;
 import kanade.kill.util.EntityUtil;
 import net.minecraft.command.*;
 import net.minecraft.entity.Entity;
@@ -38,6 +40,7 @@ public class KanadeKillCommand extends CommandBase {
                     ret.add("disableParticle");
                     ret.add("renderProtection");
                     ret.add("fieldReset");
+                    ret.add("particleEffect");
                 } else if (args[0].equals("mode")) {
                     ret.add("timestop");
                     ret.add("timeback");
@@ -82,38 +85,52 @@ public class KanadeKillCommand extends CommandBase {
                         switch (arg1) {
                             case "allReturn": {
                                 Config.allReturn = Boolean.parseBoolean(arg2);
+                                NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
                                 break;
                             }
                             case "disableEvent": {
                                 Config.disableEvent = Boolean.parseBoolean(arg2);
+                                NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
                                 break;
                             }
                             case "guiProtect": {
                                 Config.guiProtect = Boolean.parseBoolean(arg2);
+                                NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
                                 break;
                             }
                             case "coreDumpAttack": {
                                 Config.coreDumpAttack = Boolean.parseBoolean(arg2);
+                                NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
                                 break;
                             }
                             case "forceRender": {
                                 Config.forceRender = Boolean.parseBoolean(arg2);
+                                NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
                                 break;
                             }
                             case "allPlayerProtect": {
                                 Config.allPlayerProtect = Boolean.parseBoolean(arg2);
+                                NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
                                 break;
                             }
                             case "disableParticle": {
                                 Config.disableParticle = Boolean.parseBoolean(arg2);
+                                NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
                                 break;
                             }
                             case "renderProtection": {
                                 Config.renderProtection = Boolean.parseBoolean(arg2);
+                                NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
                                 break;
                             }
                             case "fieldReset": {
                                 Config.fieldReset = Boolean.parseBoolean(arg2);
+                                NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
+                                break;
+                            }
+                            case "particleEffect": {
+                                Config.particleEffect = Boolean.parseBoolean(arg2);
+                                NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
                                 break;
                             }
                             default: {
@@ -151,26 +168,31 @@ public class KanadeKillCommand extends CommandBase {
                     break;
                 }
                 case "mode": {
-                    String arg1 = args[1];
-                    switch (arg1) {
-                        case "timeback": {
-                            KillItem.mode = 2;
-                            sender.sendMessage(new TextComponentString("Set item shift-right-click mode to timeback"));
-                            break;
+                    try {
+                        EntityPlayerMP player = getCommandSenderAsPlayer(sender);
+                        String arg1 = args[1];
+                        switch (arg1) {
+                            case "timeback": {
+                                NetworkHandler.INSTANCE.sendMessageToPlayer(new ConfigUpdatePacket("kanade.kill.item.KillItem", "mode", 2), player);
+                                sender.sendMessage(new TextComponentString("Set item shift-right-click mode to timeback"));
+                                break;
+                            }
+                            case "timestop": {
+                                NetworkHandler.INSTANCE.sendMessageToPlayer(new ConfigUpdatePacket("kanade.kill.item.KillItem", "mode", 1), player);
+                                sender.sendMessage(new TextComponentString("Set item shift-right-click mode to timestop"));
+                                break;
+                            }
+                            case "Annihilation": {
+                                NetworkHandler.INSTANCE.sendMessageToPlayer(new ConfigUpdatePacket("kanade.kill.item.KillItem", "mode", 0), player);
+                                sender.sendMessage(new TextComponentString("Set item shift-right-click mode to Annihilation"));
+                                break;
+                            }
+                            default: {
+                                sender.sendMessage(new TextComponentString("Unknown mode.."));
+                            }
                         }
-                        case "timestop": {
-                            KillItem.mode = 1;
-                            sender.sendMessage(new TextComponentString("Set item shift-right-click mode to timestop"));
-                            break;
-                        }
-                        case "Annihilation": {
-                            sender.sendMessage(new TextComponentString("Set item shift-right-click mode to Annihilation"));
-                            KillItem.mode = 0;
-                            break;
-                        }
-                        default: {
-                            sender.sendMessage(new TextComponentString("Unknown mode.."));
-                        }
+                    } catch (PlayerNotFoundException e) {
+                        sender.sendMessage(new TextComponentString("No player found. Don't use this in server console."));
                     }
                     break;
                 }

@@ -44,4 +44,8 @@ public class ItemStack {
     public int getItemDamage() {
         return 0;
     }
+
+    public int getCount() {
+        return 0;
+    }
 }

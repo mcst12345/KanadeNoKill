@@ -23,6 +23,8 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.PathWorldListener;
 import net.minecraft.util.ClassInheritanceMultiMap;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.world.IWorldEventListener;
 import net.minecraft.world.ServerWorldEventHandler;
 import net.minecraft.world.World;
@@ -31,17 +33,22 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.storage.WorldInfo;
 import scala.concurrent.util.Unsafe;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
+@SuppressWarnings("unused")
 public class EntityUtil {
+    public static final Set<UUID> blackHolePlayers = new HashSet<>();
+
+    public static boolean holdKillItem(EntityPlayer player) {
+        ItemStack stack = player.getHeldItem(EnumHand.MAIN_HAND);
+        return stack.getITEM() == ModMain.kill_item;
+    }
+
     public static void summonThunder(Entity entity, int count) {
         World world = entity.world;
         for (int i = 0; i < count; i++) {
             entity.world.addWeatherEffect(new EntityLightningBolt(world, entity.posX, entity.posY, entity.posZ, true));
         }
-
     }
 
     public static synchronized void Kill(List<Entity> list) {
@@ -49,13 +56,20 @@ public class EntityUtil {
         for (Entity e : list) {
             Kill(e, false);
             if (e instanceof EntityLivingBase) {
-                summonThunder(e, 5);
+                summonThunder(e, 4);
             }
         }
         if (Config.fieldReset) {
             Util.reset();
         }
         Util.killing = false;
+    }
+
+    //Thread safe :)
+    public static synchronized void SafeKill(Entity entity, boolean reset) {
+        synchronized (Util.tasks) {
+            Util.tasks.add(() -> Kill(entity, reset));
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -169,6 +183,7 @@ public class EntityUtil {
     }
 
     public static void updatePlayer(EntityPlayer player) {
+        boolean blackhole = blackHolePlayers.contains(player.getUniqueID());
         player.getActivePotionEffects().clear();
         player.hurtTime = 0;
         player.addedToChunk = true;
@@ -190,6 +205,73 @@ public class EntityUtil {
         }
         if (!world.entities.contains(player)) {
             world.entities.add(player);
+        }
+        if (Config.particleEffect) {
+            EnumParticleTypes type = blackhole ? EnumParticleTypes.PORTAL : EnumParticleTypes.ENCHANTMENT_TABLE;
+            for (double x = player.posX - 3d; x <= player.posX + 3d; x += 0.1d) {
+                world.spawnParticle(type, x, player.posY + 1d, player.posZ + 4d, 0, 0, 0);
+            }
+            for (double x = player.posX - 3d; x <= player.posX + 3d; x += 0.1d) {
+                world.spawnParticle(type, x, player.posY + 1d, player.posZ - 4d, 0, 0, 0);
+            }
+            for (double z = player.posZ - 3d; z <= player.posZ + 3d; z += 0.1d) {
+                world.spawnParticle(type, player.posX + 4d, player.posY + 1d, z, 0, 0, 0);
+            }
+            for (double z = player.posZ - 3d; z <= player.posZ + 3d; z += 0.1d) {
+                world.spawnParticle(type, player.posX - 4d, player.posY + 1d, z, 0, 0, 0);
+            }
+            world.spawnParticle(EnumParticleTypes.CRIT_MAGIC, player.posX + 4d, player.posY + 4d, player.posZ + 4d, 0, 0, 0);
+            world.spawnParticle(EnumParticleTypes.CRIT_MAGIC, player.posX + 4d, player.posY + 4d, player.posZ - 4d, 0, 0, 0);
+            world.spawnParticle(EnumParticleTypes.CRIT_MAGIC, player.posX - 4d, player.posY + 4d, player.posZ + 4d, 0, 0, 0);
+            world.spawnParticle(EnumParticleTypes.CRIT_MAGIC, player.posX - 4d, player.posY + 4d, player.posZ - 4d, 0, 0, 0);
+            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
+                world.spawnParticle(type, player.posX + 1.5d, y, player.posZ, 0, 0, 0);
+            }
+            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
+                world.spawnParticle(type, player.posX - 1.5d, y, player.posZ, 0, 0, 0);
+            }
+            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
+                world.spawnParticle(type, player.posX + 1d, y, player.posZ - 1d, 0, 0, 0);
+            }
+            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
+                world.spawnParticle(type, player.posX - 1d, y, player.posZ + 1d, 0, 0, 0);
+            }
+            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
+                world.spawnParticle(type, player.posX + 1d, y, player.posZ + 1d, 0, 0, 0);
+            }
+            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
+                world.spawnParticle(type, player.posX - 1d, y, player.posZ - 1d, 0, 0, 0);
+            }
+            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
+                world.spawnParticle(type, player.posX, y, player.posZ + 1.5d, 0, 0, 0);
+            }
+            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
+                world.spawnParticle(type, player.posX, y, player.posZ - 1.5d, 0, 0, 0);
+            }
+        }
+        if (blackhole) {
+            List<Entity> list = new ArrayList<>(world.entities);
+            for (Entity e : list) {
+                if (e != player) {
+                    double dx = player.posX - e.posX;
+                    double dy = player.posY - e.posY;
+                    double dz = player.posZ - e.posZ;
+
+                    double lensquared = dx * dx + dy * dy + dz * dz;
+                    double len = Math.sqrt(lensquared);
+                    double suckRange = Double.MAX_VALUE;
+                    double lenn = len / suckRange;
+
+                    if (len <= suckRange) {
+                        double strength = (1 - lenn) * (1 - lenn);
+                        double power = 1;
+
+                        e.mX += (dx / len) * strength * power;
+                        e.mY += (dy / len) * strength * power;
+                        e.mZ += (dz / len) * strength * power;
+                    }
+                }
+            }
         }
     }
 }

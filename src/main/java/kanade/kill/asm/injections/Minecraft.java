@@ -180,4 +180,26 @@ public class Minecraft implements Opcodes {
         mn.maxStack = 1;
         Launch.LOGGER.info("Overwrite runGameLoop()V.");
     }
+
+    public static void OverwriteClickMouse(MethodNode mn) {
+        mn.instructions.clear();
+        mn.localVariables.clear();
+        mn.instructions.add(new VarInsnNode(ALOAD, 0));
+        mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/Minecraft", "clickMouse", "(Lnet/minecraft/client/Minecraft;)V", false));
+        mn.instructions.add(new InsnNode(RETURN));
+        mn.maxStack = 1;
+        mn.maxLocals = 1;
+        Launch.LOGGER.info("Overwrite ClickMouse().");
+    }
+
+    public static void OverwriteRightClickMouse(MethodNode mn) {
+        mn.instructions.clear();
+        mn.localVariables.clear();
+        mn.instructions.add(new VarInsnNode(ALOAD, 0));
+        mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/Minecraft", "rightClickMouse", "(Lnet/minecraft/client/Minecraft;)V", false));
+        mn.instructions.add(new InsnNode(RETURN));
+        mn.maxStack = 1;
+        mn.maxLocals = 1;
+        Launch.LOGGER.info("Overwrite RightClickMouse().");
+    }
 }

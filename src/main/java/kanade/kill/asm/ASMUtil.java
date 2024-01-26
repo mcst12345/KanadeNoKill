@@ -265,6 +265,10 @@ public class ASMUtil implements Opcodes {
         return new MethodInsnNode(INVOKESTATIC, "kanade/kill/item/KillItem", "inList", "(Ljava/lang/Object;)Z", false);
     }
 
+    public static MethodInsnNode SafeKill() {
+        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/EntityUtil", "SafeKill", "(Lnet/minecraft/entity/Entity;Z)V", false);
+    }
+
     public static MethodInsnNode NoRemove() {
         return new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "NoRemove", "(Ljava/lang/Object;)Z");
     }

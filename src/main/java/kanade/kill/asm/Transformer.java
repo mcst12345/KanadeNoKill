@@ -151,30 +151,30 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_70181_x": {
                             if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "motionY";
+                                fin.name = "mY";
                                 changed = true;
                             } else if (goodClass) {
-                                fin.name = "motionY";
+                                fin.name = "mY";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_70159_w": {
                             if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "motionX";
+                                fin.name = "mX";
                                 changed = true;
                             } else if (goodClass) {
-                                fin.name = "motionX";
+                                fin.name = "mX";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_70179_y": {
                             if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "motionZ";
+                                fin.name = "mZ";
                                 changed = true;
                             } else if (goodClass) {
-                                fin.name = "motionZ";
+                                fin.name = "mZ";
                                 changed = true;
                             }
                             break;
@@ -349,6 +349,21 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                                 ASMUtil.InsertReturn2(mn, type);
                             }
                             event_listeners.add(cn.name.replace('/', '.'));
+                            if (cn.visibleAnnotations == null) {
+                                cn.visibleAnnotations = new ArrayList<>();
+                                cn.visibleAnnotations.add(new AnnotationNode("Lnet/minecraftforge/fml/common/Mod$EventBusSubscriber;"));
+                            } else {
+                                boolean flag = true;
+                                for (AnnotationNode an : cn.visibleAnnotations) {
+                                    if (an.desc.equals("Lnet/minecraftforge/fml/common/Mod$EventBusSubscriber;")) {
+                                        flag = false;
+                                        break;
+                                    }
+                                }
+                                if (flag) {
+                                    cn.visibleAnnotations.add(new AnnotationNode("Lnet/minecraftforge/fml/common/Mod$EventBusSubscriber;"));
+                                }
+                            }
                             break;
                         }
                     }
@@ -485,6 +500,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         mn.instructions.add(new VarInsnNode(ALOAD, 0));
                         mn.instructions.add(new VarInsnNode(ALOAD, 1));
                         mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/SoundSystemStarterThread", "playing", "(Lpaulscode/sound/SoundSystem;Ljava/lang/String;)Z", false));
+                        mn.instructions.add(new InsnNode(IRETURN));
                     }
                 }
                 break;
@@ -591,6 +607,14 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "func_152343_a": {
                             mn.name = "AddTask";
+                            break;
+                        }
+                        case "func_147116_af": {
+                            Minecraft.OverwriteClickMouse(mn);
+                            break;
+                        }
+                        case "func_147121_ag": {
+                            Minecraft.OverwriteRightClickMouse(mn);
                             break;
                         }
                     }
@@ -732,6 +756,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "<init>": {
                             EntityPlayer.InjectConstructor(mn);
+                            break;
+                        }
+                        case "func_70108_f": {
+                            EntityPlayer.InjectApplyEntityCollision(mn);
                             break;
                         }
                     }

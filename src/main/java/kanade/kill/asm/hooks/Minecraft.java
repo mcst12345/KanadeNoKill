@@ -1,26 +1,166 @@
 package kanade.kill.asm.hooks;
 
+import kanade.kill.Core;
 import kanade.kill.Keys;
+import kanade.kill.item.KillItem;
 import kanade.kill.network.NetworkHandler;
-import kanade.kill.network.packets.SaveTimePoint;
-import kanade.kill.network.packets.SwitchTimePoint;
+import kanade.kill.network.packets.*;
 import kanade.kill.timemanagement.TimeStop;
+import net.minecraft.block.material.Material;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.client.settings.GameSettings;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Util;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.lwjgl.opengl.Display;
 
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static kanade.kill.item.KillItem.mode;
 import static net.minecraft.client.Minecraft.*;
 
 public class Minecraft {
+    public static final ResourceLocation BlackAndWhite = new ResourceLocation("shaders/post/desaturate.json");
+    static final boolean optifineInstalled;
+
+    static {
+        boolean tmp;
+        try {
+            Class.forName("optifine.OptiFineForgeTweaker");
+            tmp = true;
+        } catch (ClassNotFoundException e) {
+            tmp = false;
+        }
+        optifineInstalled = tmp;
+    }
+
+    public static void clickMouse(net.minecraft.client.Minecraft mc) {
+        if (mc.leftClickCounter <= 0) {
+            boolean flag = KillItem.inList(mc.PLAYER);
+            if (mc.objectMouseOver == null) {
+                LOGGER.error("Null returned as 'hitResult', this shouldn't happen!");
+
+                if (mc.playerController.isNotCreative() && !flag) {
+                    mc.leftClickCounter = 10;
+                }
+            } else if (!mc.PLAYER.isRowingBoat()) {
+                switch (mc.objectMouseOver.typeOfHit) {
+                    case ENTITY:
+                        mc.playerController.attackEntity(mc.PLAYER, mc.objectMouseOver.entityHit);
+                        break;
+                    case BLOCK:
+                        BlockPos blockpos = mc.objectMouseOver.getBlockPos();
+
+                        if (!mc.WORLD.isAirBlock(blockpos)) {
+                            mc.playerController.clickBlock(blockpos, mc.objectMouseOver.sideHit);
+                            break;
+                        }
+
+                    case MISS:
+
+                        if (mc.playerController.isNotCreative() && !flag) {
+                            mc.leftClickCounter = 10;
+                        }
+
+                        mc.PLAYER.resetCooldown();
+                        if (!(flag && mc.PLAYER.isSneaking())) {
+                            ForgeHooks.onEmptyLeftClick(mc.PLAYER);
+                        } else if (!mc.PLAYER.isSneaking()) {
+                            NetworkHandler.INSTANCE.sendMessageToServer(new BlackHole(mc.PLAYER.getUniqueID()));
+                        }
+                }
+
+                mc.PLAYER.swingArm(EnumHand.MAIN_HAND);
+            }
+        }
+    }
     public static final Queue<Runnable> tasks = new LinkedBlockingQueue<>();
+
+    public static void rightClickMouse(net.minecraft.client.Minecraft mc) {
+        if (!mc.playerController.getIsHittingBlock()) {
+            mc.rightClickDelayTimer = 4;
+
+            boolean flag = KillItem.inList(mc.PLAYER);
+
+            if (flag) {
+                if (mc.PLAYER.isSneaking()) {
+                    if (mode == 0) {
+                        NetworkHandler.INSTANCE.sendMessageToServer(new Annihilation(mc.PLAYER.dimension, (int) mc.PLAYER.posX, (int) mc.PLAYER.posY, (int) mc.PLAYER.posZ));
+                    } else if (!Core.demo) {
+                        if (mode == 1) {
+                            NetworkHandler.INSTANCE.sendMessageToServer(new ServerTimeStop(!TimeStop.isTimeStop()));
+                        } else if (mode == 2) {
+                            NetworkHandler.INSTANCE.sendMessageToServer(new TimeBack());
+                        }
+                    } else {
+                        mc.PLAYER.sendMessage(new TextComponentString("当前版本为试用版，完整版请至#QQ2981196615购买。"));
+                    }
+                }
+            }
+
+            if (!mc.PLAYER.isRowingBoat() || flag) {
+                if (mc.objectMouseOver == null) {
+                    LOGGER.warn("Null returned as 'hitResult', mc shouldn't happen!");
+                }
+
+                for (EnumHand enumhand : EnumHand.values()) {
+                    ItemStack itemstack = mc.PLAYER.getHeldItem(enumhand);
+
+                    if (mc.objectMouseOver != null) {
+                        switch (mc.objectMouseOver.typeOfHit) {
+                            case ENTITY: {
+                                if (mc.playerController.interactWithEntity(mc.PLAYER, mc.objectMouseOver.entityHit, mc.objectMouseOver, enumhand) == EnumActionResult.SUCCESS) {
+                                    return;
+                                }
+
+                                if (mc.playerController.interactWithEntity(mc.PLAYER, mc.objectMouseOver.entityHit, enumhand) == EnumActionResult.SUCCESS) {
+                                    return;
+                                }
+
+                                break;
+                            }
+                            case BLOCK: {
+                                BlockPos blockpos = mc.objectMouseOver.getBlockPos();
+
+                                if (mc.WORLD.getBlockState(blockpos).getMaterial() != Material.AIR) {
+                                    int i = itemstack.getCount();
+                                    EnumActionResult enumactionresult = mc.playerController.processRightClickBlock(mc.PLAYER, mc.WORLD, blockpos, mc.objectMouseOver.sideHit, mc.objectMouseOver.hitVec, enumhand);
+
+                                    if (enumactionresult == EnumActionResult.SUCCESS) {
+                                        mc.PLAYER.swingArm(enumhand);
+
+                                        if (!itemstack.isEmpty() && (itemstack.getCount() != i || mc.playerController.isInCreativeMode())) {
+                                            mc.EntityRenderer.itemRenderer.resetEquippedProgress(enumhand);
+                                        }
+
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (itemstack.isEmpty() && (mc.objectMouseOver == null || mc.objectMouseOver.typeOfHit == RayTraceResult.Type.MISS))
+                        net.minecraftforge.common.ForgeHooks.onEmptyClick(mc.PLAYER, enumhand);
+                    if (!itemstack.isEmpty() && mc.playerController.processRightClick(mc.PLAYER, mc.WORLD, enumhand) == EnumActionResult.SUCCESS) {
+                        mc.EntityRenderer.itemRenderer.resetEquippedProgress(enumhand);
+                        return;
+                    }
+                }
+            }
+        }
+    }
 
     public static void runTickKeyboard(net.minecraft.client.Minecraft minecraft) {
         if (Keys.SWITCH_TIME_POINT.isKeyDown()) {
@@ -63,6 +203,11 @@ public class Minecraft {
         mc.Profiler.startSection("tick");
 
         for (int j = 0; j < Math.min(10, mc.timer.elapsedTicks); ++j) {
+            if (TimeStop.isTimeStop()) {
+                mc.EntityRenderer.loadShader(BlackAndWhite);
+            } else {
+                mc.EntityRenderer.stopUseShader();
+            }
             mc.runTick();
         }
 

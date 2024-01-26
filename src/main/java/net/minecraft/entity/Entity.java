@@ -38,6 +38,9 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     public float prevRotationPitch;
     public float rotationPitch;
     public int ticksExisted;
+    public double mX;
+    public double mY;
+    public double mZ;
 
     @Nullable
     public UUID getUniqueID() {

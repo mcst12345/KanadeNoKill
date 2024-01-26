@@ -1,6 +1,8 @@
 package kanade.kill.network.packets;
 
 import io.netty.buffer.ByteBuf;
+import kanade.kill.Config;
+import kanade.kill.network.NetworkHandler;
 import kanade.kill.util.Util;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -55,6 +57,8 @@ public class Annihilation implements IMessage {
                     }
                 }
             }
+            Config.Annihilation = !Config.Annihilation;
+            NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket("Annihilation", Config.Annihilation));
             Util.killing = false;
             return null;
         }

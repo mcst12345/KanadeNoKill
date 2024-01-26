@@ -1,14 +1,11 @@
 package kanade.kill.item;
 
 import kanade.kill.Config;
-import kanade.kill.Core;
 import kanade.kill.Launch;
+import kanade.kill.entity.Lain;
 import kanade.kill.network.NetworkHandler;
-import kanade.kill.network.packets.Annihilation;
 import kanade.kill.network.packets.KillAllEntities;
-import kanade.kill.network.packets.ServerTimeStop;
-import kanade.kill.network.packets.TimeBack;
-import kanade.kill.timemanagement.TimeStop;
+import kanade.kill.network.packets.UpdatePlayerProtectedState;
 import kanade.kill.util.EntityUtil;
 import kanade.kill.util.NativeMethods;
 import kanade.kill.util.Util;
@@ -19,10 +16,10 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
@@ -38,7 +35,7 @@ import java.util.*;
 public class KillItem extends Item {
     public static int mode;
     private short shiftRightClickCount = 0;
-    private static final Set<UUID> list = new HashSet<>();
+    public static final Set<UUID> list = new HashSet<>();
     public KillItem(){
         this.setRegistryName("kanade:kill");
         this.setCreativeTab(CreativeTabs.COMBAT);
@@ -50,6 +47,10 @@ public class KillItem extends Item {
             if (uuid != null) {
                 list.add(uuid);
                 NativeMethods.ProtectAdd(uuid.hashCode());
+                MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+                if (server != null && server.isCallingFromMinecraftThread()) {
+                    NetworkHandler.INSTANCE.sendMessageToAllPlayer(new UpdatePlayerProtectedState(uuid));
+                }
             }
         } else if (Launch.client) {
             if (obj instanceof Minecraft) {
@@ -104,6 +105,9 @@ public class KillItem extends Item {
 
     public static boolean inList(Object obj) {
         if (obj instanceof Entity) {
+            if (obj instanceof Lain) {
+                return true;
+            }
             if (Config.allPlayerProtect) {
                 if (obj instanceof EntityPlayer) {
                     return true;
@@ -118,6 +122,9 @@ public class KillItem extends Item {
                     return list.contains(player.getUniqueID());
                 }
             }
+        } else if (obj instanceof UUID) {
+            UUID uuid = (UUID) obj;
+            return list.contains(uuid) || NativeMethods.ProtectContain(uuid.hashCode());
         }
         return false;
     }
@@ -147,34 +154,9 @@ public class KillItem extends Item {
                     EntityUtil.Kill(targets);
                 });
             }
-            if (FMLCommonHandler.instance().getMinecraftServerInstance().isCallingFromMinecraftThread()) {
+            MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+            if (server != null && server.isCallingFromMinecraftThread()) {
                 NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillAllEntities());
-            }
-        } else {
-            if (mode == 0) {
-                Config.Annihilation = !Config.Annihilation;
-                if (playerIn.world.isRemote) {
-                    NetworkHandler.INSTANCE.sendMessageToServer(new Annihilation(playerIn.dimension, (int) playerIn.posX, (int) playerIn.posY, (int) playerIn.posZ));
-                }
-            } else if (!Core.demo) {
-                if (mode == 1) {
-                    if (playerIn.world.isRemote) {
-                        if (shiftRightClickCount == 0) {
-                            TimeStop.SetTimeStop(!TimeStop.isTimeStop());
-                            NetworkHandler.INSTANCE.sendMessageToServer(new ServerTimeStop(TimeStop.isTimeStop()));
-                            shiftRightClickCount = 15;
-                        }
-                    }
-                } else if (mode == 2) {
-                    if (playerIn.world.isRemote) {
-                        if (shiftRightClickCount == 0) {
-                            NetworkHandler.INSTANCE.sendMessageToServer(new TimeBack());
-                            shiftRightClickCount = 15;
-                        }
-                    }
-                }
-            } else {
-                playerIn.sendMessage(new TextComponentString("当前版本为试用版，完整版请至#QQ2981196615购买。"));
             }
         }
         return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
