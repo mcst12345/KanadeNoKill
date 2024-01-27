@@ -61,6 +61,12 @@ public class ModMain {
             classes.add("kanade.kill.network.packets.KillEntity$MessageHandler");
             classes.add("kanade.kill.network.packets.ServerTimeStop");
             classes.add("kanade.kill.network.packets.ServerTimeStop$MessageHandler");
+            classes.add("kanade.kill.network.packets.BlackHole");
+            classes.add("kanade.kill.network.packets.BlackHole$MessageHandler");
+            classes.add("kanade.kill.network.packets.ConfigUpdatePacket");
+            classes.add("kanade.kill.network.packets.ConfigUpdatePacket$MessageHandler");
+            classes.add("kanade.kill.network.packets.UpdatePlayerProtectedState");
+            classes.add("kanade.kill.network.packets.UpdatePlayerProtectedState$MessageHandler");
             classes.add("kanade.kill.command.KanadeKillCommand");
             classes.add("kanade.kill.network.packets.KillAllEntities");
             classes.add("kanade.kill.network.packets.KillAllEntities$MessageHandler");

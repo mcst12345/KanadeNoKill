@@ -35,8 +35,8 @@ public class ServerTimeStop implements IMessage {
         @Override
         @SideOnly(Side.SERVER)
         public IMessage onMessage(ServerTimeStop message, MessageContext ctx) {
+            Launch.LOGGER.info("Server get message:" + message.stop);
             TimeStop.SetTimeStop(message.stop);
-            Launch.LOGGER.info("TimeStop on server side:" + TimeStop.isTimeStop());
             NetworkHandler.INSTANCE.sendMessageToAllPlayer(new ClientTimeStop(message.stop));
             return null;
         }

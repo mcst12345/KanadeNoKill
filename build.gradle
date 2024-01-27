@@ -15,9 +15,9 @@ buildscript {
 
 apply plugin: 'forge'
 
-version = "1.0"
+version = "R2"
 group = "kanade"
-archivesBaseName = "kanade"
+archivesBaseName = "Kanade's kill mc1.7.10"
 
 minecraft {
     version = "1.7.10-10.13.4.1614-1.7.10"

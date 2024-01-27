@@ -31,6 +31,12 @@ public abstract class Entity {
     public double motionX;
     public double motionY;
     public double motionZ;
+    public Entity riddenByEntity;
+    public Entity ridingEntity;
+    public float entityCollisionReduction;
+    public double mX;
+    public double mY;
+    public double mZ;
 
     public Entity(World worldIn) {
     }
@@ -72,5 +78,9 @@ public abstract class Entity {
     }
 
     public void deserializeNBT(NBTTagCompound nbt) {
+    }
+
+    public void addVelocity(double v, double v1, double v2) {
+
     }
 }

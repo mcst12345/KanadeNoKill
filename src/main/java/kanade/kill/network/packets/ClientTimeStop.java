@@ -34,8 +34,8 @@ public class ClientTimeStop implements IMessage {
         @Override
         @SideOnly(Side.CLIENT)
         public IMessage onMessage(ClientTimeStop message, MessageContext ctx) {
+            Launch.LOGGER.info("Client get message:" + message.stop);
             TimeStop.SetTimeStop(message.stop);
-            Launch.LOGGER.info("TimeStop on client:" + TimeStop.isTimeStop());
             return null;
         }
     }

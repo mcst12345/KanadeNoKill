@@ -5,6 +5,7 @@ import net.minecraft.nbt.NBTTagCompound;
 public class ItemStack {
 
     public static final ItemStack EMPTY = null;
+    public int stackSize;
 
     public ItemStack(Item killItem) {
     }

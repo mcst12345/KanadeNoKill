@@ -6,6 +6,8 @@ import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
+import kanade.kill.Config;
+import kanade.kill.network.NetworkHandler;
 import kanade.kill.util.Util;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.WorldServer;
@@ -55,6 +57,8 @@ public class Annihilation implements IMessage {
                     }
                 }
             }
+            Config.Annihilation = !Config.Annihilation;
+            NetworkHandler.INSTANCE.sendMessageToAllPlayer(new ConfigUpdatePacket("Annihilation", Config.Annihilation));
             Util.killing = false;
             return null;
         }

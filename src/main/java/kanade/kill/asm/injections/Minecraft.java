@@ -10,7 +10,7 @@ public class Minecraft implements Opcodes {
         Launch.LOGGER.info("Adding field.");
         cn.fields.add(new FieldNode(ACC_PUBLIC, "PLAYER", "Lnet/minecraft/client/entity/EntityClientPlayerMP;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "profiler", "Lnet/minecraft/profiler/Profiler;", null, null));
-        cn.fields.add(new FieldNode(ACC_PUBLIC, "entityRenderer", "Lnet/minecraft/client/renderer/EntityRenderer;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "EntityRenderer", "Lnet/minecraft/client/renderer/EntityRenderer;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "renderManager", "Lnet/minecraft/client/renderer/entity/RenderManager;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "mouseHelper", "Lnet/minecraft/util/MouseHelper;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "WORLD", "Lnet/minecraft/client/multiplayer/WorldClient;", null, null));
@@ -148,5 +148,27 @@ public class Minecraft implements Opcodes {
         list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/thread/DisplayGui", "run", "()V", false));
         mn.instructions.insert(index, list);
         Launch.LOGGER.info("Inject into run().");
+    }
+
+    public static void OverwriteClickMouse(MethodNode mn) {
+        mn.instructions.clear();
+        mn.localVariables.clear();
+        mn.instructions.add(new VarInsnNode(ALOAD, 0));
+        mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/Minecraft", "clickMouse", "(Lnet/minecraft/client/Minecraft;)V", false));
+        mn.instructions.add(new InsnNode(RETURN));
+        mn.maxStack = 1;
+        mn.maxLocals = 1;
+        Launch.LOGGER.info("Overwrite ClickMouse().");
+    }
+
+    public static void OverwriteRightClickMouse(MethodNode mn) {
+        mn.instructions.clear();
+        mn.localVariables.clear();
+        mn.instructions.add(new VarInsnNode(ALOAD, 0));
+        mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/Minecraft", "rightClickMouse", "(Lnet/minecraft/client/Minecraft;)V", false));
+        mn.instructions.add(new InsnNode(RETURN));
+        mn.maxStack = 1;
+        mn.maxLocals = 1;
+        Launch.LOGGER.info("Overwrite RightClickMouse().");
     }
 }

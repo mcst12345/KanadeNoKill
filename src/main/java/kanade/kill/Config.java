@@ -8,8 +8,9 @@ public class Config {
     public static boolean coreDumpAttack = false;
     public static boolean forceRender = false;
     public static boolean allPlayerProtect = false;
-    public static boolean disableParticle = true;
+    public static boolean disableParticle = false;
     public static boolean renderProtection = false;
     public static boolean fieldReset = true;
     public static boolean AllowAttach = Boolean.parseBoolean(System.getProperty("AllowAttach"));
+    public static boolean particleEffect = true;
 }

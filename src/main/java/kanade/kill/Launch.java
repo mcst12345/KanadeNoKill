@@ -65,6 +65,8 @@ public class Launch {
         classes.add("kanade.kill.reflection.ReflectionUtil");
         classes.add("kanade.kill.reflection.EarlyFields");
         classes.add("kanade.kill.asm.ASMUtil");
+        classes.add("kanade.kill.asm.hooks.EventBus");
+        classes.add("kanade.kill.asm.hooks.Entity");
         classes.add("kanade.kill.asm.injections.Chunk");
         classes.add("kanade.kill.asm.injections.DimensionManager");
         classes.add("kanade.kill.asm.injections.Entity");
@@ -93,11 +95,13 @@ public class Launch {
         classes.add("kanade.kill.timemanagement.TimeStop");
         classes.add("kanade.kill.classload.KanadeClassLoader");
         classes.add("kanade.kill.util.FieldInfo");
+        classes.add("kanade.kill.util.FileUtils");
         classes.add("kanade.kill.util.KanadeSecurityManager");
         classes.add("kanade.kill.thread.SecurityManagerCheckThread");
         classes.add("kanade.kill.thread.KillerThread");
         if (client) {
             classes.add("kanade.kill.asm.hooks.Timer");
+            classes.add("kanade.kill.asm.hooks.Minecraft");
             classes.add("kanade.kill.asm.hooks.MouseHelper");
             classes.add("kanade.kill.thread.DisplayGui");
             classes.add("org.lwjgl.opengl.GLOffsets");

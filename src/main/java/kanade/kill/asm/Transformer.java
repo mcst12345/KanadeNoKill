@@ -126,30 +126,30 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_70181_x": {
                             if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "motionY";
+                                fin.name = "mY";
                                 changed = true;
                             } else if (goodClass) {
-                                fin.name = "motionY";
+                                fin.name = "mY";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_70159_w": {
                             if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "motionX";
+                                fin.name = "mX";
                                 changed = true;
                             } else if (goodClass) {
-                                fin.name = "motionX";
+                                fin.name = "mX";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_70179_y": {
                             if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "motionZ";
+                                fin.name = "mZ";
                                 changed = true;
                             } else if (goodClass) {
-                                fin.name = "motionZ";
+                                fin.name = "mZ";
                                 changed = true;
                             }
                             break;
@@ -166,10 +166,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "field_71460_t": {
                             if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "entityRenderer";
+                                fin.name = "EntityRenderer";
                                 changed = true;
                             } else if (goodClass) {
-                                fin.name = "entityRenderer";
+                                fin.name = "EntityRenderer";
                                 changed = true;
                             }
                             break;
@@ -479,8 +479,15 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 kanade.kill.Launch.LOGGER.info("Get Entity.");
                 Entity.AddField(cn);
                 for (MethodNode mn : cn.methods) {
-                    if (mn.name.equals("func_70103_a")) {
-                        ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, 0, ASMUtil.inList());
+                    switch (mn.name) {
+                        case "func_70108_f": {
+                            Entity.OverwriteApplyEntityCollision(mn);
+                            break;
+                        }
+                        case "func_70103_a": {
+                            ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, 0, ASMUtil.inList());
+                            break;
+                        }
                     }
                 }
                 break;
@@ -520,6 +527,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "func_71411_J":
                         case "func_71407_l": {
+                            if (mn.name.equals("func_71411_J")) {
+                                mn.instructions.insert(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/Minecraft", "runGameLoop", "(Lnet/minecraft/client/Minecraft;)V", false));
+                                mn.instructions.insert(new VarInsnNode(ALOAD, 0));
+                            }
                             ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "kanade/kill/util/Util", "killing", "Z"));
                             ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, -1, new FieldInsnNode(GETSTATIC, "net/minecraft/client/Minecraft", "dead", "Z"));
                             break;
@@ -539,6 +550,14 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                         case "func_152343_a": {
                             mn.name = "AddTask";
+                            break;
+                        }
+                        case "func_147116_af": {
+                            Minecraft.OverwriteClickMouse(mn);
+                            break;
+                        }
+                        case "func_147121_ag": {
+                            Minecraft.OverwriteRightClickMouse(mn);
                             break;
                         }
                     }
@@ -893,7 +912,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 changed = true;
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("post")) {
-                        EventBus.InjectPost(mn);
+                        EventBus.OverwritePost(mn);
                     }
                 }
                 break;

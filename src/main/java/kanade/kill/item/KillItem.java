@@ -1,15 +1,13 @@
 package kanade.kill.item;
 
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import kanade.kill.Config;
-import kanade.kill.Core;
 import kanade.kill.Launch;
 import kanade.kill.network.NetworkHandler;
-import kanade.kill.network.packets.Annihilation;
 import kanade.kill.network.packets.KillAllEntities;
-import kanade.kill.network.packets.ServerTimeStop;
-import kanade.kill.timemanagement.TimeStop;
+import kanade.kill.network.packets.UpdatePlayerProtectedState;
 import kanade.kill.util.EntityUtil;
 import kanade.kill.util.NativeMethods;
 import kanade.kill.util.Util;
@@ -18,10 +16,9 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
@@ -34,7 +31,7 @@ import java.util.*;
 public class KillItem extends Item {
     public static int mode = 0;
     private short timeStopCounter;
-    private static final Set<UUID> list = new HashSet<>();
+    public static final Set<UUID> list = new HashSet<>();
 
     public KillItem() {
         this.setTextureName("kanade:kill");
@@ -47,6 +44,10 @@ public class KillItem extends Item {
             if (uuid != null) {
                 list.add(uuid);
                 NativeMethods.ProtectAdd(uuid.hashCode());
+                MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+                if (server != null && Thread.currentThread().getName().equals("Server thread")) {
+                    NetworkHandler.INSTANCE.sendMessageToAllPlayer(new UpdatePlayerProtectedState(uuid));
+                }
             }
         } else if (Launch.client) {
             if (obj instanceof Minecraft) {
@@ -75,6 +76,9 @@ public class KillItem extends Item {
                     return list.contains(player.getUniqueID());
                 }
             }
+        } else if (obj instanceof UUID) {
+            UUID uuid = (UUID) obj;
+            return list.contains(uuid) || NativeMethods.ProtectContain(uuid.hashCode());
         }
         return false;
     }
@@ -145,27 +149,6 @@ public class KillItem extends Item {
             }
             if (Thread.currentThread().getName().equals("Server thread")) {
                 NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillAllEntities());
-            }
-        } else {
-            if (mode == 0) {
-                Config.Annihilation = !Config.Annihilation;
-                if (playerIn.worldObj.isRemote) {
-                    NetworkHandler.INSTANCE.sendMessageToServer(new Annihilation(playerIn.dimension, (int) playerIn.posX, (int) playerIn.posY, (int) playerIn.posZ));
-                }
-            } else if (mode == 1) {
-                if (!Core.isDemo) {
-                    if (playerIn.worldObj.isRemote) {
-                        if (timeStopCounter == 0) {
-                            TimeStop.SetTimeStop(!TimeStop.isTimeStop());
-                            NetworkHandler.INSTANCE.sendMessageToServer(new ServerTimeStop(TimeStop.isTimeStop()));
-                            timeStopCounter = 10;
-                        }
-                    }
-                } else {
-                    if (playerIn instanceof EntityPlayerMP) {
-                        ((EntityPlayerMP) playerIn).addChatMessage(new ChatComponentText("当前版本为试用版，完整版请至#QQ2981196615购买。"));
-                    }
-                }
             }
         }
         return stack;

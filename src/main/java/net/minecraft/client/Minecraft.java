@@ -9,9 +9,13 @@ import kanade.kill.util.ObjectUtil;
 import net.minecraft.client.entity.EntityClientPlayerMP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Session;
 import org.apache.commons.lang3.Validate;
 import org.apache.logging.log4j.Logger;
@@ -25,6 +29,8 @@ import java.util.concurrent.Callable;
 public class Minecraft {
     public static boolean dead;
     public static Logger LOGGER;
+
+    public net.minecraft.client.renderer.EntityRenderer EntityRenderer;
     public final Queue field_152351_aB = Queues.newArrayDeque();
     public Thread field_152352_aC = Thread.currentThread();
     public Entity pointedEntity;
@@ -39,6 +45,7 @@ public class Minecraft {
     public int startNanoTime;
     public int rightClickDelayTimer;
     public FontRenderer standardGalacticFontRenderer;
+    public MovingObjectPosition objectMouseOver;
 
     public Minecraft() {
     }
@@ -149,8 +156,21 @@ public class Minecraft {
     public IResourceManager getResourceManager() {
         return null;
     }
+    public PlayerControllerMP playerController;
 
     public void setServer(String s6, int i) {
 
+    }
+
+    public TextureManager getTextureManager() {
+        return null;
+    }
+
+    public Framebuffer getFramebuffer() {
+        return null;
+    }
+
+    public static final class SwitchMovingObjectType {
+        public static final int[] field_152390_a = new int[MovingObjectPosition.MovingObjectType.values().length];
     }
 }
