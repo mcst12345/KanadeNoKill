@@ -72,6 +72,8 @@ public class Launch {
         classes.add("kanade.kill.reflection.EarlyMethods");
         classes.add("kanade.kill.reflection.ReflectionUtil");
         classes.add("kanade.kill.reflection.EarlyFields");
+        classes.add("kanade.kill.util.ClassUtil");
+        classes.add("kanade.kill.util.UnsafeAccessor");
         classes.add("kanade.kill.asm.ASMUtil");
         classes.add("kanade.kill.asm.hooks.EventBus");
         classes.add("kanade.kill.asm.hooks.World");
@@ -112,6 +114,7 @@ public class Launch {
         classes.add("kanade.kill.thread.KillerThread");
         if (client) {
             classes.add("kanade.kill.asm.hooks.Timer");
+            classes.add("kanade.kill.asm.hooks.ItemStackClient");
             classes.add("kanade.kill.asm.hooks.Minecraft");
             classes.add("kanade.kill.asm.hooks.MouseHelper");
             classes.add("kanade.kill.thread.DisplayGui");
@@ -203,6 +206,8 @@ public class Launch {
     }
 
     private void launch(String[] args) {
+
+
         final OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
 

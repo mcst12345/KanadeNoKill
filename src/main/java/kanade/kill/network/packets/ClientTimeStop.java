@@ -1,7 +1,6 @@
 package kanade.kill.network.packets;
 
 import io.netty.buffer.ByteBuf;
-import kanade.kill.Launch;
 import kanade.kill.timemanagement.TimeStop;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -35,8 +34,6 @@ public class ClientTimeStop implements IMessage {
         @SideOnly(Side.CLIENT)
         public IMessage onMessage(ClientTimeStop message, MessageContext ctx) {
             TimeStop.SetTimeStop(message.stop);
-            Launch.LOGGER.info("Client receive timestop packet.");
-            Launch.LOGGER.info("TimeStop on client:" + TimeStop.isTimeStop());
             return null;
         }
     }

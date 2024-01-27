@@ -18,4 +18,18 @@ public class ItemStack implements Opcodes {
         mn.localVariables.add(new LocalVariableNode("this", "Lnet/minecraft/item/ItemStack;", null, label0, label1, 0));
         cn.methods.add(mn);
     }
+
+    public static void OverwriteGetTooltip(MethodNode mn) {
+        mn.instructions.clear();
+        mn.localVariables.clear();
+        mn.tryCatchBlocks.clear();
+        mn.maxLocals = 3;
+        mn.maxStack = 3;
+        mn.instructions.add(new VarInsnNode(ALOAD, 0));
+        mn.instructions.add(new VarInsnNode(ALOAD, 1));
+        mn.instructions.add(new VarInsnNode(ALOAD, 2));
+        mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/ItemStackClient", "getTooltip", "(Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/player/EntityPlayer;Lnet/minecraft/client/util/ITooltipFlag;)Ljava/util/List;", false));
+        mn.instructions.add(new InsnNode(ARETURN));
+        Launch.LOGGER.info("Overwrite getTooltip.");
+    }
 }

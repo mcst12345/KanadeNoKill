@@ -76,7 +76,7 @@ public class Minecraft {
                         mc.PLAYER.resetCooldown();
                         if (!(flag && mc.PLAYER.isSneaking())) {
                             ForgeHooks.onEmptyLeftClick(mc.PLAYER);
-                        } else if (!mc.PLAYER.isSneaking()) {
+                        } else {
                             NetworkHandler.INSTANCE.sendMessageToServer(new BlackHole(mc.PLAYER.getUniqueID()));
                         }
                 }
@@ -95,6 +95,7 @@ public class Minecraft {
 
             if (flag) {
                 if (mc.PLAYER.isSneaking()) {
+                    mc.rightClickDelayTimer = 8;
                     if (mode == 0) {
                         NetworkHandler.INSTANCE.sendMessageToServer(new Annihilation(mc.PLAYER.dimension, (int) mc.PLAYER.posX, (int) mc.PLAYER.posY, (int) mc.PLAYER.posZ));
                     } else if (!Core.demo) {

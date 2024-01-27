@@ -358,6 +358,7 @@ public class ASMUtil implements Opcodes {
             return;
         }
         Type type = Type.getReturnType(mn.desc);
+        mn.tryCatchBlocks.clear();
         mn.instructions.clear();
         mn.localVariables.clear();
         switch (type.getSort()) {

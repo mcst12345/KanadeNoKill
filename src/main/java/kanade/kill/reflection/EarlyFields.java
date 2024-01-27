@@ -31,10 +31,15 @@ public class EarlyFields {
     public static final long loadBuffer_offset;
     public static final long contextClassLoader_offset;
     public static final long name_offset;
-    public static final Object classLoader_base;
-    public static final long classLoader_offset;
+    public static final Object Launch_classLoader_base;
+    public static final long Launch_classLoader_offset;
     public static final long pdcache_offset;
     public static final long soundLibrary_offset;
+    public static final long classLoader_offset;
+    public static final long classRedefinedCount_offset;
+    public static final long genericInfo_offset;
+    public static final long initted_offset;
+    public static final Object initted_base;
     static {
         try {
             Field field = ReflectionUtil.getField(Field.class, "modifiers");
@@ -48,6 +53,15 @@ public class EarlyFields {
             reflectionData_offset = Unsafe.instance.objectFieldOffset(field);
             field = ReflectionUtil.getField(Class.class, "name");
             name_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(Class.class, "classLoader");
+            classLoader_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(Class.class, "classRedefinedCount");
+            classRedefinedCount_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(Class.class, "genericInfo");
+            genericInfo_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(Class.class, "initted");
+            initted_offset = Unsafe.instance.staticFieldOffset(field);
+            initted_base = Unsafe.instance.staticFieldBase(field);
             field = ReflectionUtil.getField(System.class, "security");
             security_base = Unsafe.instance.staticFieldBase(field);
             security_offset = Unsafe.instance.staticFieldOffset(field);
@@ -79,8 +93,8 @@ public class EarlyFields {
             field = ReflectionUtil.getField(Thread.class, "contextClassLoader");
             contextClassLoader_offset = Unsafe.instance.objectFieldOffset(field);
             field = ReflectionUtil.getField(Launch.class, "classLoader");
-            classLoader_base = Unsafe.instance.staticFieldBase(field);
-            classLoader_offset = Unsafe.instance.staticFieldOffset(field);
+            Launch_classLoader_base = Unsafe.instance.staticFieldBase(field);
+            Launch_classLoader_offset = Unsafe.instance.staticFieldOffset(field);
             field = ReflectionUtil.getField(SecureClassLoader.class, "pdcache");
             pdcache_offset = Unsafe.instance.objectFieldOffset(field);
             if (kanade.kill.Launch.client) {

@@ -58,7 +58,7 @@ public class Annihilation implements IMessage {
                 }
             }
             Config.Annihilation = !Config.Annihilation;
-            NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket("Annihilation", Config.Annihilation));
+            NetworkHandler.INSTANCE.sendMessageToAllPlayer(new ConfigUpdatePacket("Annihilation", Config.Annihilation));
             Util.killing = false;
             return null;
         }

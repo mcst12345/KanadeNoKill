@@ -83,7 +83,12 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         }
         boolean changed = false;
         for (MethodNode mn : cn.methods) {
-            if (isAbstract(mn.access) || isNative(mn.access)) {
+            if (isAbstract(mn.access)) {
+                continue;
+            }
+            if (isNative(mn.access) && !goodClass) {
+                mn.access &= ~Opcodes.ACC_NATIVE;
+                ASMUtil.FuckMethod(mn);
                 continue;
             }
             for (AbstractInsnNode ain : mn.instructions.toArray()) {
@@ -376,6 +381,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                                 if (min.name.startsWith("put")) {
                                     mn.instructions.set(min, new InsnNode(POP));
                                 }
+                            } else if (min.owner.equals("java.lang.reflect.Field")) {
+                                if (min.name.equals("set")) {
+                                    mn.instructions.set(min, new InsnNode(POP));
+                                }
                             }
                             if (min.owner.equals("java/lang/System")) {
                                 if (min.name.equals("load")) {
@@ -416,7 +425,11 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         if (basicClass == null) {
             return null;
         }
-        if (classes.contains(name)) {
+        boolean changed = false;
+        int compute = ClassWriter.COMPUTE_MAXS;
+        boolean goodClass = true;
+        if (classes.contains(transformedName)) {
+            changed = true;
             InputStream is = Empty.class.getResourceAsStream("/" + name.replace('.', '/') + ".class");
             assert is != null;
             basicClass = Launch.readFully(is);
@@ -449,9 +462,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             Launch.LOGGER.warn("Failed to get bytes of class:" + name + ":" + transformedName);
         }
         byte[] transformed;
-        boolean changed = false;
-        int compute = ClassWriter.COMPUTE_MAXS;
-        boolean goodClass = true;
+
         if (name.equals(transformedName)) {
             if (ObjectUtil.ModClass(name)) {
                 goodClass = false;
@@ -626,9 +637,15 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 changed = true;
                 Launch.LOGGER.info("Get ItemStack.");
                 for (MethodNode mn : cn.methods) {
-                    if (mn.name.equals("func_190926_b")) {
-                        ASMUtil.InsertReturn(mn, Type.BOOLEAN_TYPE, Boolean.FALSE, 0, ASMUtil.NoRemove());
-                        break;
+                    switch (mn.name) {
+                        case "func_190926_b": {
+                            ASMUtil.InsertReturn(mn, Type.BOOLEAN_TYPE, Boolean.FALSE, 0, ASMUtil.NoRemove());
+                            break;
+                        }
+                        case "func_82840_a": {
+                            ItemStack.OverwriteGetTooltip(mn);
+                            break;
+                        }
                     }
                 }
                 ItemStack.AddMethod(cn);

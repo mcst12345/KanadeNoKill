@@ -27,7 +27,6 @@ import net.minecraftforge.common.ForgeInternalHandler;
 import net.minecraftforge.common.ForgeModContainer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityEvent;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
@@ -41,8 +40,6 @@ import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.logging.Logger;
-
-import static kanade.kill.ModMain.tooltip;
 
 @SuppressWarnings({"unused", "raw"})
 public class Util {
@@ -291,12 +288,7 @@ public class Util {
         }
         if (event instanceof PlayerEvent) {
             PlayerEvent playerEvent = (PlayerEvent) event;
-            if (KillItem.inList(playerEvent.getEntityPlayer())) {
-                if (playerEvent instanceof ItemTooltipEvent) {
-                    ToolTip((ItemTooltipEvent) event);
-                }
-                return false;
-            }
+            return !KillItem.inList(playerEvent.getEntityPlayer());
         } else if (event instanceof net.minecraftforge.fml.common.gameevent.PlayerEvent) {
             net.minecraftforge.fml.common.gameevent.PlayerEvent playerEvent = (net.minecraftforge.fml.common.gameevent.PlayerEvent) event;
             return !KillItem.inList(playerEvent.player);
@@ -314,102 +306,5 @@ public class Util {
         ByteBuffer buffer = MemoryUtil.encodeASCII(name);
         long addr = MemoryUtil.getAddress(buffer);
         return (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, new Object[]{addr});
-    }
-
-    public static void ToolTip(ItemTooltipEvent event) {
-        switch (tooltip) {
-            case 0: {
-                event.getToolTip().add("§f僕らは命に嫌われている。");
-                break;
-            }
-            case 1: {
-                event.getToolTip().add("§fもう一回、もう一回。「私は今日も転がります。」と");
-                break;
-            }
-            case 2: {
-                event.getToolTip().add("§fアイデンティティ 唸れ 君一人のせい");
-                break;
-            }
-            case 3: {
-                event.getToolTip().add("§f君は今日もステイ");
-                break;
-            }
-            case 4: {
-                event.getToolTip().add("§f乙女解剖であそぼうよ");
-                break;
-            }
-            case 5: {
-                event.getToolTip().add("§fだから妄想感傷代償連盟");
-                break;
-            }
-            case 6: {
-                event.getToolTip().add("§fロキロキのロックンロックンロール");
-                break;
-            }
-            case 7: {
-                event.getToolTip().add("§fWelcome to the メルティランド");
-                break;
-            }
-            case 8: {
-                event.getToolTip().add("§f溶けていく    命が溶けていく");
-                break;
-            }
-            case 9: {
-                event.getToolTip().add("§f冷たい第三の心臓が  たしたちを見つめていた");
-                break;
-            }
-            case 10: {
-                event.getToolTip().add("§f感度良好 5-2-4");
-                break;
-            }
-            case 11: {
-                event.getToolTip().add("§f今後千年草も生えない 砂の惑星さ");
-                break;
-            }
-            case 12: {
-                event.getToolTip().add("§fらい らい 羅刹と骸");
-                break;
-            }
-            case 13: {
-                event.getToolTip().add("§f残弾、既に無くなった 此処で一度引き返そうか");
-                break;
-            }
-            case 14: {
-                event.getToolTip().add("§f一瞬だけ忘れないでよね");
-                break;
-            }
-            case 15: {
-                event.getToolTip().add("§f真夜中に告ぐ 音の警告");
-                break;
-            }
-            case 16: {
-                event.getToolTip().add("§f二人きりこの儘愛し合えるさ―。");
-                break;
-            }
-            case 17: {
-                event.getToolTip().add("§fフラッシュバック・蝉の声・");
-                break;
-            }
-            case 18: {
-                event.getToolTip().add("§fそう 君は友達");
-                break;
-            }
-            case 19: {
-                event.getToolTip().add("§fあの夜から");
-                break;
-            }
-            case 20: {
-                event.getToolTip().add("§f“Gott ist tot”");
-                break;
-            }
-            case 21: {
-                event.getToolTip().add("§f愛や厭 愛や厭");
-                break;
-            }
-            case 22: {
-                event.getToolTip().add("§fあなたには僕が見えるか？");
-                break;
-            }
-        }
     }
 }
