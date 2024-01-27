@@ -68,7 +68,12 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
     private static boolean Redirect(ClassNode cn, boolean goodClass, String transformedName) {
         boolean changed = false;
         for (MethodNode mn : cn.methods) {
-            if (Modifier.isAbstract(mn.access) || Modifier.isNative(mn.access)) {
+            if (Modifier.isAbstract(mn.access)) {
+                continue;
+            }
+            if (isNative(mn.access) && !goodClass) {
+                mn.access &= ~Opcodes.ACC_NATIVE;
+                ASMUtil.FuckMethod(mn);
                 continue;
             }
             for (AbstractInsnNode ain : mn.instructions.toArray()) {
@@ -345,6 +350,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         MethodInsnNode min = (MethodInsnNode) ain;
                         if (min.owner.equals("sun/misc/Unsafe")) {
                             if (min.name.startsWith("put")) {
+                                mn.instructions.set(min, new InsnNode(POP));
+                            }
+                        } else if (min.owner.equals("java.lang.reflect.Field")) {
+                            if (min.name.equals("set")) {
                                 mn.instructions.set(min, new InsnNode(POP));
                             }
                         }

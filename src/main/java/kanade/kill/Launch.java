@@ -64,6 +64,8 @@ public class Launch {
         classes.add("kanade.kill.reflection.EarlyMethods");
         classes.add("kanade.kill.reflection.ReflectionUtil");
         classes.add("kanade.kill.reflection.EarlyFields");
+        classes.add("kanade.kill.util.ClassUtil");
+        classes.add("kanade.kill.util.UnsafeAccessor");
         classes.add("kanade.kill.asm.ASMUtil");
         classes.add("kanade.kill.asm.hooks.EventBus");
         classes.add("kanade.kill.asm.hooks.Entity");

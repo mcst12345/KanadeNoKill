@@ -34,6 +34,10 @@ public class EarlyFields {
     public static final long LaunchClassLoader_offset;
     public static final long classLoaderOffset;
     public static final long pdcache_offset;
+    public static final long classRedefinedCount_offset;
+    public static final long genericInfo_offset;
+    public static final long initted_offset;
+    public static final Object initted_base;
 
     static {
         try {
@@ -85,6 +89,13 @@ public class EarlyFields {
             pdcache_offset = Unsafe.instance.objectFieldOffset(field);
             field = ReflectionUtil.getField(Class.class, "classLoader");
             classLoaderOffset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(Class.class, "classRedefinedCount");
+            classRedefinedCount_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(Class.class, "genericInfo");
+            genericInfo_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(Class.class, "initted");
+            initted_offset = Unsafe.instance.staticFieldOffset(field);
+            initted_base = Unsafe.instance.staticFieldBase(field);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

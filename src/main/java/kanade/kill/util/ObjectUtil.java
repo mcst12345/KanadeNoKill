@@ -6,10 +6,13 @@ import kanade.kill.reflection.ReflectionUtil;
 import scala.concurrent.util.Unsafe;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 public class ObjectUtil {
     public static Object clone(Object o, int depth) {
@@ -323,6 +326,10 @@ public class ObjectUtil {
         final URL res = Launch.classLoader.findResource(name.replace('.', '/').concat(".class"));
         if (res != null) {
             String path = res.getPath();
+            try {
+                path = URLDecoder.decode(path, StandardCharsets.UTF_8.name());
+            } catch (UnsupportedEncodingException ignored) {
+            }
 
             if (path.contains("!")) {
                 path = path.substring(0, path.indexOf("!"));
@@ -334,5 +341,31 @@ public class ObjectUtil {
             return path.startsWith("mods", path.lastIndexOf(File.separator) - 4);
         }
         return false;
+    }
+
+    public static void printAddresses(Object... objects) {
+        System.out.print("0x");
+        long last;
+        int offset = Unsafe.instance.arrayBaseOffset(objects.getClass());
+        int scale = Unsafe.instance.arrayIndexScale(objects.getClass());
+        switch (scale) {
+            case 4:
+                long factor = Unsafe.instance.addressSize() == 8 ? 8 : 1;
+                final long i1 = (Unsafe.instance.getInt(objects, offset) & 0xFFFFFFFFL) * factor;
+                System.out.print(Long.toHexString(i1));
+                last = i1;
+                for (int i = 1; i < objects.length; i++) {
+                    final long i2 = (Unsafe.instance.getInt(objects, offset + i * 4) & 0xFFFFFFFFL) * factor;
+                    if (i2 > last)
+                        System.out.print(", +" + Long.toHexString(i2 - last));
+                    else
+                        System.out.print(", -" + Long.toHexString(last - i2));
+                    last = i2;
+                }
+                break;
+            case 8:
+                throw new AssertionError("Not supported");
+        }
+        System.out.println();
     }
 }
