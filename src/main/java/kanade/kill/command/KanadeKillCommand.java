@@ -1,16 +1,24 @@
 package kanade.kill.command;
 
 import kanade.kill.Config;
+import kanade.kill.Launch;
 import kanade.kill.item.KillItem;
 import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.ConfigUpdatePacket;
+import kanade.kill.network.packets.KillAllEntities;
+import kanade.kill.network.packets.Reset;
 import kanade.kill.util.EntityUtil;
+import kanade.kill.util.NativeMethods;
+import kanade.kill.util.Util;
 import net.minecraft.command.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.DimensionManager;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -28,6 +36,8 @@ public class KanadeKillCommand extends CommandBase {
             ret.add("kill");
             ret.add("protected");
             ret.add("mode");
+            ret.add("reset");
+            ret.add("killall");
         } else {
             if (args.length == 2) {
                 if (args[0].equals("config")) {
@@ -41,6 +51,7 @@ public class KanadeKillCommand extends CommandBase {
                     ret.add("renderProtection");
                     ret.add("fieldReset");
                     ret.add("particleEffect");
+                    ret.add("SuperAttack");
                 } else if (args[0].equals("mode")) {
                     ret.add("timestop");
                     ret.add("timeback");
@@ -133,6 +144,11 @@ public class KanadeKillCommand extends CommandBase {
                                 NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
                                 break;
                             }
+                            case "SuperAttack": {
+                                Config.SuperAttack = Boolean.parseBoolean(arg2);
+                                NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
+                                break;
+                            }
                             default: {
                                 sender.sendMessage(new TextComponentString("Config " + arg1 + " isn't found!"));
                                 return;
@@ -195,6 +211,33 @@ public class KanadeKillCommand extends CommandBase {
                         sender.sendMessage(new TextComponentString("No player found. Don't use this in server console."));
                     }
                     break;
+                }
+                case "reset": {
+                    Launch.LOGGER.info("Resetting...");
+                    NativeMethods.Reset();
+                    KillItem.list.clear();
+                    EntityUtil.Dead.clear();
+                    EntityUtil.blackHolePlayers.clear();
+                    for (EntityPlayerMP player : server.getPlayerList().getPlayers()) {
+                        player.Inventory = new InventoryPlayer(player);
+                        NetworkHandler.INSTANCE.sendMessageToPlayer(new Reset(), player);
+                    }
+                    break;
+                }
+                case "killall": {
+                    synchronized (Util.tasks) {
+                        Util.tasks.add(() -> {
+                            List<Entity> targets = new ArrayList<>();
+                            for (int id : DimensionManager.getIDs()) {
+                                WorldServer world = DimensionManager.getWorld(id);
+                                targets.addAll(world.entities);
+                            }
+                            EntityUtil.Kill(targets);
+                        });
+                    }
+                    if (server.isCallingFromMinecraftThread()) {
+                        NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillAllEntities());
+                    }
                 }
                 default: {
                     sender.sendMessage(new TextComponentString("Unknown command."));

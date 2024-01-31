@@ -15,6 +15,7 @@ import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.particle.ParticleManager;
+import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.RenderItem;
@@ -47,6 +48,9 @@ import java.util.concurrent.FutureTask;
 
 public class Minecraft implements ISnooperInfo {
     public static boolean dead;
+    public BlockRendererDispatcher BlockRenderDispatcher;
+    public TextureManager RenderEngine;
+    public RenderGlobal RenderGlobal;
     public final Queue<FutureTask<?>> scheduledTasks = Queues.newArrayDeque();
     public Entity pointedEntity;
     public static Logger LOGGER;
@@ -71,6 +75,7 @@ public class Minecraft implements ISnooperInfo {
     public GuiToast toastGui;
     public long startNanoTime;
     public GameSettings gameSettings;
+    public GameSettings GameSettings;
     public long prevFrameTime;
     public int fpsCounter;
     public GuiScreen CurrentScreen;
@@ -83,7 +88,7 @@ public class Minecraft implements ISnooperInfo {
     public EntityRenderer entityRenderer;
     public long systemTime;
     public RayTraceResult objectMouseOver;
-    public PlayerControllerMP playerController;
+    public PlayerControllerMP PlayerController;
 
     public Minecraft() {
     }

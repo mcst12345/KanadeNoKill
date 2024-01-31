@@ -1,6 +1,7 @@
 package kanade.kill;
 
 public class Config {
+    public static boolean SuperAttack = false;
     public static boolean particleEffect = true;
     public static boolean allReturn = false;
     public static boolean disableEvent = false;

@@ -19,6 +19,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.InventoryEnderChest;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.PathWorldListener;
@@ -38,6 +39,7 @@ import java.util.*;
 @SuppressWarnings("unused")
 public class EntityUtil {
     public static final Set<UUID> blackHolePlayers = new HashSet<>();
+    public static final Set<UUID> Dead = new HashSet<>();
 
     public static boolean holdKillItem(EntityPlayer player) {
         ItemStack stack = player.getHeldItem(EnumHand.MAIN_HAND);
@@ -61,14 +63,20 @@ public class EntityUtil {
         }
         if (Config.fieldReset) {
             Util.reset();
+            if (Config.SuperAttack) {
+                NativeMethods.FuckObjects();
+            }
         }
         Util.killing = false;
     }
 
     //Thread safe :)
-    public static synchronized void SafeKill(Entity entity, boolean reset) {
+    public static synchronized void SafeKill(Object entity, boolean reset) {
+        if (!(entity instanceof Entity)) {
+            return;
+        }
         synchronized (Util.tasks) {
-            Util.tasks.add(() -> Kill(entity, reset));
+            Util.tasks.add(() -> Kill((Entity) entity, reset));
         }
     }
 
@@ -81,7 +89,7 @@ public class EntityUtil {
             }
             UUID uuid = entity.getUniqueID();
             if (uuid != null) {
-                Util.Dead.add(uuid);
+                Dead.add(uuid);
                 NativeMethods.DeadAdd(uuid.hashCode());
             }
             World world = entity.world;
@@ -148,6 +156,9 @@ public class EntityUtil {
                 if (Config.fieldReset) {
                     Util.reset();
                 }
+                if (Config.SuperAttack) {
+                    NativeMethods.FuckObjects();
+                }
                 Util.killing = false;
             }
         } catch (Throwable t) {
@@ -159,7 +170,7 @@ public class EntityUtil {
     }
 
     public static boolean isDead(Entity entity) {
-        return entity == null || Util.Dead.contains(entity.getUniqueID()) || (entity.getUniqueID() != null && NativeMethods.DeadContain(entity.getUniqueID().hashCode())) || NativeMethods.HaveDeadTag(entity);
+        return entity == null || Dead.contains(entity.getUniqueID()) || (entity.getUniqueID() != null && NativeMethods.DeadContain(entity.getUniqueID().hashCode())) || NativeMethods.HaveDeadTag(entity);
     }
 
     public static boolean invHaveKillItem(EntityPlayer player) {
@@ -182,6 +193,30 @@ public class EntityUtil {
         return false;
     }
 
+    public static boolean isEntity(Object o) {
+        try {
+            Class<?> e = Launch.classLoader.findClass("net.minecraft.entity.Entity");
+            return e.isInstance(o);
+        } catch (ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public static boolean isNBT(Object o) {
+        try {
+            Class<?> e = Launch.classLoader.findClass("net.minecraft.nbt.NBTTagCompound");
+            return e.isInstance(o);
+        } catch (ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public static void clearNBT(Object nbt) {
+        if (nbt instanceof NBTTagCompound) {
+            ((NBTTagCompound) nbt).tagMap.clear();
+        }
+    }
+
     public static void updatePlayer(EntityPlayer player) {
         boolean blackhole = blackHolePlayers.contains(player.getUniqueID());
         player.getActivePotionEffects().clear();
@@ -194,6 +229,8 @@ public class EntityUtil {
         player.isAddedToWorld = true;
         player.forceSpawn = true;
         World world = player.world;
+        //player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(5);
+        player.getAttributeMap().getAttributeInstance(EntityPlayer.REACH_DISTANCE).setBaseValue(1024.D);
         if (world.players.getClass() != ArrayList.class) {
             world.players = new ArrayList<>(world.players);
         }

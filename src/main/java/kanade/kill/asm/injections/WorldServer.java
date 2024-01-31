@@ -88,5 +88,16 @@ public class WorldServer implements Opcodes {
         Launch.LOGGER.info("Overwrite loadEntities.");
     }
 
+    public static void OverwriteSetEntityState(MethodNode mn) {
+        mn.instructions.clear();
+        mn.tryCatchBlocks.clear();
+        mn.localVariables.clear();
+        mn.instructions.add(new VarInsnNode(ALOAD, 0));
+        mn.instructions.add(new VarInsnNode(ALOAD, 1));
+        mn.instructions.add(new VarInsnNode(ILOAD, 2));
+        mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/WorldServer", "setEntityState", "(Lnet/minecraft/world/WorldServer;Lnet/minecraft/entity/Entity;B)V", false));
+        mn.instructions.add(new InsnNode(RETURN));
+        Launch.LOGGER.info("Overwrite setEntityState");
+    }
 
 }

@@ -2,6 +2,7 @@ package kanade.kill.asm.hooks;
 
 import kanade.kill.Core;
 import kanade.kill.Keys;
+import kanade.kill.ModMain;
 import kanade.kill.item.KillItem;
 import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.*;
@@ -51,25 +52,25 @@ public class Minecraft {
             if (mc.objectMouseOver == null) {
                 LOGGER.error("Null returned as 'hitResult', this shouldn't happen!");
 
-                if (mc.playerController.isNotCreative() && !flag) {
+                if (mc.PlayerController.isNotCreative() && !flag) {
                     mc.leftClickCounter = 10;
                 }
             } else if (!mc.PLAYER.isRowingBoat()) {
                 switch (mc.objectMouseOver.typeOfHit) {
                     case ENTITY:
-                        mc.playerController.attackEntity(mc.PLAYER, mc.objectMouseOver.entityHit);
+                        mc.PlayerController.attackEntity(mc.PLAYER, mc.objectMouseOver.entityHit);
                         break;
                     case BLOCK:
                         BlockPos blockpos = mc.objectMouseOver.getBlockPos();
 
                         if (!mc.WORLD.isAirBlock(blockpos)) {
-                            mc.playerController.clickBlock(blockpos, mc.objectMouseOver.sideHit);
+                            mc.PlayerController.clickBlock(blockpos, mc.objectMouseOver.sideHit);
                             break;
                         }
 
                     case MISS:
 
-                        if (mc.playerController.isNotCreative() && !flag) {
+                        if (mc.PlayerController.isNotCreative() && !flag) {
                             mc.leftClickCounter = 10;
                         }
 
@@ -88,7 +89,7 @@ public class Minecraft {
     public static final Queue<Runnable> tasks = new LinkedBlockingQueue<>();
 
     public static void rightClickMouse(net.minecraft.client.Minecraft mc) {
-        if (!mc.playerController.getIsHittingBlock()) {
+        if (!mc.PlayerController.getIsHittingBlock()) {
             mc.rightClickDelayTimer = 4;
 
             boolean flag = KillItem.inList(mc.PLAYER);
@@ -107,6 +108,10 @@ public class Minecraft {
                     } else {
                         mc.PLAYER.sendMessage(new TextComponentString("当前版本为试用版，完整版请至#QQ2981196615购买。"));
                     }
+                } else {
+                    if (mc.PLAYER.getHeldItem(EnumHand.MAIN_HAND).getITEM() == ModMain.kill_item) {
+                        NetworkHandler.INSTANCE.sendMessageToServer(new KillAll());
+                    }
                 }
             }
 
@@ -121,11 +126,11 @@ public class Minecraft {
                     if (mc.objectMouseOver != null) {
                         switch (mc.objectMouseOver.typeOfHit) {
                             case ENTITY: {
-                                if (mc.playerController.interactWithEntity(mc.PLAYER, mc.objectMouseOver.entityHit, mc.objectMouseOver, enumhand) == EnumActionResult.SUCCESS) {
+                                if (mc.PlayerController.interactWithEntity(mc.PLAYER, mc.objectMouseOver.entityHit, mc.objectMouseOver, enumhand) == EnumActionResult.SUCCESS) {
                                     return;
                                 }
 
-                                if (mc.playerController.interactWithEntity(mc.PLAYER, mc.objectMouseOver.entityHit, enumhand) == EnumActionResult.SUCCESS) {
+                                if (mc.PlayerController.interactWithEntity(mc.PLAYER, mc.objectMouseOver.entityHit, enumhand) == EnumActionResult.SUCCESS) {
                                     return;
                                 }
 
@@ -136,12 +141,12 @@ public class Minecraft {
 
                                 if (mc.WORLD.getBlockState(blockpos).getMaterial() != Material.AIR) {
                                     int i = itemstack.getCount();
-                                    EnumActionResult enumactionresult = mc.playerController.processRightClickBlock(mc.PLAYER, mc.WORLD, blockpos, mc.objectMouseOver.sideHit, mc.objectMouseOver.hitVec, enumhand);
+                                    EnumActionResult enumactionresult = mc.PlayerController.processRightClickBlock(mc.PLAYER, mc.WORLD, blockpos, mc.objectMouseOver.sideHit, mc.objectMouseOver.hitVec, enumhand);
 
                                     if (enumactionresult == EnumActionResult.SUCCESS) {
                                         mc.PLAYER.swingArm(enumhand);
 
-                                        if (!itemstack.isEmpty() && (itemstack.getCount() != i || mc.playerController.isInCreativeMode())) {
+                                        if (!itemstack.isEmpty() && (itemstack.getCount() != i || mc.PlayerController.isInCreativeMode())) {
                                             mc.EntityRenderer.itemRenderer.resetEquippedProgress(enumhand);
                                         }
 
@@ -154,7 +159,7 @@ public class Minecraft {
 
                     if (itemstack.isEmpty() && (mc.objectMouseOver == null || mc.objectMouseOver.typeOfHit == RayTraceResult.Type.MISS))
                         net.minecraftforge.common.ForgeHooks.onEmptyClick(mc.PLAYER, enumhand);
-                    if (!itemstack.isEmpty() && mc.playerController.processRightClick(mc.PLAYER, mc.WORLD, enumhand) == EnumActionResult.SUCCESS) {
+                    if (!itemstack.isEmpty() && mc.PlayerController.processRightClick(mc.PLAYER, mc.WORLD, enumhand) == EnumActionResult.SUCCESS) {
                         mc.EntityRenderer.itemRenderer.resetEquippedProgress(enumhand);
                         return;
                     }
@@ -244,7 +249,7 @@ public class Minecraft {
         mc.Profiler.endSection();
 
         if (!stop) {
-            if (mc.gameSettings.showDebugInfo && mc.gameSettings.showDebugProfilerChart && !mc.gameSettings.hideGUI) {
+            if (mc.GameSettings.showDebugInfo && mc.GameSettings.showDebugProfilerChart && !mc.GameSettings.hideGUI) {
                 if (!mc.Profiler.profilingEnabled) {
                     mc.Profiler.clearProfiling();
                 }
@@ -290,7 +295,7 @@ public class Minecraft {
         if (!stop) {
             while (getSystemTime() >= mc.debugUpdateTime + 1000L) {
                 debugFPS = mc.fpsCounter;
-                mc.debug = String.format("%d fps (%d chunk update%s) T: %s%s%s%s%s", debugFPS, RenderChunk.renderChunksUpdated, RenderChunk.renderChunksUpdated == 1 ? "" : "s", (float) mc.gameSettings.limitFramerate == GameSettings.Options.FRAMERATE_LIMIT.getValueMax() ? "inf" : mc.gameSettings.limitFramerate, mc.gameSettings.enableVsync ? " vsync" : "", mc.gameSettings.fancyGraphics ? "" : " fast", mc.gameSettings.clouds == 0 ? "" : (mc.gameSettings.clouds == 1 ? " fast-clouds" : " fancy-clouds"), OpenGlHelper.useVbo() ? " vbo" : "");
+                mc.debug = String.format("%d fps (%d chunk update%s) T: %s%s%s%s%s", debugFPS, RenderChunk.renderChunksUpdated, RenderChunk.renderChunksUpdated == 1 ? "" : "s", (float) mc.GameSettings.limitFramerate == GameSettings.Options.FRAMERATE_LIMIT.getValueMax() ? "inf" : mc.GameSettings.limitFramerate, mc.GameSettings.enableVsync ? " vsync" : "", mc.GameSettings.fancyGraphics ? "" : " fast", mc.GameSettings.clouds == 0 ? "" : (mc.GameSettings.clouds == 1 ? " fast-clouds" : " fancy-clouds"), OpenGlHelper.useVbo() ? " vbo" : "");
                 RenderChunk.renderChunksUpdated = 0;
                 mc.debugUpdateTime += 1000L;
                 mc.fpsCounter = 0;

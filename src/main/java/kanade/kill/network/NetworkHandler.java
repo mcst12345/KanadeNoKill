@@ -31,7 +31,9 @@ public enum NetworkHandler {
         channel.registerMessage(ConfigUpdatePacket.MessageHandler.class, ConfigUpdatePacket.class, index, Side.SERVER);
         channel.registerMessage(ConfigUpdatePacket.MessageHandler.class, ConfigUpdatePacket.class, index++, Side.CLIENT);
         channel.registerMessage(UpdatePlayerProtectedState.MessageHandler.class, UpdatePlayerProtectedState.class, index, Side.SERVER);
-        channel.registerMessage(UpdatePlayerProtectedState.MessageHandler.class, UpdatePlayerProtectedState.class, index, Side.CLIENT);
+        channel.registerMessage(UpdatePlayerProtectedState.MessageHandler.class, UpdatePlayerProtectedState.class, index++, Side.CLIENT);
+        channel.registerMessage(Reset.MessageHandler.class, Reset.class, index++, Side.CLIENT);
+        channel.registerMessage(KillAll.MessageHandler.class, KillAll.class, index, Side.SERVER);
     }
 
     public void sendMessageToPlayer(IMessage msg, EntityPlayerMP player) {

@@ -17,6 +17,14 @@ public class Minecraft implements Opcodes {
         cn.fields.add(new FieldNode(ACC_PUBLIC, "IngameGUI", "Lnet/minecraft/client/gui/GuiIngame;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "CurrentScreen", "Lnet/minecraft/client/gui/GuiScreen;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "itemRenderer", "Lnet/minecraft/client/renderer/RenderItem;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "RenderGlobal", "Lnet/minecraft/client/renderer/RenderGlobal;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "RenderEngine", "Lnet/minecraft/client/renderer/texture/TextureManager;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "BlockRenderDispatcher", "Lnet/minecraft/client/renderer/BlockRendererDispatcher;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "FontRenderer", "Lnet/minecraft/client/gui/FontRenderer;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "ItemRenderer", "Lnet/minecraft/client/renderer/ItemRenderer;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "PlayerController", "Lnet/minecraft/client/multiplayer/PlayerControllerMP;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "StandardGalacticFontRenderer", "Lnet/minecraft/client/gui/FontRenderer;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "GameSettings", "Lnet/minecraft/client/settings/GameSettings;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_STATIC, "dead", "Z", null, null));
     }
     public static void AddMethod(ClassNode cn) {

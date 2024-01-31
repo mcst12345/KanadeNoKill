@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Core extends FMLCorePlugin {
-    public static final boolean demo = false;
+    public static final boolean demo = true;
 
     static {
         boolean AllowAgent = Boolean.parseBoolean(System.getProperty("AllowAgent"));

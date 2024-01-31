@@ -43,10 +43,9 @@ public class Launch {
     public static List<IClassTransformer> lists;
     public static Logger LOGGER = LogManager.getLogger("Kanade");
     public static final boolean Debug = System.getProperty("Debug") != null;
+    public static final boolean win = System.getProperty("os.name").startsWith("Windows");
 
     static {
-        final boolean win = System.getProperty("os.name").startsWith("Windows");
-
         File file = new File("KanadeAgent" + (win ? ".dll" : ".so"));
         System.load(file.getAbsolutePath());
         NativeMethods.Test("12345:)");
@@ -64,7 +63,7 @@ public class Launch {
         ProtectionDomain gl = client ? GL11.class.getProtectionDomain() : null;
         ClassLoader appClassLoader = client ? GL11.class.getClassLoader() : null;
 
-        classes.add("net.minecraftforge.fml.relauncher.CoreModManager");
+        //classes.add("net.minecraftforge.fml.relauncher.CoreModManager");
         classes.add("kanade.kill.util.ObjectUtil");
         classes.add("kanade.kill.Config");
         classes.add("kanade.kill.util.Util");
@@ -77,6 +76,7 @@ public class Launch {
         classes.add("kanade.kill.asm.ASMUtil");
         classes.add("kanade.kill.asm.hooks.EventBus");
         classes.add("kanade.kill.asm.hooks.World");
+        classes.add("kanade.kill.asm.hooks.WorldServer");
         classes.add("kanade.kill.asm.injections.Chunk");
         classes.add("kanade.kill.asm.injections.DimensionManager");
         classes.add("kanade.kill.asm.injections.Entity");
@@ -88,6 +88,7 @@ public class Launch {
         classes.add("kanade.kill.asm.injections.FMLClientHandler");
         classes.add("kanade.kill.asm.injections.ForgeHooksClient");
         classes.add("kanade.kill.asm.injections.ItemStack");
+        classes.add("kanade.kill.asm.injections.KeyBinding");
         classes.add("kanade.kill.asm.injections.Minecraft");
         classes.add("kanade.kill.asm.injections.MinecraftForge");
         classes.add("kanade.kill.asm.injections.MinecraftServer");
@@ -113,6 +114,7 @@ public class Launch {
         classes.add("kanade.kill.thread.SecurityManagerCheckThread");
         classes.add("kanade.kill.thread.KillerThread");
         if (client) {
+            classes.add("kanade.kill.ClientMain");
             classes.add("kanade.kill.asm.hooks.Timer");
             classes.add("kanade.kill.asm.hooks.ItemStackClient");
             classes.add("kanade.kill.asm.hooks.Minecraft");

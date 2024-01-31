@@ -67,7 +67,9 @@ public class ModMain {
                 classes.add("kanade.kill.util.FontRenderer");
                 classes.add("kanade.kill.util.VertexFormat");
                 classes.add("kanade.kill.util.VertexFormatElement");
+                classes.add("kanade.kill.util.ClientFakeObjects");
             }
+
 
             classes.add("kanade.kill.entity.Lain");
             classes.add("kanade.kill.util.EntityUtil");
@@ -101,6 +103,10 @@ public class ModMain {
             classes.add("kanade.kill.network.packets.ConfigUpdatePacket$MessageHandler");
             classes.add("kanade.kill.network.packets.UpdatePlayerProtectedState");
             classes.add("kanade.kill.network.packets.UpdatePlayerProtectedState$MessageHandler");
+            classes.add("kanade.kill.network.packets.KillAll");
+            classes.add("kanade.kill.network.packets.KillAll$MessageHandler");
+            classes.add("kanade.kill.network.packets.Reset");
+            classes.add("kanade.kill.network.packets.Reset$MessageHandler");
             classes.add("kanade.kill.command.KanadeKillCommand");
             classes.add("kanade.kill.network.packets.KillAllEntities");
             classes.add("kanade.kill.network.packets.KillAllEntities$MessageHandler");

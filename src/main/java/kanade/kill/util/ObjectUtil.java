@@ -5,7 +5,6 @@ import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.reflection.ReflectionUtil;
 import scala.concurrent.util.Unsafe;
 
-import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -13,147 +12,224 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+@SuppressWarnings("unused")
 public class ObjectUtil {
-    public static Object clone(Object o, int depth) {
+    public static void Fuck(Object o) {
+        {
+            if (o == Util.tasks) {
+                return;
+            }
+            Class<?> clazz = o.getClass();
+            Launch.LOGGER.info(clazz.getName());
+            Field[] fields = ReflectionUtil.getAllFields(clazz);
+            for (Field f : fields) {
+                if (Util.cache.containsKey(f) || Util.cache2.containsKey(f)) {
+                    continue;
+                }
+                boolean STATIC = Modifier.isStatic(f.getModifiers());
+                Object obj = STATIC ? getStatic(f) : getField(f, o);
+                if (obj instanceof int[]) {
+                    if (STATIC) {
+                        putStatic(f, new int[((int[]) obj).length]);
+                    } else {
+                        putField(f, o, new int[((int[]) obj).length]);
+                    }
+                } else if (obj instanceof short[]) {
+                    if (STATIC) {
+                        putStatic(f, new int[((short[]) obj).length]);
+                    } else {
+                        putField(f, o, new int[((short[]) obj).length]);
+                    }
+                } else if (obj instanceof char[]) {
+                    if (STATIC) {
+                        putStatic(f, new int[((char[]) obj).length]);
+                    } else {
+                        putField(f, o, new int[((char[]) obj).length]);
+                    }
+                } else if (obj instanceof long[]) {
+                    if (STATIC) {
+                        putStatic(f, new int[((long[]) obj).length]);
+                    } else {
+                        putField(f, o, new int[((long[]) obj).length]);
+                    }
+                } else if (obj instanceof float[]) {
+                    if (STATIC) {
+                        putStatic(f, new int[((float[]) obj).length]);
+                    } else {
+                        putField(f, o, new int[((float[]) obj).length]);
+                    }
+                } else if (obj instanceof double[]) {
+                    if (STATIC) {
+                        putStatic(f, new int[((double[]) obj).length]);
+                    } else {
+                        putField(f, o, new int[((double[]) obj).length]);
+                    }
+                } else if (obj instanceof byte[]) {
+                    if (STATIC) {
+                        putStatic(f, new int[((byte[]) obj).length]);
+                    } else {
+                        putField(f, o, new int[((byte[]) obj).length]);
+                    }
+                } else if (obj instanceof boolean[]) {
+                    if (STATIC) {
+                        putStatic(f, new int[((boolean[]) obj).length]);
+                    } else {
+                        putField(f, o, new int[((boolean[]) obj).length]);
+                    }
+                }
+                if (f.getType().getName().equals("int")) {
+                    if (STATIC) {
+                        putStatic(f, 0);
+                    } else {
+                        putField(f, o, 0);
+                    }
+                } else if (f.getType().getName().equals("short")) {
+                    if (STATIC) {
+                        putStatic(f, 0);
+                    } else {
+                        putField(f, o, 0);
+                    }
+                } else if (f.getType().getName().equals("char")) {
+                    if (STATIC) {
+                        putStatic(f, ' ');
+                    } else {
+                        putField(f, o, ' ');
+                    }
+                } else if (f.getType().getName().equals("long")) {
+                    if (STATIC) {
+                        putStatic(f, 0L);
+                    } else {
+                        putField(f, o, 0L);
+                    }
+                } else if (f.getType().getName().equals("float")) {
+                    if (STATIC) {
+                        putStatic(f, 0.0f);
+                    } else {
+                        putField(f, o, 0.0f);
+                    }
+                } else if (f.getType().getName().equals("double")) {
+                    if (STATIC) {
+                        putStatic(f, 0.0d);
+                    } else {
+                        putField(f, o, 0.0d);
+                    }
+                } else if (f.getType().getName().equals("byte")) {
+                    byte b = 0;
+                    if (STATIC) {
+                        putStatic(f, b);
+                    } else {
+                        putField(f, o, b);
+                    }
+                } else if (f.getType().getName().equals("boolean")) {
+                    if (STATIC) {
+                        putStatic(f, false);
+                    } else {
+                        putField(f, o, false);
+                    }
+                } else if (obj instanceof List) {
+                    try {
+                        ((List) obj).clear();
+                    } catch (Throwable ignored) {
+                    }
+                } else if (obj instanceof Set) {
+                    try {
+                        ((Set) obj).clear();
+                    } catch (Throwable ignored) {
+                    }
+                } else if (obj instanceof Map) {
+                    try {
+                        ((Map) obj).clear();
+                    } catch (Throwable ignored) {
+                    }
+                } else if (obj instanceof Collection) {
+                    try {
+                        ((Collection) obj).clear();
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }
+        }
+    }
+
+    public static Object clone(Object o) {
         if (o == null) {
             return null;
         }
         if (o instanceof Class) {
             return o;
         }
-        if (depth > 20000) {
-            Launch.LOGGER.info("Too deep.");
-            return o;
-        }
         Object copy;
         long offset;
-        if (o instanceof int[]) {
-            int length = Array.getLength(o);
-            int base = Unsafe.instance.arrayBaseOffset(int[].class);
-            int scale = Unsafe.instance.arrayIndexScale(int[].class);
-
-            copy = new int[length];
-
-            for (int i = 0; i < length; i++) {
-                long address = ((long) i * scale) + base;
-                Unsafe.instance.putIntVolatile(copy, address, Unsafe.instance.getIntVolatile(o, address));
-            }
-            return copy;
-        } else {
-            if (o instanceof float[]) {
-                int length = Array.getLength(o);
-                int base = Unsafe.instance.arrayBaseOffset(float[].class);
-                int scale = Unsafe.instance.arrayIndexScale(float[].class);
-
-                copy = new float[length];
-
-                for (int i = 0; i < length; i++) {
-                    long address = ((long) i * scale) + base;
-                    Unsafe.instance.putFloatVolatile(copy, address, Unsafe.instance.getFloatVolatile(o, address));
+        if (o.getClass().getName().startsWith("[")) {
+            Class<?> cls = o.getClass();
+            int abo = Unsafe.instance.arrayBaseOffset(cls);
+            int ais = Unsafe.instance.arrayIndexScale(cls);
+            switch (cls.getName()) {
+                case "[I": {
+                    int[] array = new int[((int[]) o).length];
+                    int[] old = (int[]) o;
+                    System.arraycopy(old, 0, array, 0, old.length);
+                    return array;
                 }
-                return copy;
-            } else {
-                if (o instanceof double[]) {
+                case "[J": {
+                    long[] array = new long[((long[]) o).length];
+                    long[] old = (long[]) o;
+                    System.arraycopy(old, 0, array, 0, old.length);
+                    return array;
+                }
+                case "[S": {
+                    short[] array = new short[((short[]) o).length];
+                    short[] old = (short[]) o;
+                    System.arraycopy(old, 0, array, 0, old.length);
+                    return array;
+                }
+                case "[Z": {
+                    boolean[] array = new boolean[((boolean[]) o).length];
+                    boolean[] old = (boolean[]) o;
+                    System.arraycopy(old, 0, array, 0, old.length);
+                    return array;
+                }
+                case "[F": {
+                    float[] array = new float[((float[]) o).length];
+                    float[] old = (float[]) o;
+                    System.arraycopy(old, 0, array, 0, old.length);
+                    return array;
+                }
+                case "[D": {
+                    double[] array = new double[((double[]) o).length];
+                    double[] old = (double[]) o;
+                    System.arraycopy(old, 0, array, 0, old.length);
+                    return array;
+                }
+                case "[C": {
+                    char[] array = new char[((char[]) o).length];
+                    char[] old = (char[]) o;
+                    System.arraycopy(old, 0, array, 0, old.length);
+                    return array;
+                }
+                case "[B": {
+                    byte[] array = new byte[((byte[]) o).length];
+                    byte[] old = (byte[]) o;
+                    System.arraycopy(old, 0, array, 0, old.length);
+                    return array;
+                }
+                default: {
+                    Object array = Array.newInstance(o.getClass().getComponentType(), Array.getLength(o));
                     int length = Array.getLength(o);
-                    int base = Unsafe.instance.arrayBaseOffset(double[].class);
-                    int scale = Unsafe.instance.arrayIndexScale(double[].class);
-
-                    copy = new double[length];
-
                     for (int i = 0; i < length; i++) {
-                        long address = ((long) i * scale) + base;
-                        Unsafe.instance.putDoubleVolatile(copy, address, Unsafe.instance.getDoubleVolatile(o, address));
+                        long address = ((long) i * ais) + abo;
+                        Unsafe.instance.putObjectVolatile(array, address, Unsafe.instance.getObjectVolatile(o, address));
                     }
-                    return copy;
-                } else {
-                    if (o instanceof long[]) {
-                        int length = Array.getLength(o);
-                        int base = Unsafe.instance.arrayBaseOffset(long[].class);
-                        int scale = Unsafe.instance.arrayIndexScale(long[].class);
-
-                        copy = new long[length];
-
-                        for (int i = 0; i < length; i++) {
-                            long address = ((long) i * scale) + base;
-                            Unsafe.instance.putLongVolatile(copy, address, Unsafe.instance.getLongVolatile(o, address));
-                        }
-                        return copy;
-                    } else {
-                        if (o instanceof short[]) {
-                            int length = Array.getLength(o);
-                            int base = Unsafe.instance.arrayBaseOffset(short[].class);
-                            int scale = Unsafe.instance.arrayIndexScale(short[].class);
-
-                            copy = new short[length];
-
-                            for (int i = 0; i < length; i++) {
-                                long address = ((long) i * scale) + base;
-                                Unsafe.instance.putShortVolatile(copy, address, Unsafe.instance.getShortVolatile(o, address));
-                            }
-                            return copy;
-                        } else {
-                            if (o instanceof boolean[]) {
-                                int length = Array.getLength(o);
-                                int base = Unsafe.instance.arrayBaseOffset(boolean[].class);
-                                int scale = Unsafe.instance.arrayIndexScale(boolean[].class);
-
-                                copy = new boolean[length];
-
-                                for (int i = 0; i < length; i++) {
-                                    long address = ((long) i * scale) + base;
-                                    Unsafe.instance.putBooleanVolatile(copy, address, Unsafe.instance.getBooleanVolatile(o, address));
-                                }
-                                return copy;
-                            } else {
-                                if (o instanceof char[]) {
-                                    int length = Array.getLength(o);
-                                    int base = Unsafe.instance.arrayBaseOffset(char[].class);
-                                    int scale = Unsafe.instance.arrayIndexScale(char[].class);
-
-                                    copy = new char[length];
-
-                                    for (int i = 0; i < length; i++) {
-                                        long address = ((long) i * scale) + base;
-                                        Unsafe.instance.putCharVolatile(copy, address, Unsafe.instance.getCharVolatile(o, address));
-                                    }
-                                    return copy;
-                                } else {
-                                    if (o instanceof byte[]) {
-                                        int length = Array.getLength(o);
-                                        int base = Unsafe.instance.arrayBaseOffset(byte[].class);
-                                        int scale = Unsafe.instance.arrayIndexScale(byte[].class);
-
-                                        copy = new byte[length];
-
-                                        for (int i = 0; i < length; i++) {
-                                            long address = ((long) i * scale) + base;
-                                            Unsafe.instance.putByteVolatile(copy, address, Unsafe.instance.getByteVolatile(o, address));
-                                        }
-                                        return copy;
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    return array;
                 }
             }
         }
-        if (o.getClass().isArray()) {
-            try {
-                int length = Array.getLength(o);
-                int scale = Unsafe.instance.arrayIndexScale(o.getClass());
-                int base = Unsafe.instance.arrayBaseOffset(o.getClass());
-                copy = Array.newInstance(o.getClass().getComponentType(), length);
-                for (int i = 0; i < length; i++) {
-                    long address = ((long) i * scale) + base;
-                    Unsafe.instance.putObjectVolatile(copy, address, Unsafe.instance.getObjectVolatile(o, address));
-                }
-                return copy;
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
-        } else {
+        {
             try {
                 copy = Unsafe.instance.allocateInstance(o.getClass());
             } catch (InstantiationException e) {
@@ -165,7 +241,7 @@ public class ObjectUtil {
                 continue;
             }
             if (Util.offsetCache.containsKey(field)) {
-                offset = Util.offsetCache.getLong(field);
+                offset = Util.offsetCache.get(field);
             } else {
                 offset = Unsafe.instance.objectFieldOffset(field);
                 Util.offsetCache.put(field, offset);
@@ -204,16 +280,54 @@ public class ObjectUtil {
                     break;
                 }
                 default: {
-                    Launch.LOGGER.info("Coping field:" + field.getName() + ":" + field.getType().getName());
                     Object obj = Unsafe.instance.getObjectVolatile(o, offset);
-                    Unsafe.instance.putObjectVolatile(copy, offset, clone(obj, depth + 1));
+                    Unsafe.instance.putObjectVolatile(copy, offset, clone(obj));
                 }
             }
         }
         return copy;
     }
 
-    public synchronized static Object getStatic(Field field) {
+    public static Object getField(Field field, Object base) {
+        long offset;
+        if (Util.offsetCache.containsKey(field)) {
+            offset = Util.offsetCache.get(field);
+        } else {
+            offset = Unsafe.instance.objectFieldOffset(field);
+            Util.offsetCache.put(field, offset);
+        }
+        switch (field.getType().getName()) {
+            case "int": {
+                return Unsafe.instance.getIntVolatile(base, offset);
+            }
+            case "float": {
+                return Unsafe.instance.getFloatVolatile(base, offset);
+            }
+            case "double": {
+                return Unsafe.instance.getDoubleVolatile(base, offset);
+            }
+            case "long": {
+                return Unsafe.instance.getLongVolatile(base, offset);
+            }
+            case "short": {
+                return Unsafe.instance.getShortVolatile(base, offset);
+            }
+            case "boolean": {
+                return Unsafe.instance.getBooleanVolatile(base, offset);
+            }
+            case "char": {
+                return Unsafe.instance.getCharVolatile(base, offset);
+            }
+            case "byte": {
+                return Unsafe.instance.getByteVolatile(base, offset);
+            }
+            default: {
+                return Unsafe.instance.getObjectVolatile(base, Unsafe.instance.objectFieldOffset(field));
+            }
+        }
+    }
+
+    public static Object getStatic(Field field) {
         Object base;
         if (Util.baseCache.containsKey(field)) {
             base = Util.baseCache.get(field);
@@ -223,7 +337,7 @@ public class ObjectUtil {
         }
         long offset;
         if (Util.offsetCache.containsKey(field)) {
-            offset = Util.offsetCache.getLong(field);
+            offset = Util.offsetCache.get(field);
         } else {
             offset = Unsafe.instance.staticFieldOffset(field);
             Util.offsetCache.put(field, offset);
@@ -260,7 +374,55 @@ public class ObjectUtil {
 
     }
 
-    public synchronized static void putStatic(Field field, Object obj) {
+    public static void putField(Field field, Object base, Object obj) {
+        long offset;
+        if (Util.offsetCache.containsKey(field)) {
+            offset = Util.offsetCache.get(field);
+        } else {
+            offset = Unsafe.instance.objectFieldOffset(field);
+            Util.offsetCache.put(field, offset);
+        }
+        switch (field.getType().getName()) {
+            case "int": {
+                Unsafe.instance.putIntVolatile(base, offset, (int) obj);
+                break;
+            }
+            case "float": {
+                Unsafe.instance.putFloatVolatile(base, offset, (float) obj);
+                break;
+            }
+            case "double": {
+                Unsafe.instance.putDoubleVolatile(base, offset, (double) obj);
+                break;
+            }
+            case "long": {
+                Unsafe.instance.putLongVolatile(base, offset, (long) obj);
+                break;
+            }
+            case "short": {
+                Unsafe.instance.putShortVolatile(base, offset, (short) obj);
+                break;
+            }
+            case "boolean": {
+                Unsafe.instance.putBooleanVolatile(base, offset, (boolean) obj);
+                break;
+            }
+            case "char": {
+                Unsafe.instance.putCharVolatile(base, offset, (char) obj);
+                break;
+            }
+            case "byte": {
+                Unsafe.instance.putByteVolatile(base, offset, (byte) obj);
+                break;
+            }
+            default: {
+                Unsafe.instance.putObjectVolatile(base, offset, clone(obj));
+                break;
+            }
+        }
+    }
+
+    public static void putStatic(Field field, Object obj) {
         Object base;
         if (Util.baseCache.containsKey(field)) {
             base = Util.baseCache.get(field);
@@ -270,7 +432,7 @@ public class ObjectUtil {
         }
         long offset;
         if (Util.offsetCache.containsKey(field)) {
-            offset = Util.offsetCache.getLong(field);
+            offset = Util.offsetCache.get(field);
         } else {
             offset = Unsafe.instance.staticFieldOffset(field);
             Util.offsetCache.put(field, offset);
@@ -309,7 +471,7 @@ public class ObjectUtil {
                 break;
             }
             default: {
-                Unsafe.instance.putObjectVolatile(base, offset, clone(obj, 0));
+                Unsafe.instance.putObjectVolatile(base, offset, clone(obj));
                 break;
             }
         }
@@ -317,7 +479,6 @@ public class ObjectUtil {
 
     public static boolean FromModClass(Object obj) {
         String name = ReflectionUtil.getName(obj.getClass());
-        Launch.LOGGER.info("class:" + name);
         return ModClass(name);
     }
 
@@ -332,17 +493,17 @@ public class ObjectUtil {
             }
 
             if (path.contains("!")) {
-                path = path.substring(0, path.indexOf("!"));
+                path = path.substring(0, path.lastIndexOf("!"));
             }
             if (path.contains("file:/")) {
                 path = path.replace("file:/", "");
             }
-
-            if (Launch.Debug) {
-                Launch.LOGGER.info(path);
+            if (Launch.win) {
+                if (path.startsWith("/")) {
+                    path = path.substring(1);
+                }
             }
-
-            return path.startsWith("mods", path.lastIndexOf(File.separator) - 4);
+            return path.contains("/mods/") || path.contains("\\mods\\");
         }
         return false;
     }
@@ -355,11 +516,11 @@ public class ObjectUtil {
         switch (scale) {
             case 4:
                 long factor = Unsafe.instance.addressSize() == 8 ? 8 : 1;
-                final long i1 = (Unsafe.instance.getInt(objects, offset) & 0xFFFFFFFFL) * factor;
+                final long i1 = (Unsafe.instance.getIntVolatile(objects, offset) & 0xFFFFFFFFL) * factor;
                 System.out.print(Long.toHexString(i1));
                 last = i1;
                 for (int i = 1; i < objects.length; i++) {
-                    final long i2 = (Unsafe.instance.getInt(objects, offset + i * 4) & 0xFFFFFFFFL) * factor;
+                    final long i2 = (Unsafe.instance.getIntVolatile(objects, offset + i * 4L) & 0xFFFFFFFFL) * factor;
                     if (i2 > last)
                         System.out.print(", +" + Long.toHexString(i2 - last));
                     else
@@ -371,5 +532,175 @@ public class ObjectUtil {
                 throw new AssertionError("Not supported");
         }
         System.out.println();
+    }
+
+    public static Object generateObject(Class<?> cls) {
+        if (cls == Class.class) {
+            throw new IllegalArgumentException("Cannot construct class instance!");
+        }
+        try {
+            Object o = Unsafe.instance.allocateInstance(cls);
+            for (Field field : ReflectionUtil.getAllFields(cls)) {
+                if (Modifier.isStatic(field.getModifiers())) {
+                    continue;
+                }
+                fillValue(field, o, null);
+            }
+            return o;
+        } catch (InstantiationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void fillValue(Field field, Object o, Object obj) {
+        boolean isStatic = Modifier.isStatic(field.getModifiers());
+        Object base = null;
+        if (isStatic) {
+            if (Util.baseCache.containsKey(field)) {
+                base = Util.baseCache.get(field);
+            } else {
+                base = Unsafe.instance.staticFieldBase(field);
+                Util.baseCache.put(field, base);
+            }
+        }
+        long offset;
+        if (Util.offsetCache.containsKey(field)) {
+            offset = Util.offsetCache.get(field);
+        } else {
+            offset = isStatic ? Unsafe.instance.staticFieldOffset(field) : Unsafe.instance.objectFieldOffset(field);
+            Util.offsetCache.put(field, offset);
+        }
+        base = base == null ? o : base;
+        if (base == null) {
+            throw new IllegalArgumentException("The fuck?");
+        }
+        if (field.getType().getName().startsWith("[")) {
+            int abo = Unsafe.instance.arrayBaseOffset(field.getType());
+            int ais = Unsafe.instance.arrayIndexScale(field.getType());
+            switch (field.getType().getName()) {
+                case "[I": {
+                    int[] array = new int[obj == null ? 0 : ((int[]) obj).length];
+                    if (obj != null) {
+                        int[] old = (int[]) obj;
+                        System.arraycopy(old, 0, array, 0, old.length);
+                    }
+                    Unsafe.instance.putObjectVolatile(base, offset, array);
+                    break;
+                }
+                case "[J": {
+                    long[] array = new long[obj == null ? 0 : ((long[]) obj).length];
+                    if (obj != null) {
+                        long[] old = (long[]) obj;
+                        System.arraycopy(old, 0, array, 0, old.length);
+                    }
+                    Unsafe.instance.putObjectVolatile(base, offset, array);
+                    break;
+                }
+                case "[S": {
+                    short[] array = new short[obj == null ? 0 : ((short[]) obj).length];
+                    if (obj != null) {
+                        short[] old = (short[]) obj;
+                        System.arraycopy(old, 0, array, 0, old.length);
+                    }
+                    Unsafe.instance.putObjectVolatile(base, offset, array);
+                    break;
+                }
+                case "[Z": {
+                    boolean[] array = new boolean[obj == null ? 0 : ((boolean[]) obj).length];
+                    if (obj != null) {
+                        boolean[] old = (boolean[]) obj;
+                        System.arraycopy(old, 0, array, 0, old.length);
+                    }
+                    Unsafe.instance.putObjectVolatile(base, offset, array);
+                    break;
+                }
+                case "[F": {
+                    float[] array = new float[obj == null ? 0 : ((float[]) obj).length];
+                    if (obj != null) {
+                        float[] old = (float[]) obj;
+                        System.arraycopy(old, 0, array, 0, old.length);
+                    }
+                    Unsafe.instance.putObjectVolatile(base, offset, array);
+                    break;
+                }
+                case "[D": {
+                    double[] array = new double[obj == null ? 0 : ((double[]) obj).length];
+                    if (obj != null) {
+                        double[] old = (double[]) obj;
+                        System.arraycopy(old, 0, array, 0, old.length);
+                    }
+                    Unsafe.instance.putObjectVolatile(base, offset, array);
+                    break;
+                }
+                case "[C": {
+                    char[] array = new char[obj == null ? 0 : ((char[]) obj).length];
+                    if (obj != null) {
+                        char[] old = (char[]) obj;
+                        System.arraycopy(old, 0, array, 0, old.length);
+                    }
+                    Unsafe.instance.putObjectVolatile(base, offset, array);
+                    break;
+                }
+                case "[B": {
+                    byte[] array = new byte[obj == null ? 0 : ((byte[]) obj).length];
+                    if (obj != null) {
+                        byte[] old = (byte[]) obj;
+                        System.arraycopy(old, 0, array, 0, old.length);
+                    }
+                    Unsafe.instance.putObjectVolatile(base, offset, array);
+                    break;
+                }
+                default: {
+                    Object array = Array.newInstance(field.getType().getComponentType(), obj == null ? 0 : Array.getLength(obj));
+                    if (obj != null) {
+                        int length = Array.getLength(obj);
+                        for (int i = 0; i < length; i++) {
+                            long address = ((long) i * ais) + abo;
+                            Unsafe.instance.putObjectVolatile(array, address, Unsafe.instance.getObjectVolatile(obj, address));
+                        }
+                    }
+                    break;
+                }
+            }
+            return;
+        }
+        switch (field.getType().getName()) {
+            case "int": {
+                Unsafe.instance.putIntVolatile(base, offset, obj != null ? (int) obj : 0);
+                break;
+            }
+            case "float": {
+                Unsafe.instance.putFloatVolatile(base, offset, obj != null ? (float) obj : 0.0f);
+                break;
+            }
+            case "double": {
+                Unsafe.instance.putDoubleVolatile(base, offset, obj != null ? (double) obj : 0.0D);
+                break;
+            }
+            case "long": {
+                Unsafe.instance.putLongVolatile(base, offset, obj != null ? (long) obj : 0L);
+                break;
+            }
+            case "short": {
+                Unsafe.instance.putShortVolatile(base, offset, obj != null ? (short) obj : 0);
+                break;
+            }
+            case "boolean": {
+                Unsafe.instance.putBooleanVolatile(base, offset, obj != null && (boolean) obj);
+                break;
+            }
+            case "char": {
+                Unsafe.instance.putCharVolatile(base, offset, obj != null ? (char) obj : 0);
+                break;
+            }
+            case "byte": {
+                Unsafe.instance.putByteVolatile(base, offset, obj != null ? (byte) obj : 0);
+                break;
+            }
+            default: {
+                Unsafe.instance.putObjectVolatile(base, offset, obj != null ? clone(obj) : generateObject(field.getType()));
+                break;
+            }
+        }
     }
 }

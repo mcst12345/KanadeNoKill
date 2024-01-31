@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 public class NBTTagCompound extends NBTBase {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Pattern SIMPLE_VALUE = Pattern.compile("[A-Za-z0-9._+-]+");
-    public final Map<String, NBTBase> tagMap = Maps.<String, NBTBase>newHashMap();
+    public final Map<String, NBTBase> tagMap = Maps.newHashMap();
 
     private static void writeEntry(String name, NBTBase data, DataOutput output) throws IOException {
         output.writeByte(data.getId());

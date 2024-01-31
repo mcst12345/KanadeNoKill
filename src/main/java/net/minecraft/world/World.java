@@ -63,15 +63,15 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     public final WorldProvider provider;
     public final Profiler profiler;
     public final boolean isRemote;
-    protected final List<Entity> unloadedEntityList = Lists.newArrayList();
+    public final List<Entity> unloadedEntityList = Lists.newArrayList();
     protected final IntHashMap<Entity> entitiesById = new IntHashMap<>();
     protected final int DIST_HASH_MAGIC = 1013904223;
     protected final ISaveHandler saveHandler;
-    private final List<TileEntity> addedTileEntityList = Lists.newArrayList();
-    private final List<TileEntity> tileEntitiesToBeRemoved = Lists.newArrayList();
+    public final List<TileEntity> addedTileEntityList = Lists.newArrayList();
+    public final List<TileEntity> tileEntitiesToBeRemoved = Lists.newArrayList();
     private final long cloudColour = 16777215L;
     private final Calendar calendar;
-    private final WorldBorder worldBorder;
+    public final WorldBorder worldBorder;
     public List<Entity> protects = new ArrayList<>();
     public List<Entity> entities = new ArrayList<>();
     public List<Entity> players = new ArrayList<>();
@@ -102,7 +102,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     private int seaLevel = 63;
     private int skylightSubtracted;
     private int lastLightningBolt;
-    private boolean processingLoadedTiles;
+    public boolean processingLoadedTiles;
     private net.minecraftforge.common.capabilities.CapabilityDispatcher capabilities;
     private net.minecraftforge.common.util.WorldCapabilityData capabilityData;
 
@@ -241,7 +241,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         }
     }
 
-    protected abstract boolean isChunkLoaded(int x, int z, boolean allowEmpty);
+    public abstract boolean isChunkLoaded(int x, int z, boolean allowEmpty);
 
     public Chunk getChunk(BlockPos pos) {
         return this.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
@@ -1510,7 +1510,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
         this.profiler.endSection();
     }
 
-    protected void tickPlayers() {
+    public void tickPlayers() {
     }
 
     public boolean addTileEntity(TileEntity tile) {

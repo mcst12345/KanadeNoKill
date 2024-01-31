@@ -4,7 +4,6 @@ import kanade.kill.Config;
 import kanade.kill.Launch;
 import kanade.kill.entity.Lain;
 import kanade.kill.network.NetworkHandler;
-import kanade.kill.network.packets.KillAllEntities;
 import kanade.kill.network.packets.UpdatePlayerProtectedState;
 import kanade.kill.util.EntityUtil;
 import kanade.kill.util.NativeMethods;
@@ -21,15 +20,15 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
-import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 @SuppressWarnings("unused")
 public class KillItem extends Item {
@@ -143,22 +142,6 @@ public class KillItem extends Item {
 
     @Nonnull
     public ActionResult<ItemStack> onItemRightClick(@Nonnull World worldIn, @Nonnull EntityPlayer playerIn,@Nonnull EnumHand handIn){
-        if (!playerIn.isSneaking()) {
-            synchronized (Util.tasks) {
-                Util.tasks.add(() -> {
-                    List<Entity> targets = new ArrayList<>();
-                    for (int id : DimensionManager.getIDs()) {
-                        WorldServer world = DimensionManager.getWorld(id);
-                        targets.addAll(world.entities);
-                    }
-                    EntityUtil.Kill(targets);
-                });
-            }
-            MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-            if (server != null && server.isCallingFromMinecraftThread()) {
-                NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillAllEntities());
-            }
-        }
         return new ActionResult<>(EnumActionResult.SUCCESS, playerIn.getHeldItem(handIn));
     }
 }

@@ -12,7 +12,7 @@ plugins {
 
 
 group = 'kanade'
-version = "R2"
+version = "R3 beta"
 
 java {
     archivesBaseName = "Kanade's Kill mc1.12.2"
