@@ -20,7 +20,7 @@ public class FieldSaveThread extends Thread {
                 }
                 Launch.LOGGER.info("Field:" + field.getName() + ":" + field.getType().getName());
                 try {
-                    Util.cache2.put(field, ObjectUtil.clone(ObjectUtil.getStatic(field), 0));
+                    Util.cache2.put(field, ObjectUtil.clone(ObjectUtil.getStatic(field)));
                 } catch (Throwable t) {
                     if (t instanceof StackOverflowError) {
                         Launch.LOGGER.warn("Too deep. Ignoring this field.");

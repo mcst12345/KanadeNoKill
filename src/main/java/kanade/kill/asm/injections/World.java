@@ -250,70 +250,14 @@ public class World implements Opcodes {
         Launch.LOGGER.info("Inject into countEntities(net.minecraft.entity.EnumCreatureType,boolean).");
     }
 
-    public static void InjectUpdateEntities(MethodNode mn) {
-        InsnList list = new InsnList();
-        LabelNode label = new LabelNode();
-        LabelNode label6 = new LabelNode();
-
-        list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/util/Util", "killing", "Z"));
-        list.add(new JumpInsnNode(IFNE, label));
-        list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Launch", "client", "Z"));
-        list.add(new JumpInsnNode(IFEQ, label6));
-        list.add(new FieldInsnNode(GETSTATIC, "net/minecraft/client/Minecraft", "dead", "Z"));
-        list.add(new JumpInsnNode(IFNE, label));
-        list.add(new JumpInsnNode(GOTO, label6));
-        list.add(label);
-        list.add(new InsnNode(RETURN));
-        list.add(label6);
-
-        LabelNode label0 = new LabelNode();
-        LabelNode label1 = new LabelNode();
-        LabelNode label2 = new LabelNode();
-        LabelNode label3 = new LabelNode();
-        LabelNode label4 = new LabelNode();
-        LabelNode label5 = new LabelNode();
-        list.add(label0);
-        list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
-        list.add(new MethodInsnNode(INVOKEVIRTUAL, "java/lang/Object", "getClass", "()Ljava/lang/Class;", false));
-        list.add(new LdcInsnNode(Type.getType("Ljava/util/ArrayList;")));
-        list.add(new JumpInsnNode(IF_ACMPEQ, label1));
-        list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new TypeInsnNode(NEW, "java/util/ArrayList"));
-        list.add(new InsnNode(DUP));
-        list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
-        list.add(new MethodInsnNode(INVOKESPECIAL, "java/util/ArrayList", "<init>", "(Ljava/util/Collection;)V", false));
-        list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
-        list.add(label1);
-        list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "protects", "Ljava/util/List;"));
-        list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "iterator", "()Ljava/util/Iterator;", true));
-        list.add(new VarInsnNode(ASTORE, 1));
-        list.add(label4);
-        list.add(new VarInsnNode(ALOAD, 1));
-        list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/Iterator", "hasNext", "()Z", true));
-        list.add(new JumpInsnNode(IFEQ, label2));
-        list.add(new VarInsnNode(ALOAD, 1));
-        list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/Iterator", "next", "()Ljava/lang/Object;", true));
-        list.add(new TypeInsnNode(CHECKCAST, "net/minecraft/entity/Entity"));
-        list.add(new VarInsnNode(ASTORE, 2));
-        list.add(label5);
-        list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
-        list.add(new VarInsnNode(ALOAD, 2));
-        list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "contains", "(Ljava/lang/Object;)Z", true));
-        list.add(new JumpInsnNode(IFNE, label3));
-        list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/world/World", "entities", "Ljava/util/List;"));
-        list.add(new VarInsnNode(ALOAD, 2));
-        list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "add", "(Ljava/lang/Object;)Z", true));
-        list.add(new InsnNode(POP));
-        list.add(label3);
-        list.add(new JumpInsnNode(GOTO, label4));
-        list.add(label2);
-        mn.instructions.insert(list);
-        Launch.LOGGER.info("Inject into updateEntities().");
+    public static void OverwriteUpdateEntities(MethodNode mn) {
+        mn.instructions.clear();
+        mn.localVariables.clear();
+        mn.tryCatchBlocks.clear();
+        mn.instructions.add(new VarInsnNode(ALOAD, 0));
+        mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/World", "UpdateEntities", "(Lnet/minecraft/world/World;)V", false));
+        mn.instructions.add(new InsnNode(RETURN));
+        Launch.LOGGER.info("Overwrite into updateEntities().");
     }
 
     public static void InjectUpdateEntityWithOptionalForce(MethodNode mn) {

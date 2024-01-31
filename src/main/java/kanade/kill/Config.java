@@ -13,4 +13,5 @@ public class Config {
     public static boolean fieldReset = true;
     public static boolean AllowAttach = Boolean.parseBoolean(System.getProperty("AllowAttach"));
     public static boolean particleEffect = true;
+    public static boolean SuperAttack = false;
 }

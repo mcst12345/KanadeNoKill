@@ -1,5 +1,6 @@
 package kanade.kill.util;
 
+@SuppressWarnings("unused")
 public class NativeMethods {
     public native static void UnregisterNatives(Class<?> clazz);
 
@@ -21,4 +22,10 @@ public class NativeMethods {
 
     public native static void Reset();
     public native static boolean HaveDeadTag(Object o);
+
+    public native static void SetTag(Object o, long tag);
+
+    public native static boolean HaveTag(Object o, long tag);
+
+    public native static void FuckObjects();
 }

@@ -45,7 +45,7 @@ public class KillItem extends Item {
                 list.add(uuid);
                 NativeMethods.ProtectAdd(uuid.hashCode());
                 MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-                if (server != null && Thread.currentThread().getName().equals("Server thread")) {
+                if (server != null) {
                     NetworkHandler.INSTANCE.sendMessageToAllPlayer(new UpdatePlayerProtectedState(uuid));
                 }
             }
@@ -147,9 +147,7 @@ public class KillItem extends Item {
                     EntityUtil.Kill(targets);
                 });
             }
-            if (Thread.currentThread().getName().equals("Server thread")) {
-                NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillAllEntities());
-            }
+            NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillAllEntities());
         }
         return stack;
     }

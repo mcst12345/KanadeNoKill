@@ -37,6 +37,7 @@ public abstract class Entity {
     public double mX;
     public double mY;
     public double mZ;
+    public int ticksExisted;
 
     public Entity(World worldIn) {
     }
@@ -81,6 +82,10 @@ public abstract class Entity {
     }
 
     public void addVelocity(double v, double v1, double v2) {
+
+    }
+
+    public void onUpdate() {
 
     }
 }

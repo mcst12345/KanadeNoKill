@@ -1,13 +1,19 @@
 package kanade.kill.command;
 
+import cpw.mods.fml.common.FMLCommonHandler;
 import kanade.kill.Config;
+import kanade.kill.Launch;
 import kanade.kill.item.KillItem;
 import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.ConfigUpdatePacket;
+import kanade.kill.network.packets.Reset;
 import kanade.kill.util.EntityUtil;
+import kanade.kill.util.NativeMethods;
 import net.minecraft.command.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
 
 import javax.annotation.Nonnull;
@@ -25,6 +31,7 @@ public class KanadeKillCommand extends CommandBase {
             ret.add("kill");
             ret.add("protected");
             ret.add("mode");
+            ret.add("reset");
         } else {
             if (args.length == 2) {
                 if (args[0].equals("config")) {
@@ -38,6 +45,7 @@ public class KanadeKillCommand extends CommandBase {
                     ret.add("allPlayerProtect");
                     ret.add("fieldReset");
                     ret.add("particleEffect");
+                    ret.add("SuperAttack");
                 } else if (args[0].equals("mode")) {
                     ret.add("timestop");
                     ret.add("Annihilation");
@@ -128,6 +136,11 @@ public class KanadeKillCommand extends CommandBase {
                                 Config.particleEffect = Boolean.parseBoolean(arg2);
                                 break;
                             }
+                            case "SuperAttack": {
+                                Config.SuperAttack = Boolean.parseBoolean(arg2);
+                                NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
+                                break;
+                            }
                             default: {
                                 sender.addChatMessage(new ChatComponentText("Config " + arg1 + " isn't found!"));
                                 return;
@@ -149,6 +162,7 @@ public class KanadeKillCommand extends CommandBase {
                         Entity entity = getPlayer(sender, args[2]);
                         EntityUtil.Kill(entity, true);
                     }
+                    break;
                 }
                 case "protected": {
                     try {
@@ -159,6 +173,7 @@ public class KanadeKillCommand extends CommandBase {
                     } catch (PlayerNotFoundException e) {
                         sender.addChatMessage(new ChatComponentText("No player found. Don't use this in server console."));
                     }
+                    break;
                 }
                 case "mode": {
                     try {
@@ -181,6 +196,23 @@ public class KanadeKillCommand extends CommandBase {
                         }
                     } catch (PlayerNotFoundException e) {
                         sender.addChatMessage(new ChatComponentText("No player found. Don't use this in server console."));
+                    }
+                    break;
+                }
+                case "reset": {
+                    Launch.LOGGER.info("Resetting...");
+                    NativeMethods.Reset();
+                    KillItem.list.clear();
+                    EntityUtil.Dead.clear();
+                    EntityUtil.blackHolePlayers.clear();
+                    MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+                    if (server == null) {
+                        break;
+                    }
+                    for (Object o : server.serverConfigManager.playerEntityList) {
+                        EntityPlayerMP player = (EntityPlayerMP) o;
+                        player.Inventory = new InventoryPlayer(player);
+                        NetworkHandler.INSTANCE.sendMessageToPlayer(new Reset(), player);
                     }
                     break;
                 }

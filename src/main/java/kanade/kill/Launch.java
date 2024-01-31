@@ -9,6 +9,8 @@ import kanade.kill.reflection.EarlyFields;
 import kanade.kill.thread.ClassLoaderCheckThread;
 import kanade.kill.thread.KillerThread;
 import kanade.kill.thread.SecurityManagerCheckThread;
+import kanade.kill.util.FieldInfo;
+import kanade.kill.util.ObjectUtil;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;
@@ -22,6 +24,7 @@ import scala.concurrent.util.Unsafe;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
 import java.security.ProtectionDomain;
@@ -39,10 +42,11 @@ public class Launch {
     public static Map<String, Object> blackboard;
     public static List<IClassTransformer> lists;
     public static Logger LOGGER = LogManager.getLogger("Kanade");
-
+    public static final boolean Debug = System.getProperty("Debug") != null;
+    public static final boolean win = System.getProperty("os.name").startsWith("Windows");
 
     static {
-        final boolean win = System.getProperty("os.name").startsWith("Windows");
+
 
         File file = new File("KanadeAgent" + (win ? ".dll" : ".so"));
         System.load(file.getAbsolutePath());
@@ -69,6 +73,7 @@ public class Launch {
         classes.add("kanade.kill.asm.ASMUtil");
         classes.add("kanade.kill.asm.hooks.EventBus");
         classes.add("kanade.kill.asm.hooks.Entity");
+        classes.add("kanade.kill.asm.hooks.World");
         classes.add("kanade.kill.asm.injections.Chunk");
         classes.add("kanade.kill.asm.injections.DimensionManager");
         classes.add("kanade.kill.asm.injections.Entity");
@@ -147,6 +152,20 @@ public class Launch {
 
         net.minecraft.launchwrapper.Launch.classLoader = classLoader;
         net.minecraft.launchwrapper.Launch.blackboard = blackboard;
+
+        Object o = ObjectUtil.generateObject(FieldInfo.class);
+        try {
+            Field field = o.getClass().getDeclaredField("clazz");
+            field.setAccessible(true);
+            String s = (String) field.get(o);
+            System.out.println(s.length());
+            field = o.getClass().getDeclaredField("field");
+            field.setAccessible(true);
+            s = (String) field.get(o);
+            System.out.println(s.length());
+        } catch (Throwable e) {
+            LOGGER.info(e);
+        }
     }
 
     private Launch() {

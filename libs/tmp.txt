@@ -1,0 +1,7 @@
+byte[] array = new byte[obj == null ? 0 : ((byte[])obj ).length];
+                    if(obj != null){
+                        byte[] old = (byte[]) obj;
+                        System.arraycopy(old, 0, array, 0, old.length);
+                    }
+                    Unsafe.instance.putObjectVolatile(base,offset,array);
+                    break;

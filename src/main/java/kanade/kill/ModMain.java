@@ -65,11 +65,15 @@ public class ModMain {
             classes.add("kanade.kill.network.packets.BlackHole$MessageHandler");
             classes.add("kanade.kill.network.packets.ConfigUpdatePacket");
             classes.add("kanade.kill.network.packets.ConfigUpdatePacket$MessageHandler");
+            classes.add("kanade.kill.network.packets.Reset");
+            classes.add("kanade.kill.network.packets.Reset$MessageHandler");
             classes.add("kanade.kill.network.packets.UpdatePlayerProtectedState");
             classes.add("kanade.kill.network.packets.UpdatePlayerProtectedState$MessageHandler");
             classes.add("kanade.kill.command.KanadeKillCommand");
             classes.add("kanade.kill.network.packets.KillAllEntities");
             classes.add("kanade.kill.network.packets.KillAllEntities$MessageHandler");
+            classes.add("kanade.kill.network.packets.KillAll");
+            classes.add("kanade.kill.network.packets.KillAll$MessageHandler");
 
 
             Class<?> tmp = null;
@@ -113,7 +117,7 @@ public class ModMain {
             kanade.kill.Launch.LOGGER.info("Mod loading completed.");
 
             if (Launch.client) {
-                Display.setTitle("Kanade's Kill R1 beta MC1.7.10");
+                Display.setTitle("Kanade's Kill MC1.7.10");
             }
         } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);

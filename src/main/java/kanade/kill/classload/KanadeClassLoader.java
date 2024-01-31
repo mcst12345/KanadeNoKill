@@ -31,6 +31,8 @@ import java.util.jar.Manifest;
 
 @SuppressWarnings("unchecked")
 public class KanadeClassLoader extends LaunchClassLoader {
+    private static final Set<String> exclusions = new HashSet<>();
+
     private static final Manifest EMPTY = new Manifest();
     private final Map<String, byte[]> resourceCache = new ConcurrentHashMap<>(1000);
     private final Set<String> invalid = new HashSet<>();
@@ -148,13 +150,26 @@ public class KanadeClassLoader extends LaunchClassLoader {
         return name;
     }
 
+    static {
+        exclusions.add("kanade.kill.asm.Transformer");
+        exclusions.add("kanade.kill.util.NativeMethods");
+        exclusions.add("kanade.kill.Launch");
+        exclusions.add("kanade.kill.ServerMain");
+        exclusions.add("kanade.kill.Core");
+    }
+
+    //Launch.classLoader.getClass().getDeclaredField("transformerExceptions")
+    //Why don's you use LaunchClassLoader.class ?
+    @SuppressWarnings("unused")
+    public Set<String> transformerExceptions = Collections.EMPTY_SET;
+
     @Override
     public Class<?> findClass(String name) throws ClassNotFoundException {
         if (invalid.contains(name)) {
             throw new ClassNotFoundException(name);
         }
         ClassLoader parent = (ClassLoader) Unsafe.instance.getObjectVolatile(this, EarlyFields.parent_offset);
-        if (name.equals("kanade.kill.util.NativeMethods") || name.equals("kanade.kill.Launch") || name.equals("kanade.kill.ServerMain")) {
+        if (exclusions.contains(name)) {
             return parent.loadClass(name);
         }
         String transformedName = transformName(name);

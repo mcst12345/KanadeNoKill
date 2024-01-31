@@ -1,10 +1,12 @@
 package kanade.kill.asm.hooks;
 
 import kanade.kill.Core;
+import kanade.kill.ModMain;
 import kanade.kill.item.KillItem;
 import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.Annihilation;
 import kanade.kill.network.packets.BlackHole;
+import kanade.kill.network.packets.KillAll;
 import kanade.kill.network.packets.ServerTimeStop;
 import kanade.kill.timemanagement.TimeStop;
 import net.minecraft.block.material.Material;
@@ -49,6 +51,10 @@ public class Minecraft {
                     }
                 } else {
                     mc.PLAYER.sendChatMessage("当前版本为试用版，完整版请至#QQ2981196615购买。");
+                }
+            } else {
+                if (mc.PLAYER.getHeldItem().getITEM() == ModMain.kill_item) {
+                    NetworkHandler.INSTANCE.sendMessageToServer(new KillAll());
                 }
             }
         }
@@ -136,7 +142,6 @@ public class Minecraft {
                             NetworkHandler.INSTANCE.sendMessageToServer(new BlackHole(mc.PLAYER.getUniqueID()));
                         }
                 }
-
             }
         }
     }

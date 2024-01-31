@@ -15,7 +15,7 @@ buildscript {
 
 apply plugin: 'forge'
 
-version = "R2"
+version = "R3 beta"
 group = "kanade"
 archivesBaseName = "Kanade's kill mc1.7.10"
 

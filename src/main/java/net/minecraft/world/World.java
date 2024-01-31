@@ -3,6 +3,7 @@ package net.minecraft.world;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
+import net.minecraft.profiler.Profiler;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.biome.BiomeGenBase;
@@ -20,6 +21,13 @@ public class World implements IBlockAccess {
     public List<Entity> players;
     public boolean isRemote;
     public List<IWorldAccess> worldAccesses;
+    public Profiler theProfiler;
+    public List weatherEffects;
+    public List unloadedEntityList;
+    public boolean field_147481_N;
+    public List loadedTileEntityList;
+    public List field_147483_b;
+    public List addedTileEntityList;
 
     public Block getBlock(int p_147439_1_, int p_147439_2_, int p_147439_3_) {
         return null;
@@ -92,4 +100,20 @@ public class World implements IBlockAccess {
     }
 
     public WorldInfo worldInfo;
+
+    public boolean chunkExists(int j, int l) {
+        return false;
+    }
+
+    public void onEntityRemoved(Entity entity) {
+
+    }
+
+    public void updateEntity(Entity entity) {
+
+    }
+
+    public boolean blockExists(int xCoord, int yCoord, int zCoord) {
+        return false;
+    }
 }

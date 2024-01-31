@@ -16,6 +16,8 @@ public class Minecraft implements Opcodes {
         cn.fields.add(new FieldNode(ACC_PUBLIC, "WORLD", "Lnet/minecraft/client/multiplayer/WorldClient;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "IngameGUI", "Lnet/minecraft/client/gui/GuiIngame;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "CurrentScreen", "Lnet/minecraft/client/gui/GuiScreen;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "RenderGlobal", "Lnet/minecraft/client/renderer/RenderGlobal;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "RenderEngine", "Lnet/minecraft/client/renderer/texture/TextureManager;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_STATIC, "dead", "Z", null, null));
     }
 
