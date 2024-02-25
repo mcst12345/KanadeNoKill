@@ -14,6 +14,7 @@ public class Keys {
     public static final KeyBinding SAVE = new KeyBinding("key.kanade.save", KeyConflictContext.IN_GAME, KeyModifier.ALT, Keyboard.KEY_I, "key.category.kanade");
 
     public static void init() {
+        Launch.LOGGER.info("Registering keys.");
         ClientRegistry.registerKeyBinding(SWITCH_TIME_POINT);
         ClientRegistry.registerKeyBinding(SAVE);
     }

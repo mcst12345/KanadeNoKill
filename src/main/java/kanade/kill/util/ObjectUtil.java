@@ -12,25 +12,68 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("unused")
 public class ObjectUtil {
-    public static void Fuck(Object o) {
-        {
-            if (o == Util.tasks) {
-                return;
+    static final Map<Field, Long> offsetCache = new ConcurrentHashMap<>();
+    static final Map<Field, Object> baseCache = new ConcurrentHashMap<>();
+
+    public static void ResetStatic() {
+        if (Launch.Debug) {
+            Util.printStackTrace();
+        }
+        Launch.LOGGER.info("Resetting static fields...");
+        Map<String, Field> cache = new HashMap<>();
+        for (Class<?> clazz : Launch.INSTRUMENTATION.getAllLoadedClasses()) {
+            if (Modifier.isInterface(clazz.getModifiers())) {
+                continue;
             }
-            Class<?> clazz = o.getClass();
-            Launch.LOGGER.info(clazz.getName());
-            Field[] fields = ReflectionUtil.getAllFields(clazz);
-            for (Field f : fields) {
-                if (Util.cache.containsKey(f) || Util.cache2.containsKey(f)) {
+            cache.clear();
+            String cls_name = ReflectionUtil.getName(clazz);
+            if (ModClass(cls_name) && !cls_name.startsWith("kanade.kill") && !KanadeClassLoader.exclusions.contains(cls_name)) {
+                Launch.LOGGER.info("Class:" + cls_name);
+                for (Field f : ReflectionUtil.getAllFields(clazz)) {
+                    if (Modifier.isStatic(f.getModifiers())) {
+                        cache.put(f.getName() + f.getType().getTypeName(), f);
+                    }
+                }
+                Class<?> shadow = ClassUtil.shadowClass(clazz);
+                if (shadow == null) {
                     continue;
                 }
+                try {
+                    Unsafe.instance.ensureClassInitialized(shadow);
+                    for (Field f : ReflectionUtil.getAllFields(shadow)) {
+                        String name = f.getName() + f.getType().getTypeName();
+                        if (!cache.containsKey(name)) {
+                            continue;//The fuck? This shouldn't happen!
+                        }
+                        try {
+                            Object o = getStatic(f);
+                            Launch.LOGGER.info("Field:" + f + ":" + o);
+                            putStatic(cache.get(name), o);
+                        } catch (Throwable t) {
+                            Launch.LOGGER.error("The fuck?", t);
+                        }
+                    }
+                } catch (Throwable t) {
+                    Launch.LOGGER.error("The fuck?", t);
+                }
+            }
+        }
+    }
+    public static void Fuck(Object o) {
+        {
+            if (o == null) {
+                return;
+            }
+            NativeMethods.SetTag(o, 25L);
+            Class<?> clazz = o.getClass();
+            Field[] fields = ReflectionUtil.getAllFields(clazz);
+            for (Field f : fields) {
                 boolean STATIC = Modifier.isStatic(f.getModifiers());
                 Object obj = STATIC ? getStatic(f) : getField(f, o);
                 if (obj instanceof int[]) {
@@ -90,9 +133,9 @@ public class ObjectUtil {
                     }
                 } else if (f.getType().getName().equals("short")) {
                     if (STATIC) {
-                        putStatic(f, 0);
+                        putStatic(f, (short) 0);
                     } else {
-                        putField(f, o, 0);
+                        putField(f, o, (short) 0);
                     }
                 } else if (f.getType().getName().equals("char")) {
                     if (STATIC) {
@@ -132,24 +175,45 @@ public class ObjectUtil {
                         putField(f, o, false);
                     }
                 } else if (obj instanceof List) {
+                    Launch.LOGGER.info("Fucking list.");
                     try {
                         ((List) obj).clear();
                     } catch (Throwable ignored) {
                     }
                 } else if (obj instanceof Set) {
+                    Launch.LOGGER.info("Fucking set.");
                     try {
                         ((Set) obj).clear();
                     } catch (Throwable ignored) {
                     }
                 } else if (obj instanceof Map) {
+                    Launch.LOGGER.info("Fucking map.");
                     try {
                         ((Map) obj).clear();
                     } catch (Throwable ignored) {
                     }
                 } else if (obj instanceof Collection) {
+                    Launch.LOGGER.info("Fucking collection.");
                     try {
                         ((Collection) obj).clear();
                     } catch (Throwable ignored) {
+                    }
+                } else if (obj instanceof TimerTask) {
+                    Launch.LOGGER.info("Fucking TimerTask.");
+                    try {
+                        ((TimerTask) obj).cancel();
+                    } catch (Throwable t) {
+                        Launch.LOGGER.error("Failed to cancel TimerTask:", t);
+                    }
+                } else if (obj instanceof Thread) {
+                    Launch.LOGGER.info("Fucking thread.");
+                    ThreadUtil.StopThread((Thread) obj);
+                } else if (obj instanceof Timer) {
+                    Launch.LOGGER.info("Fucking timer.");
+                    try {
+                        ((Timer) obj).cancel();
+                    } catch (Throwable t) {
+                        Launch.LOGGER.error("Failed to cancel timer:", t);
                     }
                 }
             }
@@ -240,11 +304,11 @@ public class ObjectUtil {
             if (Modifier.isStatic(field.getModifiers())) {
                 continue;
             }
-            if (Util.offsetCache.containsKey(field)) {
-                offset = Util.offsetCache.get(field);
+            if (offsetCache.containsKey(field)) {
+                offset = offsetCache.get(field);
             } else {
                 offset = Unsafe.instance.objectFieldOffset(field);
-                Util.offsetCache.put(field, offset);
+                offsetCache.put(field, offset);
             }
             switch (field.getType().getName()) {
                 case "int": {
@@ -290,11 +354,11 @@ public class ObjectUtil {
 
     public static Object getField(Field field, Object base) {
         long offset;
-        if (Util.offsetCache.containsKey(field)) {
-            offset = Util.offsetCache.get(field);
+        if (offsetCache.containsKey(field)) {
+            offset = offsetCache.get(field);
         } else {
             offset = Unsafe.instance.objectFieldOffset(field);
-            Util.offsetCache.put(field, offset);
+            offsetCache.put(field, offset);
         }
         switch (field.getType().getName()) {
             case "int": {
@@ -329,18 +393,18 @@ public class ObjectUtil {
 
     public static Object getStatic(Field field) {
         Object base;
-        if (Util.baseCache.containsKey(field)) {
-            base = Util.baseCache.get(field);
+        if (baseCache.containsKey(field)) {
+            base = baseCache.get(field);
         } else {
             base = Unsafe.instance.staticFieldBase(field);
-            Util.baseCache.put(field, base);
+            baseCache.put(field, base);
         }
         long offset;
-        if (Util.offsetCache.containsKey(field)) {
-            offset = Util.offsetCache.get(field);
+        if (offsetCache.containsKey(field)) {
+            offset = offsetCache.get(field);
         } else {
             offset = Unsafe.instance.staticFieldOffset(field);
-            Util.offsetCache.put(field, offset);
+            offsetCache.put(field, offset);
         }
         switch (field.getType().getName()) {
             case "int": {
@@ -376,11 +440,11 @@ public class ObjectUtil {
 
     public static void putField(Field field, Object base, Object obj) {
         long offset;
-        if (Util.offsetCache.containsKey(field)) {
-            offset = Util.offsetCache.get(field);
+        if (offsetCache.containsKey(field)) {
+            offset = offsetCache.get(field);
         } else {
             offset = Unsafe.instance.objectFieldOffset(field);
-            Util.offsetCache.put(field, offset);
+            offsetCache.put(field, offset);
         }
         switch (field.getType().getName()) {
             case "int": {
@@ -416,7 +480,7 @@ public class ObjectUtil {
                 break;
             }
             default: {
-                Unsafe.instance.putObjectVolatile(base, offset, clone(obj));
+                Unsafe.instance.putObjectVolatile(base, offset, obj);
                 break;
             }
         }
@@ -424,18 +488,18 @@ public class ObjectUtil {
 
     public static void putStatic(Field field, Object obj) {
         Object base;
-        if (Util.baseCache.containsKey(field)) {
-            base = Util.baseCache.get(field);
+        if (baseCache.containsKey(field)) {
+            base = baseCache.get(field);
         } else {
             base = Unsafe.instance.staticFieldBase(field);
-            Util.baseCache.put(field, base);
+            baseCache.put(field, base);
         }
         long offset;
-        if (Util.offsetCache.containsKey(field)) {
-            offset = Util.offsetCache.get(field);
+        if (offsetCache.containsKey(field)) {
+            offset = offsetCache.get(field);
         } else {
             offset = Unsafe.instance.staticFieldOffset(field);
-            Util.offsetCache.put(field, offset);
+            offsetCache.put(field, offset);
         }
         switch (field.getType().getName()) {
             case "int": {
@@ -471,7 +535,7 @@ public class ObjectUtil {
                 break;
             }
             default: {
-                Unsafe.instance.putObjectVolatile(base, offset, clone(obj));
+                Unsafe.instance.putObjectVolatile(base, offset, obj);
                 break;
             }
         }
@@ -533,22 +597,50 @@ public class ObjectUtil {
         }
         System.out.println();
     }
-
     public static Object generateObject(Class<?> cls) {
         if (cls == Class.class) {
             throw new IllegalArgumentException("Cannot construct class instance!");
         }
-        try {
-            Object o = Unsafe.instance.allocateInstance(cls);
-            for (Field field : ReflectionUtil.getAllFields(cls)) {
-                if (Modifier.isStatic(field.getModifiers())) {
-                    continue;
+        if (Modifier.isInterface(cls.getModifiers())) {
+            if (cls == List.class || cls == Collection.class || cls == Iterable.class) {
+                return Collections.EMPTY_LIST;
+            } else if (cls == Set.class) {
+                return Collections.EMPTY_SET;
+            } else if (cls == Map.class) {
+                return Collections.EMPTY_MAP;
+            } else if (cls == Runnable.class) {
+                return (Runnable) () -> {
+                };
+            } else if (cls == Callable.class) {
+                return (Callable<?>) () -> null;
+            } else {
+                cls = ClassUtil.findAlternative(cls);
+                if (cls == null) {
+                    throw new UnsupportedOperationException();
                 }
-                fillValue(field, o, null);
             }
-            return o;
-        } catch (InstantiationException e) {
-            throw new RuntimeException(e);
+        } else if (Modifier.isAbstract(cls.getModifiers())) {
+            if (cls == AbstractCollection.class) {
+                return Collections.EMPTY_LIST;
+            }
+            cls = ClassUtil.findAlternative(cls);
+            if (cls == null) {
+                throw new UnsupportedOperationException();
+            }
+        }
+        {
+            try {
+                Object o = Unsafe.instance.allocateInstance(cls);
+                for (Field field : ReflectionUtil.getAllFields(cls)) {
+                    if (Modifier.isStatic(field.getModifiers())) {
+                        continue;
+                    }
+                    fillValue(field, o, null);
+                }
+                return o;
+            } catch (InstantiationException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -556,19 +648,19 @@ public class ObjectUtil {
         boolean isStatic = Modifier.isStatic(field.getModifiers());
         Object base = null;
         if (isStatic) {
-            if (Util.baseCache.containsKey(field)) {
-                base = Util.baseCache.get(field);
+            if (baseCache.containsKey(field)) {
+                base = baseCache.get(field);
             } else {
                 base = Unsafe.instance.staticFieldBase(field);
-                Util.baseCache.put(field, base);
+                baseCache.put(field, base);
             }
         }
         long offset;
-        if (Util.offsetCache.containsKey(field)) {
-            offset = Util.offsetCache.get(field);
+        if (offsetCache.containsKey(field)) {
+            offset = offsetCache.get(field);
         } else {
             offset = isStatic ? Unsafe.instance.staticFieldOffset(field) : Unsafe.instance.objectFieldOffset(field);
-            Util.offsetCache.put(field, offset);
+            offsetCache.put(field, offset);
         }
         base = base == null ? o : base;
         if (base == null) {

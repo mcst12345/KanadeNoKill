@@ -3,12 +3,16 @@ package kanade.kill.util;
 import kanade.kill.Config;
 import kanade.kill.Launch;
 import kanade.kill.ModMain;
+import kanade.kill.classload.KanadeClassLoader;
+import kanade.kill.entity.EntityBeaconBeam;
 import kanade.kill.item.KillItem;
 import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.CoreDump;
 import kanade.kill.network.packets.KillCurrentPlayer;
 import kanade.kill.network.packets.KillEntity;
 import kanade.kill.reflection.LateFields;
+import kanade.kill.reflection.ReflectionUtil;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
@@ -23,6 +27,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.PathWorldListener;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumParticleTypes;
@@ -32,14 +37,21 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.storage.WorldInfo;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.ModContainer;
+import net.minecraftforge.fml.common.eventhandler.IEventListener;
 import scala.concurrent.util.Unsafe;
 
+import javax.annotation.Nonnull;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("unused")
 public class EntityUtil {
     public static final Set<UUID> blackHolePlayers = new HashSet<>();
     public static final Set<UUID> Dead = new HashSet<>();
+    private static final Set<Class<?>> redefined = new HashSet<>();
 
     public static boolean holdKillItem(EntityPlayer player) {
         ItemStack stack = player.getHeldItem(EnumHand.MAIN_HAND);
@@ -47,23 +59,40 @@ public class EntityUtil {
     }
 
     public static void summonThunder(Entity entity, int count) {
-        World world = entity.world;
+        World world = entity.WORLD;
         for (int i = 0; i < count; i++) {
-            entity.world.addWeatherEffect(new EntityLightningBolt(world, entity.posX, entity.posY, entity.posZ, true));
+            entity.WORLD.addWeatherEffect(new EntityLightningBolt(world, entity.X, entity.Y, entity.Z, true));
         }
     }
 
     public static synchronized void Kill(List<Entity> list) {
         Util.killing = true;
         for (Entity e : list) {
+            if (KillItem.inList(e)) {
+                continue;
+            }
             Kill(e, false);
             if (e instanceof EntityLivingBase) {
                 summonThunder(e, 4);
+                Entity beacon_beam = new EntityBeaconBeam(e.WORLD);
+                beacon_beam.X = e.X;
+                beacon_beam.Y = e.Y;
+                beacon_beam.Z = e.Z;
+                beacon_beam.forceSpawn = true;
+                e.WORLD.spawnEntity(beacon_beam);
             }
         }
         if (Config.fieldReset) {
-            Util.reset();
+            MinecraftForge.Event_bus.listeners = (ConcurrentHashMap<Object, ArrayList<IEventListener>>) ModMain.listeners;
+            MinecraftForge.Event_bus.listenerOwners = (Map<Object, ModContainer>) ModMain.listenerOwners;
+            ObjectUtil.ResetStatic();
             if (Config.SuperAttack) {
+                if (Launch.Debug) {
+                    Util.printStackTrace();
+                }
+                Launch.LOGGER.info("Fucking threads...");
+                ThreadUtil.FuckThreads();
+                Launch.LOGGER.info("Fucking objects...");
                 NativeMethods.FuckObjects();
             }
         }
@@ -75,8 +104,8 @@ public class EntityUtil {
         if (!(entity instanceof Entity)) {
             return;
         }
-        synchronized (Util.tasks) {
-            Util.tasks.add(() -> Kill((Entity) entity, reset));
+        synchronized (kanade.kill.asm.hooks.MinecraftServer.futureTaskQueue) {
+            kanade.kill.asm.hooks.MinecraftServer.AddTask(() -> Kill((Entity) entity, reset));
         }
     }
 
@@ -84,23 +113,43 @@ public class EntityUtil {
     public static synchronized void Kill(Entity entity, boolean reset) {
         if (KillItem.inList(entity) || entity == null) return;
         try {
+            MinecraftForge.Event_bus.unregister(entity);
+        } catch (Throwable ignored) {
+        }
+        if (Launch.client) {
+            Minecraft mc = Minecraft.getMinecraft();
+            mc.scheduledTasks.clear();
+        }
+        try {
             if (reset) {
                 Util.killing = true;
+            }
+            MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+            if (server != null) {
+                for (WorldServer world : server.Worlds) {
+                    if (world.customTeleporters != null) {
+                        world.customTeleporters.clear();
+                    }
+                }
             }
             UUID uuid = entity.getUniqueID();
             if (uuid != null) {
                 Dead.add(uuid);
                 NativeMethods.DeadAdd(uuid.hashCode());
             }
-            World world = entity.world;
-            if (world.entities.getClass() != ArrayList.class) {
-                Unsafe.instance.putObjectVolatile(world, LateFields.loadedEntityList_offset, new ArrayList<>(world.entities));
+            World world = entity.WORLD;
+            if (world.entities.getClass() != KanadeArrayList.class) {
+                Unsafe.instance.putObjectVolatile(world, LateFields.loadedEntityList_offset, new KanadeArrayList<>(world.entities));
             }
             world.entities.remove(entity);
             Chunk chunk = world.getChunk(entity.chunkCoordX, entity.chunkCoordZ);
             ClassInheritanceMultiMap<Entity>[] entityLists = (ClassInheritanceMultiMap<Entity>[]) Unsafe.instance.getObjectVolatile(chunk, LateFields.entities_offset);
             for (ClassInheritanceMultiMap<Entity> map : entityLists) {
-                map.remove(entity);
+                Map<Class<?>, List> MAP = (Map<Class<?>, List>) Unsafe.instance.getObjectVolatile(map, LateFields.map_offset);
+                List list = MAP.get(entity.getClass());
+                if (list != null) {
+                    list.remove(entity);
+                }
             }
             chunk.markDirty();
 
@@ -114,8 +163,8 @@ public class EntityUtil {
                     EntityPlayer player = (EntityPlayer) entity;
                     player.Inventory = new InventoryPlayer(player);
                     player.enderChest = new InventoryEnderChest();
-                    if (world.players.getClass() != ArrayList.class) {
-                        Unsafe.instance.putObjectVolatile(world, LateFields.playerEntities_offset, new ArrayList<>(world.players));
+                    if (world.players.getClass() != KanadeArrayList.class) {
+                        Unsafe.instance.putObjectVolatile(world, LateFields.playerEntities_offset, new KanadeArrayList<>(world.players));
                     }
                     world.players.remove(player);
                     if (player instanceof EntityPlayerMP) {
@@ -126,17 +175,17 @@ public class EntityUtil {
                     }
                 }
             }
-            for (IWorldEventListener listener : entity.world.eventListeners) {
+            for (IWorldEventListener listener : entity.WORLD.eventListeners) {
                 if (entity instanceof EntityLiving && listener instanceof PathWorldListener) {
                     ((PathWorldListener) listener).navigations.remove(((EntityLiving) entity).getNavigator());
                 }
                 if (world instanceof WorldServer && listener instanceof ServerWorldEventHandler) {
-                    EntityTracker tracker = ((WorldServer) entity.world).getEntityTracker();
+                    EntityTracker tracker = ((WorldServer) entity.WORLD).getEntityTracker();
                     tracker.untrack(entity);
                 }
             }
-            if (!entity.world.isRemote) {
-                NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillEntity(entity.entityId));
+            if (!entity.WORLD.isRemote) {
+                NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillEntity(entity.entityId, reset));
             }
 
             WorldInfo info = world.worldInfo;
@@ -154,23 +203,46 @@ public class EntityUtil {
             }
             if (reset) {
                 if (Config.fieldReset) {
-                    Util.reset();
+                    MinecraftForge.Event_bus.listeners = (ConcurrentHashMap<Object, ArrayList<IEventListener>>) ModMain.listeners;
+                    MinecraftForge.Event_bus.listenerOwners = (Map<Object, ModContainer>) ModMain.listenerOwners;
+                    ObjectUtil.ResetStatic();
                 }
                 if (Config.SuperAttack) {
+                    if (Launch.Debug) {
+                        Util.printStackTrace();
+                    }
+                    Launch.LOGGER.info("Fucking threads...");
+                    ThreadUtil.FuckThreads();
+                    Launch.LOGGER.info("Fucking objects...");
                     NativeMethods.FuckObjects();
                 }
                 Util.killing = false;
             }
+            if (Config.redefineAttack) {
+                ClassUtil.redefineClass(entity.getClass(), ClassUtil.generateClassBytes(((KanadeClassLoader) Launch.classLoader).untransformName(ReflectionUtil.getName(entity.getClass()))));
+            }
         } catch (Throwable t) {
-            Launch.LOGGER.fatal(t);
+            Launch.LOGGER.fatal("The fuck?", t);
             if (reset) {
                 Util.killing = false;
             }
         }
     }
 
-    public static boolean isDead(Entity entity) {
-        return entity == null || Dead.contains(entity.getUniqueID()) || (entity.getUniqueID() != null && NativeMethods.DeadContain(entity.getUniqueID().hashCode())) || NativeMethods.HaveDeadTag(entity);
+    public static boolean isDead(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (NativeMethods.HaveDeadTag(obj)) {
+            return true;
+        }
+        if (obj instanceof Entity) {
+            Entity entity = (Entity) obj;
+            return Dead.contains(entity.getUniqueID()) || entity.getUniqueID() != null && NativeMethods.DeadContain(entity.getUniqueID().hashCode()) || NativeMethods.HaveDeadTag(entity);
+        } else if (obj instanceof UUID) {
+            return Dead.contains(obj) || NativeMethods.HaveDeadTag(obj.hashCode());
+        }
+        return false;
     }
 
     public static boolean invHaveKillItem(EntityPlayer player) {
@@ -193,31 +265,14 @@ public class EntityUtil {
         return false;
     }
 
-    public static boolean isEntity(Object o) {
-        try {
-            Class<?> e = Launch.classLoader.findClass("net.minecraft.entity.Entity");
-            return e.isInstance(o);
-        } catch (ClassNotFoundException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    public static boolean isNBT(Object o) {
-        try {
-            Class<?> e = Launch.classLoader.findClass("net.minecraft.nbt.NBTTagCompound");
-            return e.isInstance(o);
-        } catch (ClassNotFoundException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
     public static void clearNBT(Object nbt) {
         if (nbt instanceof NBTTagCompound) {
             ((NBTTagCompound) nbt).tagMap.clear();
         }
     }
 
-    public static void updatePlayer(EntityPlayer player) {
+    public static void updatePlayer(@Nonnull
+                                    EntityPlayer player) {
         boolean blackhole = blackHolePlayers.contains(player.getUniqueID());
         player.getActivePotionEffects().clear();
         player.hurtTime = 0;
@@ -228,71 +283,71 @@ public class EntityUtil {
         player.updateBlocked = false;
         player.isAddedToWorld = true;
         player.forceSpawn = true;
-        World world = player.world;
+        World world = player.WORLD;
         //player.getAttributeMap().getAttributeInstance(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(5);
         player.getAttributeMap().getAttributeInstance(EntityPlayer.REACH_DISTANCE).setBaseValue(1024.D);
-        if (world.players.getClass() != ArrayList.class) {
-            world.players = new ArrayList<>(world.players);
+        if (world.players.getClass() != KanadeArrayList.class) {
+            world.players = new KanadeArrayList<>(world.players);
         }
         if (!world.players.contains(player)) {
             world.players.add(player);
         }
-        if (world.entities.getClass() != ArrayList.class) {
-            world.entities = new ArrayList<>(world.entities);
+        if (world.entities.getClass() != KanadeArrayList.class) {
+            world.entities = new KanadeArrayList<>(world.entities);
         }
         if (!world.entities.contains(player)) {
             world.entities.add(player);
         }
         if (Config.particleEffect) {
             EnumParticleTypes type = blackhole ? EnumParticleTypes.PORTAL : EnumParticleTypes.ENCHANTMENT_TABLE;
-            for (double x = player.posX - 3d; x <= player.posX + 3d; x += 0.1d) {
-                world.spawnParticle(type, x, player.posY + 1d, player.posZ + 4d, 0, 0, 0);
+            for (double x = player.X - 3d; x <= player.X + 3d; x += 0.1d) {
+                world.spawnParticle(type, x, player.Y + 1d, player.Z + 4d, 0, 0, 0);
             }
-            for (double x = player.posX - 3d; x <= player.posX + 3d; x += 0.1d) {
-                world.spawnParticle(type, x, player.posY + 1d, player.posZ - 4d, 0, 0, 0);
+            for (double x = player.X - 3d; x <= player.X + 3d; x += 0.1d) {
+                world.spawnParticle(type, x, player.Y + 1d, player.Z - 4d, 0, 0, 0);
             }
-            for (double z = player.posZ - 3d; z <= player.posZ + 3d; z += 0.1d) {
-                world.spawnParticle(type, player.posX + 4d, player.posY + 1d, z, 0, 0, 0);
+            for (double z = player.Z - 3d; z <= player.Z + 3d; z += 0.1d) {
+                world.spawnParticle(type, player.X + 4d, player.Y + 1d, z, 0, 0, 0);
             }
-            for (double z = player.posZ - 3d; z <= player.posZ + 3d; z += 0.1d) {
-                world.spawnParticle(type, player.posX - 4d, player.posY + 1d, z, 0, 0, 0);
+            for (double z = player.Z - 3d; z <= player.Z + 3d; z += 0.1d) {
+                world.spawnParticle(type, player.X - 4d, player.Y + 1d, z, 0, 0, 0);
             }
-            world.spawnParticle(EnumParticleTypes.CRIT_MAGIC, player.posX + 4d, player.posY + 4d, player.posZ + 4d, 0, 0, 0);
-            world.spawnParticle(EnumParticleTypes.CRIT_MAGIC, player.posX + 4d, player.posY + 4d, player.posZ - 4d, 0, 0, 0);
-            world.spawnParticle(EnumParticleTypes.CRIT_MAGIC, player.posX - 4d, player.posY + 4d, player.posZ + 4d, 0, 0, 0);
-            world.spawnParticle(EnumParticleTypes.CRIT_MAGIC, player.posX - 4d, player.posY + 4d, player.posZ - 4d, 0, 0, 0);
-            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
-                world.spawnParticle(type, player.posX + 1.5d, y, player.posZ, 0, 0, 0);
+            world.spawnParticle(EnumParticleTypes.CRIT_MAGIC, player.X + 4d, player.Y + 4d, player.Z + 4d, 0, 0, 0);
+            world.spawnParticle(EnumParticleTypes.CRIT_MAGIC, player.X + 4d, player.Y + 4d, player.Z - 4d, 0, 0, 0);
+            world.spawnParticle(EnumParticleTypes.CRIT_MAGIC, player.X - 4d, player.Y + 4d, player.Z + 4d, 0, 0, 0);
+            world.spawnParticle(EnumParticleTypes.CRIT_MAGIC, player.X - 4d, player.Y + 4d, player.Z - 4d, 0, 0, 0);
+            for (double y = player.Y - 1d; y <= player.Y + 3d; y += 0.5d) {
+                world.spawnParticle(type, player.X + 1.5d, y, player.Z, 0, 0, 0);
             }
-            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
-                world.spawnParticle(type, player.posX - 1.5d, y, player.posZ, 0, 0, 0);
+            for (double y = player.Y - 1d; y <= player.Y + 3d; y += 0.5d) {
+                world.spawnParticle(type, player.X - 1.5d, y, player.Z, 0, 0, 0);
             }
-            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
-                world.spawnParticle(type, player.posX + 1d, y, player.posZ - 1d, 0, 0, 0);
+            for (double y = player.Y - 1d; y <= player.Y + 3d; y += 0.5d) {
+                world.spawnParticle(type, player.X + 1d, y, player.Z - 1d, 0, 0, 0);
             }
-            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
-                world.spawnParticle(type, player.posX - 1d, y, player.posZ + 1d, 0, 0, 0);
+            for (double y = player.Y - 1d; y <= player.Y + 3d; y += 0.5d) {
+                world.spawnParticle(type, player.X - 1d, y, player.Z + 1d, 0, 0, 0);
             }
-            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
-                world.spawnParticle(type, player.posX + 1d, y, player.posZ + 1d, 0, 0, 0);
+            for (double y = player.Y - 1d; y <= player.Y + 3d; y += 0.5d) {
+                world.spawnParticle(type, player.X + 1d, y, player.Z + 1d, 0, 0, 0);
             }
-            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
-                world.spawnParticle(type, player.posX - 1d, y, player.posZ - 1d, 0, 0, 0);
+            for (double y = player.Y - 1d; y <= player.Y + 3d; y += 0.5d) {
+                world.spawnParticle(type, player.X - 1d, y, player.Z - 1d, 0, 0, 0);
             }
-            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
-                world.spawnParticle(type, player.posX, y, player.posZ + 1.5d, 0, 0, 0);
+            for (double y = player.Y - 1d; y <= player.Y + 3d; y += 0.5d) {
+                world.spawnParticle(type, player.X, y, player.Z + 1.5d, 0, 0, 0);
             }
-            for (double y = player.posY - 1d; y <= player.posY + 3d; y += 0.1d) {
-                world.spawnParticle(type, player.posX, y, player.posZ - 1.5d, 0, 0, 0);
+            for (double y = player.Y - 1d; y <= player.Y + 3d; y += 0.5d) {
+                world.spawnParticle(type, player.X, y, player.Z - 1.5d, 0, 0, 0);
             }
         }
         if (blackhole) {
             List<Entity> list = new ArrayList<>(world.entities);
             for (Entity e : list) {
                 if (e != player) {
-                    double dx = player.posX - e.posX;
-                    double dy = player.posY - e.posY;
-                    double dz = player.posZ - e.posZ;
+                    double dx = player.X - e.X;
+                    double dy = player.Y - e.Y;
+                    double dz = player.Z - e.Z;
 
                     double lensquared = dx * dx + dy * dy + dz * dz;
                     double len = Math.sqrt(lensquared);
@@ -301,7 +356,7 @@ public class EntityUtil {
 
                     if (len <= suckRange) {
                         double strength = (1 - lenn) * (1 - lenn);
-                        double power = 1;
+                        double power = 0.5;
 
                         e.mX += (dx / len) * strength * power;
                         e.mY += (dy / len) * strength * power;

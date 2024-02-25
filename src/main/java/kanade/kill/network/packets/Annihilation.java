@@ -11,8 +11,6 @@ import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class Annihilation implements IMessage {
     public int x, y, z, world;
@@ -46,7 +44,6 @@ public class Annihilation implements IMessage {
     public static class MessageHandler implements IMessageHandler<Annihilation, IMessage> {
 
         @Override
-        @SideOnly(Side.SERVER)
         public IMessage onMessage(Annihilation message, MessageContext ctx) {
             Util.killing = true;
             WorldServer world = DimensionManager.getWorld(message.world);

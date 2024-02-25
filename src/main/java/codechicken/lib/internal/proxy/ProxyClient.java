@@ -155,10 +155,10 @@ public class ProxyClient extends Proxy {
         protected void entityInit() {
         }
 
-        protected void readEntityFromNBT(@Nonnull NBTTagCompound compound) {
+        public void readEntityFromNBT(@Nonnull NBTTagCompound compound) {
         }
 
-        protected void writeEntityToNBT(@Nonnull NBTTagCompound compound) {
+        public void writeEntityToNBT(@Nonnull NBTTagCompound compound) {
         }
     }
 }

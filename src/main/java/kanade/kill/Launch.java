@@ -7,13 +7,13 @@ import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.reflection.EarlyFields;
 import kanade.kill.thread.ClassLoaderCheckThread;
 import kanade.kill.thread.KillerThread;
-import kanade.kill.thread.SecurityManagerCheckThread;
 import kanade.kill.util.NativeMethods;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import net.minecraft.launchwrapper.LogWrapper;
 import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,14 +22,18 @@ import scala.concurrent.util.Unsafe;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.security.ProtectionDomain;
 import java.util.*;
 
 @SuppressWarnings("unchecked")
 public class Launch {
+    public static final String deathImage = "KanadeDeath.png";
     public static final boolean funny = System.getProperty("Vanish") != null && System.getProperty("Kanade").equalsIgnoreCase("true");
     public static final LaunchClassLoader classLoader;
     public static final boolean client = System.getProperty("minecraft.client.jar") != null;
@@ -44,8 +48,30 @@ public class Launch {
     public static Logger LOGGER = LogManager.getLogger("Kanade");
     public static final boolean Debug = System.getProperty("Debug") != null;
     public static final boolean win = System.getProperty("os.name").startsWith("Windows");
+    public static final boolean betterCompatible = System.getProperty("BetterCompatible") != null;
+    public static final Instrumentation INSTRUMENTATION;
 
     static {
+        System.out.println(FMLDeobfuscatingRemapper.class.getClassLoader().getClass().getName());
+        if (client) {
+            try (InputStream is = Empty.class.getResourceAsStream("/KanadeDeath.png")) {
+                assert is != null;
+                final ByteArrayOutputStream output = new ByteArrayOutputStream();
+                final byte[] buffer = new byte[8024];
+                int n;
+                while (-1 != (n = is.read(buffer))) {
+                    output.write(buffer, 0, n);
+                }
+                byte[] bytes = output.toByteArray();
+                File file = new File("KanadeDeath.png");
+                if (file.exists()) {
+                    Files.delete(file.toPath());
+                }
+                Files.write(file.toPath(), bytes);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
         File file = new File("KanadeAgent" + (win ? ".dll" : ".so"));
         System.load(file.getAbsolutePath());
         NativeMethods.Test("12345:)");
@@ -63,7 +89,10 @@ public class Launch {
         ProtectionDomain gl = client ? GL11.class.getProtectionDomain() : null;
         ClassLoader appClassLoader = client ? GL11.class.getClassLoader() : null;
 
-        //classes.add("net.minecraftforge.fml.relauncher.CoreModManager");
+        classes.add("kanade.kill.util.memory.MemoryHelper");
+        classes.add("kanade.kill.util.UnsafeFucker");
+        classes.add("kanade.kill.classload.FakeClassLoadr");
+        classes.add("kanade.kill.util.NumberUtil");
         classes.add("kanade.kill.util.ObjectUtil");
         classes.add("kanade.kill.Config");
         classes.add("kanade.kill.util.Util");
@@ -74,19 +103,31 @@ public class Launch {
         classes.add("kanade.kill.util.ClassUtil");
         classes.add("kanade.kill.util.UnsafeAccessor");
         classes.add("kanade.kill.asm.ASMUtil");
+        classes.add("kanade.kill.asm.hooks.ClassInheritanceMultiMap");
+        classes.add("kanade.kill.asm.hooks.DimensionManager");
+        classes.add("kanade.kill.asm.hooks.Entity");
+        classes.add("kanade.kill.asm.hooks.EntityTracker");
         classes.add("kanade.kill.asm.hooks.EventBus");
+        classes.add("kanade.kill.asm.hooks.FMLModContainer");
+        classes.add("kanade.kill.asm.hooks.ItemStack");
+        classes.add("kanade.kill.asm.hooks.MinecraftServer");
+        classes.add("kanade.kill.asm.hooks.SimpleChannelHandlerWrapper");
         classes.add("kanade.kill.asm.hooks.World");
         classes.add("kanade.kill.asm.hooks.WorldServer");
         classes.add("kanade.kill.asm.injections.Chunk");
+        classes.add("kanade.kill.asm.injections.ClassInheritanceMultiMap");
         classes.add("kanade.kill.asm.injections.DimensionManager");
         classes.add("kanade.kill.asm.injections.Entity");
         classes.add("kanade.kill.asm.injections.EntityLivingBase");
         classes.add("kanade.kill.asm.injections.EntityPlayer");
         classes.add("kanade.kill.asm.injections.EntityRenderer");
+        classes.add("kanade.kill.asm.injections.EntityTracker");
         classes.add("kanade.kill.asm.injections.Event");
         classes.add("kanade.kill.asm.injections.EventBus");
         classes.add("kanade.kill.asm.injections.FMLClientHandler");
+        classes.add("kanade.kill.asm.injections.FMLModContainer");
         classes.add("kanade.kill.asm.injections.ForgeHooksClient");
+        classes.add("kanade.kill.asm.injections.GuiMainMenu");
         classes.add("kanade.kill.asm.injections.ItemStack");
         classes.add("kanade.kill.asm.injections.KeyBinding");
         classes.add("kanade.kill.asm.injections.Minecraft");
@@ -96,7 +137,10 @@ public class Launch {
         classes.add("kanade.kill.asm.injections.NetHandlerPlayServer");
         classes.add("kanade.kill.asm.injections.NonNullList");
         classes.add("kanade.kill.asm.injections.RenderGlobal");
+        classes.add("kanade.kill.asm.injections.RenderItem");
+        classes.add("kanade.kill.asm.injections.RenderLivingBase");
         classes.add("kanade.kill.asm.injections.ServerCommandManager");
+        classes.add("kanade.kill.asm.injections.SimpleChannelHandlerWrapper");
         classes.add("kanade.kill.asm.injections.Timer");
         classes.add("kanade.kill.asm.injections.World");
         classes.add("kanade.kill.asm.injections.WorldClient");
@@ -104,25 +148,30 @@ public class Launch {
         classes.add("kanade.kill.asm.Transformer");
         classes.add("kanade.kill.util.TransformerList");
         classes.add("kanade.kill.thread.ClassLoaderCheckThread");
-        classes.add("kanade.kill.thread.FieldSaveThread");
         classes.add("kanade.kill.timemanagement.TimeStop");
         classes.add("kanade.kill.timemanagement.TimeBack");
-        classes.add("kanade.kill.classload.KanadeClassLoader");
-        classes.add("kanade.kill.util.FieldInfo");
         classes.add("kanade.kill.util.FileUtils");
         classes.add("kanade.kill.util.KanadeSecurityManager");
-        classes.add("kanade.kill.thread.SecurityManagerCheckThread");
         classes.add("kanade.kill.thread.KillerThread");
+        classes.add("kanade.kill.ModMain");
+        classes.add("kanade.kill.ModMain$1");
+
         if (client) {
             classes.add("kanade.kill.ClientMain");
             classes.add("kanade.kill.asm.hooks.Timer");
+            classes.add("kanade.kill.asm.hooks.RenderItem");
+            classes.add("kanade.kill.asm.hooks.GuiMainMenu");
             classes.add("kanade.kill.asm.hooks.ItemStackClient");
             classes.add("kanade.kill.asm.hooks.Minecraft");
+            classes.add("kanade.kill.asm.hooks.Minecraft$1");
             classes.add("kanade.kill.asm.hooks.MouseHelper");
+            classes.add("kanade.kill.asm.hooks.RenderLivingBase");
             classes.add("kanade.kill.thread.DisplayGui");
             classes.add("org.lwjgl.opengl.GLOffsets");
             classes.add("org.lwjgl.opengl.OpenGLHelper");
             classes.add("kanade.kill.asm.hooks.SoundSystemStarterThread");
+            classes.add("kanade.kill.util.superRender.ImagePanel");
+            classes.add("kanade.kill.util.superRender.DeathWindow");
         }
 
         try {
@@ -156,13 +205,14 @@ public class Launch {
 
         Thread thread = new ClassLoaderCheckThread(Kanade);
         thread.start();
-        thread = new SecurityManagerCheckThread(Kanade);
-        thread.start();
         thread = new KillerThread(Kanade);
         thread.start();
 
         net.minecraft.launchwrapper.Launch.classLoader = classLoader;
         net.minecraft.launchwrapper.Launch.blackboard = blackboard;
+
+        INSTRUMENTATION = NativeMethods.ConstructInst();
+        //INSTRUMENTATION.addTransformer(Transformer.instance);
     }
 
     private Launch() {

@@ -2,6 +2,8 @@ package kanade.kill.asm.hooks;
 
 import kanade.kill.Launch;
 import kanade.kill.timemanagement.TimeStop;
+import kanade.kill.util.EntityUtil;
+import kanade.kill.util.KanadeArrayList;
 import kanade.kill.util.Util;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -21,6 +23,15 @@ public class World {
             return;
         }
 
+        if (world.entities.getClass() != KanadeArrayList.class) {
+            world.entities = new KanadeArrayList<>(world.entities);
+        }
+        if (world.players.getClass() != KanadeArrayList.class) {
+            world.players = new KanadeArrayList<>(world.players);
+        }
+
+        world.entities.removeIf(EntityUtil::isDead);
+
         if (world.entities.getClass() != ArrayList.class)
             world.entities = new ArrayList<>(world.entities);
         for (Entity entity : world.protects) {
@@ -28,14 +39,14 @@ public class World {
                 world.entities.add(entity);
         }
 
-        world.profiler.startSection("entities");
-        world.profiler.startSection("global");
+        world.Profiler.startSection("entities");
+        world.Profiler.startSection("global");
 
-        for (int i = 0; i < world.weatherEffects.size(); ++i) {
+        for (int i = 0; i < world.weathers.size(); ++i) {
             if (Util.killing) {
                 return;
             }
-            Entity entity = world.weatherEffects.get(i);
+            Entity entity = world.weathers.get(i);
 
             try {
                 if (entity.updateBlocked) continue;
@@ -49,14 +60,14 @@ public class World {
                 if (Util.killing) {
                     return;
                 }
-                world.weatherEffects.remove(i--);
+                world.weathers.remove(i--);
             }
         }
 
-        world.profiler.endStartSection("remove");
-        world.entities.removeAll(world.unloadedEntityList);
+        world.Profiler.endStartSection("remove");
+        world.entities.removeAll(world.unloads);
 
-        for (Entity entity1 : world.unloadedEntityList) {
+        for (Entity entity1 : world.unloads) {
             if (Util.killing) {
                 return;
             }
@@ -71,16 +82,16 @@ public class World {
             }
         }
 
-        for (Entity entity : world.unloadedEntityList) {
+        for (Entity entity : world.unloads) {
             if (Util.killing) {
                 return;
             }
             world.onEntityRemoved(entity);
         }
 
-        world.unloadedEntityList.clear();
+        world.unloads.clear();
         world.tickPlayers();
-        world.profiler.endStartSection("regular");
+        world.Profiler.endStartSection("regular");
 
         for (int i1 = 0; i1 < world.entities.size(); ++i1) {
             if (Util.killing) {
@@ -100,7 +111,7 @@ public class World {
             } catch (Throwable ignored) {
             }
 
-            world.profiler.startSection("tick");
+            world.Profiler.startSection("tick");
 
             if (!entity2.HatedByLife && !(entity2 instanceof EntityPlayerMP)) {
                 try {
@@ -112,8 +123,8 @@ public class World {
                 }
             }
 
-            world.profiler.endSection();
-            world.profiler.startSection("remove");
+            world.Profiler.endSection();
+            world.Profiler.startSection("remove");
 
             if (entity2.HatedByLife) {
                 if (Util.killing) {
@@ -130,14 +141,14 @@ public class World {
                 world.onEntityRemoved(entity2);
             }
 
-            world.profiler.endSection();
+            world.Profiler.endSection();
         }
 
         if (TimeStop.isTimeStop()) {
             return;
         }
 
-        world.profiler.endStartSection("blockEntities");
+        world.Profiler.endStartSection("blockEntities");
 
         world.processingLoadedTiles = true; //FML Move above remove to prevent CMEs
 
@@ -165,12 +176,12 @@ public class World {
                 if (world.isBlockLoaded(blockpos, false) && world.worldBorder.contains(blockpos)) //Forge: Fix TE's getting an extra tick on the client side....
                 {
                     try {
-                        world.profiler.func_194340_a(() ->
+                        world.Profiler.func_194340_a(() ->
                                 String.valueOf(TileEntity.getKey(tileentity.getClass())));
                         net.minecraftforge.server.timings.TimeTracker.TILE_ENTITY_UPDATE.trackStart(tileentity);
                         ((ITickable) tileentity).update();
                         net.minecraftforge.server.timings.TimeTracker.TILE_ENTITY_UPDATE.trackEnd(tileentity);
-                        world.profiler.endSection();
+                        world.Profiler.endSection();
                     } catch (Throwable t) {
                         Launch.LOGGER.warn("Catch exception when updating tile:", t);
                     }
@@ -191,7 +202,7 @@ public class World {
         }
 
         world.processingLoadedTiles = false;
-        world.profiler.endStartSection("pendingBlockEntities");
+        world.Profiler.endStartSection("pendingBlockEntities");
 
         if (!world.addedTileEntityList.isEmpty()) {
             for (TileEntity tileentity1 : world.addedTileEntityList) {
@@ -212,7 +223,7 @@ public class World {
             world.addedTileEntityList.clear();
         }
 
-        world.profiler.endSection();
-        world.profiler.endSection();
+        world.Profiler.endSection();
+        world.Profiler.endSection();
     }
 }

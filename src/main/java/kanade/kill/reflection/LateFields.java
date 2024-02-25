@@ -4,6 +4,7 @@ import kanade.kill.Launch;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.MinecraftForge;
@@ -31,6 +32,8 @@ public class LateFields {
     public static final long listeners_offset_2;
     public static final long currentScreen_offset;
     public static final long entities_offset;
+    public static final long knownKeys_offset;
+    public static final long map_offset;
 
     static {
         try {
@@ -42,6 +45,8 @@ public class LateFields {
             entityLists_offset = Unsafe.instance.objectFieldOffset(field);
             field = ReflectionUtil.getField(Chunk.class, "entities");
             entities_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(ClassInheritanceMultiMap.class, "field_180216_b");
+            knownKeys_offset = Unsafe.instance.objectFieldOffset(field);
             field = ReflectionUtil.getField(Entity.class, "field_70180_af");
             dataManager_offset = Unsafe.instance.objectFieldOffset(field);
             field = ReflectionUtil.getField(EntityLivingBase.class, "field_184632_c");
@@ -67,6 +72,8 @@ public class LateFields {
             } else {
                 currentScreen_offset = -1;
             }
+            field = ReflectionUtil.getField(ClassInheritanceMultiMap.class, "field_180218_a");
+            map_offset = Unsafe.instance.objectFieldOffset(field);
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }

@@ -1,16 +1,21 @@
 package kanade.kill.reflection;
 
-import kanade.kill.util.KanadeSecurityManager;
+import com.sun.corba.se.impl.orbutil.threadpool.ThreadPoolImpl;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
+import net.minecraftforge.fml.common.Loader;
 import paulscode.sound.SoundSystem;
 import scala.concurrent.util.Unsafe;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.security.SecureClassLoader;
+import java.util.ArrayList;
+import java.util.Timer;
 
 public class EarlyFields {
+    public static final long namedMods_offset;
+    public static final long ArrayListSize_offset;
     public static final long transformers_offset;
     public static final long reflectionData_offset;
     public static final long modifiers_offset;
@@ -40,6 +45,17 @@ public class EarlyFields {
     public static final long genericInfo_offset;
     public static final long initted_offset;
     public static final Object initted_base;
+    public static final long ArrayListElementData_offset;
+    public static final Field sclSet_field;
+    public static final Field scl_field;
+    public static final long TimerThread_offset;
+    public static final long ThreadPoolWorkers_offset;
+    public static final long ThreadPoolThreadGroup_offset;
+    public static final long ThreadGroupGroups_offset;
+    public static final long ThreadGroupGroupsN_offset;
+    public static final long ThreadGroupThreads_offset;
+    public static final long ThreadGroupThreadsN_offset;
+    public static final long classes_offset;
     static {
         try {
             Field field = ReflectionUtil.getField(Field.class, "modifiers");
@@ -65,7 +81,6 @@ public class EarlyFields {
             field = ReflectionUtil.getField(System.class, "security");
             security_base = Unsafe.instance.staticFieldBase(field);
             security_offset = Unsafe.instance.staticFieldOffset(field);
-            Unsafe.instance.putObjectVolatile(security_base, security_offset, KanadeSecurityManager.INSTANCE);
             field = ReflectionUtil.getField(Thread.class, "uncaughtExceptionHandler");
             uncaughtExceptionHandler_offset = Unsafe.instance.objectFieldOffset(field);
             field = ReflectionUtil.getField(Class.forName("sun.instrument.InstrumentationImpl"), "mNativeAgent");
@@ -97,12 +112,37 @@ public class EarlyFields {
             Launch_classLoader_offset = Unsafe.instance.staticFieldOffset(field);
             field = ReflectionUtil.getField(SecureClassLoader.class, "pdcache");
             pdcache_offset = Unsafe.instance.objectFieldOffset(field);
-            if (kanade.kill.Launch.client) {
+            field = ReflectionUtil.getField(ArrayList.class, "size");
+            ArrayListSize_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(ArrayList.class, "elementData");
+            ArrayListElementData_offset = Unsafe.instance.objectFieldOffset(field);
+            boolean client = System.getProperty("minecraft.client.jar") != null;
+            if (client) {
                 field = ReflectionUtil.getField(SoundSystem.class, "soundLibrary");
                 soundLibrary_offset = Unsafe.instance.objectFieldOffset(field);
             } else {
                 soundLibrary_offset = 0;
             }
+            sclSet_field = ReflectionUtil.getField(ClassLoader.class, "sclSet");
+            scl_field = ReflectionUtil.getField(ClassLoader.class, "scl");
+            field = ReflectionUtil.getField(Timer.class, "thread");
+            TimerThread_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(ThreadPoolImpl.class, "workers");
+            ThreadPoolWorkers_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(ThreadPoolImpl.class, "threadGroup");
+            ThreadPoolThreadGroup_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(ThreadGroup.class, "groups");
+            ThreadGroupGroups_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(ThreadGroup.class, "threads");
+            ThreadGroupThreads_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(ThreadGroup.class, "ngroups");
+            ThreadGroupGroupsN_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(ThreadGroup.class, "nthreads");
+            ThreadGroupThreadsN_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(Loader.class, "namedMods");
+            namedMods_offset = Unsafe.instance.objectFieldOffset(field);
+            field = ReflectionUtil.getField(ClassLoader.class, "classes");
+            classes_offset = Unsafe.instance.objectFieldOffset(field);
         } catch (NoSuchFieldException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }

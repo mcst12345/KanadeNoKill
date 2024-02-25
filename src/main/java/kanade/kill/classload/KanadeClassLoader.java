@@ -3,6 +3,7 @@ package kanade.kill.classload;
 import kanade.kill.Launch;
 import kanade.kill.asm.Transformer;
 import kanade.kill.reflection.EarlyFields;
+import kanade.kill.util.NativeMethods;
 import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.LaunchClassLoader;
@@ -31,11 +32,10 @@ import java.util.jar.Manifest;
 
 @SuppressWarnings("unchecked")
 public class KanadeClassLoader extends LaunchClassLoader {
-    private static final Set<String> exclusions = new HashSet<>();
+    public static final Set<String> exclusions = new HashSet<>();
     private final Map<String, byte[]> resourceCache = new ConcurrentHashMap<>(1000);
-    private final Set<String> invalid = new HashSet<>();
     List<IClassTransformer> transformers = new ArrayList<>();
-    IClassNameTransformer DeobfuscatingTransformer;
+    private static int num;
     private static final Manifest EMPTY = new Manifest();
 
     public static final List<IClassTransformer> NecessaryTransformers = new ArrayList<>();
@@ -160,11 +160,26 @@ public class KanadeClassLoader extends LaunchClassLoader {
     }
 
     static {
+        exclusions.add("me.xdark.shell.JVMUtil");
+        exclusions.add("me.xdark.shell.NativeLibrary");
+        exclusions.add("me.xdark.shell.ShellcodeRunner");
+        exclusions.add("one.helfy.Field");
+        exclusions.add("one.helfy.JVM");
+        exclusions.add("one.helfy.Type");
+        exclusions.add("one.helfy.JVMException");
+        exclusions.add("kanade.kill.util.memory.MemoryHelper");
+        exclusions.add("kanade.kill.classload.KanadeClassLoader");
         exclusions.add("kanade.kill.asm.Transformer");
         exclusions.add("kanade.kill.util.NativeMethods");
         exclusions.add("kanade.kill.Launch");
         exclusions.add("kanade.kill.ServerMain");
         exclusions.add("kanade.kill.Core");
+        exclusions.add("org.lwjgl.opengl.GLOffsets");
+        exclusions.add("org.lwjgl.opengl.OpenGLHelper");
+        exclusions.add("kanade.kill.util.NumberUtil");
+        exclusions.add("kanade.kill.classload.FakeClassLoadr");
+        exclusions.add("kanade.kill.util.superRender.ImagePanel");
+        exclusions.add("kanade.kill.util.superRender.DeathWindow");
     }
 
     //Launch.classLoader.getClass().getDeclaredField("transformerExceptions")
@@ -172,114 +187,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
     @SuppressWarnings("unused")
     public Set<String> transformerExceptions = Collections.EMPTY_SET;
 
-    @Override
-    public Class<?> findClass(String name) throws ClassNotFoundException {
-        if (invalid.contains(name)) {
-            throw new ClassNotFoundException(name);
-        }
-        ClassLoader parent = (ClassLoader) Unsafe.instance.getObjectVolatile(this, EarlyFields.parent_offset);
-        if (exclusions.contains(name)) {
-            return parent.loadClass(name);
-        }
-        String transformedName = transformName(name);
-        String untransformedName = untransformName(name);
-        Set<String> classLoaderExceptions = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.classLoaderExceptions_offset);
-        Map<String, Class<?>> cachedClasses = (Map<String, Class<?>>) Unsafe.instance.getObjectVolatile(this, EarlyFields.cachedClasses_offset);
-        Set<String> transformerExceptions = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformerExceptions_offset);
-
-        Map<Package, Manifest> packageManifests = (Map<Package, Manifest>) Unsafe.instance.getObjectVolatile(this, EarlyFields.packageManifests_offset);
-
-        for (final String exception : classLoaderExceptions) {
-            if (name.startsWith(exception)) {
-                return parent.loadClass(name);
-            }
-        }
-
-        if (cachedClasses.containsKey(name)) {
-            return cachedClasses.get(name);
-        }
-
-        final String fileName = untransformedName.replace('.', '/').concat(".class");
-        URLConnection urlConnection = findCodeSourceConnectionFor(fileName);
-
-
-        for (final String exception : transformerExceptions) {
-            if (name.startsWith(exception)) {
-                try {
-                    byte[] CLASS = getClassBytes(name);
-                    if (CLASS == null) {
-                        invalid.add(name);
-                        throw new ClassNotFoundException(name);
-                    }
-                    CLASS = Transformer.instance.transform(untransformedName, transformedName, CLASS);
-                    final Class<?> clazz = Unsafe.instance.defineClass(transformedName, CLASS, 0, CLASS.length, this, new ProtectionDomain(new CodeSource(urlConnection != null ? urlConnection.getURL() : null, new Certificate[0]), null));
-                    cachedClasses.put(name, clazz);
-                    return clazz;
-                } catch (IOException e) {
-                    invalid.add(name);
-                    throw new ClassNotFoundException(name);
-                }
-            }
-        }
-
-        try {
-
-            final int lastDot = untransformedName.lastIndexOf('.');
-            final String packageName = lastDot == -1 ? "" : untransformedName.substring(0, lastDot);
-
-            CodeSigner[] signers = null;
-
-            if (lastDot > -1 && !untransformedName.startsWith("net.minecraft.")) {
-                if (urlConnection instanceof JarURLConnection) {
-                    final JarURLConnection jarURLConnection = (JarURLConnection) urlConnection;
-                    final JarFile jarFile = jarURLConnection.getJarFile();
-
-                    if (jarFile != null && jarFile.getManifest() != null) {
-                        final Manifest manifest = jarFile.getManifest();
-                        final JarEntry entry = jarFile.getJarEntry(fileName);
-
-                        Package pkg = getPackage(packageName);
-                        getClassBytes(untransformedName);
-                        signers = entry.getCodeSigners();
-                        if (pkg == null) {
-                            pkg = definePackage(packageName, manifest, jarURLConnection.getJarFileURL());
-                            packageManifests.put(pkg, manifest);
-                        }
-                    }
-                } else {
-                    Package pkg = getPackage(packageName);
-                    if (pkg == null) {
-                        pkg = definePackage(packageName, null, null, null, null, null, null, null);
-                        packageManifests.put(pkg, EMPTY);
-                    }
-                }
-            }
-
-            byte[] bytes = getClassBytes(untransformedName);
-
-            if (bytes == null) {
-                Launch.LOGGER.warn("Failed to get bytes of class:" + name);
-                Launch.LOGGER.warn("Untransformed name:" + untransformedName);
-                invalid.add(name);
-            }
-
-            byte[] transformedClass = runTransformers(untransformedName, transformedName, bytes);
-            transformedClass = Transformer.instance.transform(untransformedName, transformedName
-                    , transformedClass);
-
-            if (debug) {
-                save(transformedClass, name);
-            }
-
-            final CodeSource codeSource = urlConnection == null ? null : new CodeSource(urlConnection.getURL(), signers);
-            final Class<?> clazz = Unsafe.instance.defineClass(transformedName, transformedClass, 0, transformedClass.length, this, getProtectionDomain(codeSource));
-            cachedClasses.put(transformedName, clazz);
-            return clazz;
-        } catch (Throwable e) {
-            invalid.add(name);
-            throw new ClassNotFoundException(name, e);
-        }
-    }
+    public IClassNameTransformer DeobfuscatingTransformer;
 
     @Override
     public byte[] getClassBytes(String name) throws IOException {
@@ -371,5 +279,138 @@ public class KanadeClassLoader extends LaunchClassLoader {
             pdcache.put(cs, pd);
         }
         return pd;
+    }
+
+    @SuppressWarnings("unused")
+    public static Class<?> defineClass(Object unused, String name, byte[] b, int off, int len,
+                                       ClassLoader loader,
+                                       ProtectionDomain protectionDomain) {
+        b = Transformer.instance.transform(name, ((KanadeClassLoader) Launch.classLoader).untransformName(name), b);
+        if (debug) {
+            save(b, name);
+        }
+        Class<?> clazz = Unsafe.instance.defineClass(name, b, off, len, Launch.classLoader, protectionDomain);
+        NativeMethods.SetTag(clazz, 16);//good class tag :)
+        return clazz;
+    }
+
+    @SuppressWarnings("unused")
+    public static Class<?> defineAnonymousClass(Object unused, Class<?> hostClass, byte[] data, Object[] cpPatches) {
+        data = Transformer.instance.transform("", "", data);
+        if (debug) {
+            save(data, "AnonyClass" + num++);
+        }
+        Class<?> clazz = Unsafe.instance.defineAnonymousClass(hostClass, data, cpPatches);
+        NativeMethods.SetTag(clazz, 16);//good class tag :)
+        return clazz;
+    }
+
+    @Override
+    public Class<?> findClass(String name) throws ClassNotFoundException {
+        if (name.startsWith("kanade.kill.")) {
+            Launch.LOGGER.info("Kanade class wants to load:" + name);
+        }
+        ClassLoader parent = (ClassLoader) Unsafe.instance.getObjectVolatile(this, EarlyFields.parent_offset);
+        if (exclusions.contains(name)) {
+            return parent.loadClass(name);
+        }
+        if (FakeClassLoadr.INSTANCE.cache.containsKey(name)) {
+            return FakeClassLoadr.INSTANCE.cache.get(name);
+        }
+        String transformedName = transformName(name);
+        String untransformedName = untransformName(name);
+        Set<String> classLoaderExceptions = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.classLoaderExceptions_offset);
+        Map<String, Class<?>> cachedClasses = (Map<String, Class<?>>) Unsafe.instance.getObjectVolatile(this, EarlyFields.cachedClasses_offset);
+        Set<String> transformerExceptions = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformerExceptions_offset);
+
+        Map<Package, Manifest> packageManifests = (Map<Package, Manifest>) Unsafe.instance.getObjectVolatile(this, EarlyFields.packageManifests_offset);
+
+        for (final String exception : classLoaderExceptions) {
+            if (name.startsWith(exception)) {
+                return parent.loadClass(name);
+            }
+        }
+
+        if (cachedClasses.containsKey(name)) {
+            return cachedClasses.get(name);
+        }
+
+        final String fileName = untransformedName.replace('.', '/').concat(".class");
+        URLConnection urlConnection = findCodeSourceConnectionFor(fileName);
+
+
+        for (final String exception : transformerExceptions) {
+            if (name.startsWith(exception)) {
+                try {
+                    byte[] CLASS = getClassBytes(name);
+                    if (CLASS == null) {
+                        throw new ClassNotFoundException(name);
+                    }
+                    CLASS = Transformer.instance.transform(untransformedName, transformedName, CLASS);
+                    final Class<?> clazz = Unsafe.instance.defineClass(transformedName, CLASS, 0, CLASS.length, this, new ProtectionDomain(new CodeSource(urlConnection != null ? urlConnection.getURL() : null, new Certificate[0]), null));
+                    cachedClasses.put(name, clazz);
+                    return clazz;
+                } catch (IOException e) {
+                    throw new ClassNotFoundException(name);
+                }
+            }
+        }
+
+        try {
+
+            final int lastDot = untransformedName.lastIndexOf('.');
+            final String packageName = lastDot == -1 ? "" : untransformedName.substring(0, lastDot);
+
+            CodeSigner[] signers = null;
+
+            if (lastDot > -1 && !untransformedName.startsWith("net.minecraft.")) {
+                if (urlConnection instanceof JarURLConnection) {
+                    final JarURLConnection jarURLConnection = (JarURLConnection) urlConnection;
+                    final JarFile jarFile = jarURLConnection.getJarFile();
+
+                    if (jarFile != null && jarFile.getManifest() != null) {
+                        final Manifest manifest = jarFile.getManifest();
+                        final JarEntry entry = jarFile.getJarEntry(fileName);
+
+                        Package pkg = getPackage(packageName);
+                        getClassBytes(untransformedName);
+                        signers = entry.getCodeSigners();
+                        if (pkg == null) {
+                            pkg = definePackage(packageName, manifest, jarURLConnection.getJarFileURL());
+                            packageManifests.put(pkg, manifest);
+                        }
+                    }
+                } else {
+                    Package pkg = getPackage(packageName);
+                    if (pkg == null) {
+                        pkg = definePackage(packageName, null, null, null, null, null, null, null);
+                        packageManifests.put(pkg, EMPTY);
+                    }
+                }
+            }
+
+            byte[] bytes = getClassBytes(untransformedName);
+
+            if (bytes == null) {
+                Launch.LOGGER.warn("Failed to get bytes of class:" + name);
+                Launch.LOGGER.warn("Untransformed name:" + untransformedName);
+            }
+
+            byte[] transformedClass = runTransformers(untransformedName, transformedName, bytes);
+            transformedClass = Transformer.instance.transform(untransformedName, transformedName
+                    , transformedClass);
+
+            if (debug) {
+                save(transformedClass, name);
+            }
+
+            final CodeSource codeSource = urlConnection == null ? null : new CodeSource(urlConnection.getURL(), signers);
+            final Class<?> clazz = Unsafe.instance.defineClass(transformedName, transformedClass, 0, transformedClass.length, this, getProtectionDomain(codeSource));
+            NativeMethods.SetTag(clazz, 16);//Good class tag :)
+            cachedClasses.put(transformedName, clazz);
+            return clazz;
+        } catch (Throwable e) {
+            throw new ClassNotFoundException(name, e);
+        }
     }
 }

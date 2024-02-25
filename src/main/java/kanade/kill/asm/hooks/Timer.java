@@ -7,6 +7,7 @@ public class Timer {
     public static void updateTimer(net.minecraft.util.Timer timer) {
         if (TimeStop.isTimeStop()) {
             timer.renderPartialTicks = 0;
+            timer.elapsedTicks = 40;
             return;
         }
         long i = Minecraft.getSystemTime();

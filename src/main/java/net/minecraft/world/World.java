@@ -48,23 +48,28 @@ import java.util.*;
 
 @SuppressWarnings("unused")
 public abstract class World implements IBlockAccess, net.minecraftforge.common.capabilities.ICapabilityProvider {
+
+
     /**
      * Used in the getEntitiesWithinAABB functions to expand the search area for entities.
      * Modders should change this variable to a higher value if it is less then the radius
      * of one of there entities.
      */
     public static double MAX_ENTITY_RADIUS = 2.0D;
+    public final List<Entity> weathers = Lists.newArrayList();
     public final List<Entity> loadedEntityList = Lists.newArrayList();
     public final List<TileEntity> loadedTileEntityList = Lists.newArrayList();
     public final List<TileEntity> tickableTileEntities = Lists.newArrayList();
     public final List<EntityPlayer> playerEntities = Lists.newArrayList();
     public final List<Entity> weatherEffects = Lists.newArrayList();
+    public final List<Entity> unloads = Lists.newArrayList();
     public final Random rand = new Random();
     public final WorldProvider provider;
     public final Profiler profiler;
     public final boolean isRemote;
     public final List<Entity> unloadedEntityList = Lists.newArrayList();
-    protected final IntHashMap<Entity> entitiesById = new IntHashMap<>();
+    public final IntHashMap<Entity> entitiesById = new IntHashMap<>();
+    public Profiler Profiler;
     protected final int DIST_HASH_MAGIC = 1013904223;
     protected final ISaveHandler saveHandler;
     public final List<TileEntity> addedTileEntityList = Lists.newArrayList();

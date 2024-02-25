@@ -10,9 +10,12 @@ import org.objectweb.asm.tree.*;
 public class World implements Opcodes {
     public static void AddField(ClassNode cn) {
         Launch.LOGGER.info("Adding field.");
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "Profiler", "Lnet/minecraft/profiler/Profiler;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "protects", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
         cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "entities", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
         cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "players", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "weathers", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "unloads", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
     }
 
     public static void InjectConstructor(MethodNode mn) {
@@ -32,6 +35,16 @@ public class World implements Opcodes {
         list.add(new InsnNode(DUP));
         list.add(new MethodInsnNode(INVOKESPECIAL, "java/util/ArrayList", "<init>", "()V", false));
         list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "field_73010_i", "Ljava/util/List;"));
+        list.add(new VarInsnNode(ALOAD, 0));
+        list.add(new TypeInsnNode(NEW, "java/util/ArrayList"));
+        list.add(new InsnNode(DUP));
+        list.add(new MethodInsnNode(INVOKESPECIAL, "java/util/ArrayList", "<init>", "()V", false));
+        list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "field_73007_j", "Ljava/util/List;"));
+        list.add(new VarInsnNode(ALOAD, 0));
+        list.add(new TypeInsnNode(NEW, "java/util/ArrayList"));
+        list.add(new InsnNode(DUP));
+        list.add(new MethodInsnNode(INVOKESPECIAL, "java/util/ArrayList", "<init>", "()V", false));
+        list.add(new FieldInsnNode(PUTFIELD, "net/minecraft/world/World", "field_72997_g", "Ljava/util/List;"));
         mn.instructions.insert(list);
         Launch.LOGGER.info("Inject into <init>.");
     }
@@ -56,7 +69,7 @@ public class World implements Opcodes {
         list.add(new VarInsnNode(ASTORE, 2));
         list.add(label1);
         list.add(new VarInsnNode(ALOAD, 2));
-        list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/util/Util", "isDead", "(Lnet/minecraft/entity/Entity;)Z", false), Type.getType("(Lnet/minecraft/entity/Entity;)Z")));
+        list.add(new InvokeDynamicInsnNode("test", "()Ljava/util/function/Predicate;", new Handle(H_INVOKESTATIC, "java/lang/invoke/LambdaMetafactory", "metafactory", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;", false), Type.getType("(Ljava/lang/Object;)Z"), new Handle(H_INVOKESTATIC, "kanade/kill/util/EntityUtil", "isDead", "(Ljava/lang/Object;)Z", false), Type.getType("(Lnet/minecraft/entity/Entity;)Z")));
         list.add(new MethodInsnNode(INVOKEINTERFACE, "java/util/List", "removeIf", "(Ljava/util/function/Predicate;)Z", true));
         list.add(new InsnNode(POP));
         list.add(label2);

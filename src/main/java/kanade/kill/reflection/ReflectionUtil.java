@@ -1,19 +1,22 @@
 package kanade.kill.reflection;
 
+import kanade.kill.util.memory.MemoryHelper;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class ReflectionUtil {
     public static Field[] getFields(Class<?> clazz) {
+        if (clazz == null) {
+            return new Field[0];
+        }
         try {
             return (Field[]) EarlyMethods.getDeclaredFields0.invoke(clazz, false);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        } catch (IllegalAccessException | InvocationTargetException | NullPointerException e) {
             return new Field[0];
         }
     }
@@ -38,9 +41,33 @@ public class ReflectionUtil {
         throw new NoSuchMethodError(name);
     }
 
+    @Nonnull
+    public static Constructor getConstructor(Class<?> clazz, Class<?>... parameterTypes) throws NoSuchMethodError {
+        for (Constructor constructor : getConstructors(clazz)) {
+            //System.out.println(Arrays.toString(constructor.getParameterTypes()));
+            //System.out.println(Arrays.toString(parameterTypes));
+            if (arrayContentsEq(parameterTypes, constructor.getParameterTypes())) {
+                constructor.setAccessible(true);
+                return constructor;
+            }
+        }
+        throw new NoSuchMethodError();
+    }
+
+    public static Constructor[] getConstructors(Class<?> clazz) {
+        try {
+            return (Constructor[]) EarlyMethods.getDeclaredConstructors0.invoke(clazz, false);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            return new Constructor[0];
+        }
+    }
+
     public static Field[] getAllFields(Class<?> clazz) {
+        if (clazz == null) {
+            return new Field[0];
+        }
         List<Field> list = new ArrayList<>();
-        while (clazz != Object.class) {
+        while (clazz != Object.class && clazz != null) {
             Collections.addAll(list, getFields(clazz));
             clazz = clazz.getSuperclass();
         }
@@ -75,15 +102,24 @@ public class ReflectionUtil {
     public static Object invoke(Method method, @Nullable Object obj, @Nullable Object... args) {
         EarlyMethods.invoke0.setAccessible(true);
         method.setAccessible(true);
+        boolean Static = Modifier.isStatic(method.getModifiers());
         try {
-            return EarlyMethods.invoke0.invoke(null, method, obj, args != null ? args : new Object[0]);
+            return EarlyMethods.invoke0.invoke(null, method, Static ? null : obj, args != null ? args : new Object[0]);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
     }
 
     public static String getName(Class<?> clazz) {
-        return (String) ReflectionUtil.invoke(EarlyMethods.getName0, clazz);
+        //try {
+        //    return (String) ReflectionUtil.invoke(EarlyMethods.getName0, clazz);
+        //} catch (NullPointerException t){
+        //    return "";
+        //}
+        if (clazz == null) {
+            return "";
+        }
+        return MemoryHelper.getClassName(clazz).replace('/', '.');
     }
 
     private static boolean arrayContentsEq(Object[] a1, Object[] a2) {
@@ -107,4 +143,45 @@ public class ReflectionUtil {
 
         return true;
     }
+
+    public static boolean isExtend(Class<?> a, Class<?> b) {
+        if (a == null) {
+            return false;
+        }
+        if (b == Object.class) {
+            return true;
+        }
+        try {
+            while (a.getSuperclass() != Object.class) {
+                a = a.getSuperclass();
+                if (a == b) {
+                    return true;
+                }
+            }
+        } catch (Throwable t) {
+            return false;
+        }
+        return false;
+    }
+
+    public static boolean isExtend(Class<?> a, String b) {
+        if (b == null || b.isEmpty()) {
+            return false;
+        }
+        if (b.equals("java.lang.Object")) {
+            return true;
+        }
+        while (a.getSuperclass() != Object.class) {
+            a = a.getSuperclass();
+            String name = getName(a);
+            if (name.equals(b)) {
+                return true;
+            } else if (name.isEmpty()) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+
 }

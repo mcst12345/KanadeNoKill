@@ -4,6 +4,7 @@ import kanade.kill.item.KillItem;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.play.server.SPacketEntityStatus;
 
+@SuppressWarnings("unused")
 public class WorldServer {
     public static void setEntityState(net.minecraft.world.WorldServer world, Entity entityIn, byte state) {
         if (KillItem.inList(entityIn)) {

@@ -19,14 +19,22 @@ import java.util.Collection;
 import java.util.List;
 
 public class KillAllEntities implements IMessage {
+    public boolean reset;
+    public KillAllEntities() {
+    }
+
+    public KillAllEntities(boolean reset) {
+        this.reset = reset;
+    }
+
     @Override
     public void fromBytes(ByteBuf buf) {
-
+        reset = buf.readBoolean();
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
-
+        buf.writeBoolean(reset);
     }
 
     public static class MessageHandler implements IMessageHandler<KillAllEntities, IMessage> {
@@ -38,12 +46,13 @@ public class KillAllEntities implements IMessage {
                 return null;
             }
             WorldClient world = Minecraft.getMinecraft().WORLD;
+            Minecraft.getMinecraft().scheduledTasks.clear();
             List<Entity> targets = new ArrayList<>();
             targets.addAll(world.entities);
             targets.addAll(world.players);
             targets.addAll((Collection) Unsafe.instance.getObjectVolatile(world, LateFields.entityLists_offset));
             for (Entity e : targets) {
-                EntityUtil.Kill(e, true);
+                EntityUtil.Kill(e, message.reset);
             }
             return null;
         }

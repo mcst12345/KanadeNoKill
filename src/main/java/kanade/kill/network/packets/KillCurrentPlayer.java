@@ -32,7 +32,7 @@ public class KillCurrentPlayer implements IMessage {
             if (!Launch.client) {
                 return null;
             }
-            if (Config.forceRender) {
+            if (Config.forceRender || Config.outScreenRender) {
                 Minecraft.dead = true;
             }
             Minecraft.getMinecraft().isGamePaused = true;
@@ -42,7 +42,7 @@ public class KillCurrentPlayer implements IMessage {
             Minecraft.getMinecraft().skipRenderWorld = true;
             Minecraft.getMinecraft().pointedEntity = null;
             Minecraft.getMinecraft().scheduledTasks.clear();
-            if (Config.forceRender) {
+            if (Config.forceRender || Config.outScreenRender) {
                 DisplayGui.display();
             }
             return null;

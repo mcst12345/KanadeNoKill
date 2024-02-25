@@ -6,20 +6,23 @@ import kanade.kill.entity.Lain;
 import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.UpdatePlayerProtectedState;
 import kanade.kill.util.EntityUtil;
+import kanade.kill.util.KanadeFontRender;
 import kanade.kill.util.NativeMethods;
 import kanade.kill.util.Util;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemSword;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.EnumHelper;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -27,17 +30,42 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
 @SuppressWarnings("unused")
-public class KillItem extends Item {
+public class KillItem extends ItemSword {
+    private static final ToolMaterial TOOL_MATERIAL = EnumHelper.addToolMaterial("KANADE", 32, 9999, 9999F, Float.MAX_VALUE, 200);
+
+    public KillItem(){
+        super(Objects.requireNonNull(TOOL_MATERIAL));
+        this.setRegistryName("kanade:kill");
+        this.setMaxStackSize(1);
+    }
+
+    @Override
+    public float getDestroySpeed(@Nonnull ItemStack stack, @Nonnull IBlockState state) {
+        return Float.MAX_VALUE;
+    }
+
+    @Override
+    public boolean canHarvestBlock(@Nonnull IBlockState blockIn) {
+        return true;
+    }
+
+    @SideOnly(Side.CLIENT)
+    public boolean isFull3D() {
+        return true;
+    }
     public static int mode;
     private short shiftRightClickCount = 0;
     public static final Set<UUID> list = new HashSet<>();
-    public KillItem(){
-        this.setRegistryName("kanade:kill");
-        this.setCreativeTab(CreativeTabs.COMBAT);
+
+    @SideOnly(Side.CLIENT)
+    @Nullable
+    public net.minecraft.client.gui.FontRenderer getFontRenderer(@Nonnull ItemStack stack) {
+        return KanadeFontRender.Get();
     }
 
     public static void AddToList(Object obj) {
@@ -71,11 +99,6 @@ public class KillItem extends Item {
     @Nonnull
     public Item setFull3D(){
         return this;
-    }
-
-    @SideOnly(Side.CLIENT)
-    public boolean isFull3D(){
-        return true;
     }
 
     @Override
@@ -132,7 +155,7 @@ public class KillItem extends Item {
     public void onUpdate(@Nullable ItemStack stack,@Nullable World worldIn,@Nonnull Entity entityIn, int itemSlot, boolean isSelected)
     {
         if(entityIn instanceof EntityPlayer){
-            entityIn.world.protects.add(entityIn);
+            entityIn.WORLD.protects.add(entityIn);
             list.add(entityIn.getUniqueID());
         }
         if (shiftRightClickCount > 0) {

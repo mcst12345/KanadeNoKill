@@ -3,6 +3,7 @@ package kanade.kill.asm.hooks;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 
+@SuppressWarnings("unused")
 public class MouseHelper {
     public static void grabMouseCursor(net.minecraft.util.MouseHelper helper) {
         if (Boolean.parseBoolean(System.getProperty("fml.noGrab", "false"))) return;

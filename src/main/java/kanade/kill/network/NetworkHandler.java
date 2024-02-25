@@ -11,7 +11,6 @@ import net.minecraftforge.fml.relauncher.Side;
 @SuppressWarnings("unused")
 public enum NetworkHandler {
     INSTANCE;
-
     private final SimpleNetworkWrapper channel = NetworkRegistry.INSTANCE.newSimpleChannel("kanade");
 
     NetworkHandler() {
@@ -33,7 +32,10 @@ public enum NetworkHandler {
         channel.registerMessage(UpdatePlayerProtectedState.MessageHandler.class, UpdatePlayerProtectedState.class, index, Side.SERVER);
         channel.registerMessage(UpdatePlayerProtectedState.MessageHandler.class, UpdatePlayerProtectedState.class, index++, Side.CLIENT);
         channel.registerMessage(Reset.MessageHandler.class, Reset.class, index++, Side.CLIENT);
-        channel.registerMessage(KillAll.MessageHandler.class, KillAll.class, index, Side.SERVER);
+        channel.registerMessage(KillAll.MessageHandler.class, KillAll.class, index++, Side.SERVER);
+        channel.registerMessage(UpdateTickCount.MessageHandler.class, UpdateTickCount.class, index++, Side.CLIENT);
+        channel.registerMessage(UpdateSuperMode.MessageHandler.class, UpdateSuperMode.class, index, Side.CLIENT);
+        channel.registerMessage(UpdateSuperMode.MessageHandler.class, UpdateSuperMode.class, index, Side.SERVER);
     }
 
     public void sendMessageToPlayer(IMessage msg, EntityPlayerMP player) {

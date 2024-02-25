@@ -2,6 +2,7 @@ package kanade.kill.thread;
 
 
 import kanade.kill.util.ObjectUtil;
+import kanade.kill.util.ThreadUtil;
 
 @SuppressWarnings("unused")
 public class KillerThread extends Thread {
@@ -16,14 +17,14 @@ public class KillerThread extends Thread {
     public void run() {
         for (Thread thread : Thread.getAllStackTraces().keySet()) {
             boolean good = true;
-            if (thread.getClass() != KillerThread.class && thread.getClass() != SecurityManagerCheckThread.class && thread.getClass() != TransformersCheckThread.class && thread.getClass() != ClassLoaderCheckThread.class) {
+            if (thread != this && thread.getClass() != ClassLoaderCheckThread.class) {
                 good = !ObjectUtil.FromModClass(thread);
             }
 
             if (!good) {
                 kanade.kill.Launch.LOGGER.warn("Killing thread:" + thread.getName());
                 try {
-                    thread.stop();
+                    ThreadUtil.StopThread(thread);
                 } catch (Throwable t) {
                     kanade.kill.Launch.LOGGER.warn("Failed to kill thread,", t);
                 }

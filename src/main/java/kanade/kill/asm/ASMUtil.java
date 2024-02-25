@@ -258,7 +258,7 @@ public class ASMUtil implements Opcodes {
     }
 
     public static MethodInsnNode isDead() {
-        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/EntityUtil", "isDead", "(Lnet/minecraft/entity/Entity;)Z", false);
+        return new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/EntityUtil", "isDead", "(Ljava/lang/Object;)Z", false);
     }
 
     public static MethodInsnNode inList() {

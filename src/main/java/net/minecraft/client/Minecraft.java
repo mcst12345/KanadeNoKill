@@ -8,6 +8,7 @@ import kanade.kill.util.ObjectUtil;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.toasts.GuiToast;
 import net.minecraft.client.main.GameConfiguration;
@@ -22,7 +23,9 @@ import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.color.ItemColors;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.client.resources.LanguageManager;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.entity.Entity;
@@ -47,6 +50,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
 public class Minecraft implements ISnooperInfo {
+    public static final boolean IS_RUNNING_ON_MAC = false;
     public static boolean dead;
     public BlockRendererDispatcher BlockRenderDispatcher;
     public TextureManager RenderEngine;
@@ -65,6 +69,7 @@ public class Minecraft implements ISnooperInfo {
     public EntityRenderer EntityRenderer;
     public Timer timer;
     public FontRenderer fontRenderer;
+    public FontRenderer FontRenderer;
     public int leftClickCounter;
     public boolean isGamePaused;
     public int displayWidth;
@@ -89,6 +94,14 @@ public class Minecraft implements ISnooperInfo {
     public long systemTime;
     public RayTraceResult objectMouseOver;
     public PlayerControllerMP PlayerController;
+    public boolean renderChunksMany;
+    public GuiIngame ingameGUI;
+    public net.minecraft.profiler.Profiler profiler;
+    public RenderManager renderManager;
+    public EntityPlayerSP player;
+    public PlayerControllerMP playerController;
+    public GuiScreen currentScreen;
+    public WorldClient world;
 
     public Minecraft() {
     }
@@ -100,6 +113,10 @@ public class Minecraft implements ISnooperInfo {
         return null;
     }
     public ISaveFormat saveLoader;
+
+    public static boolean isGuiEnabled() {
+        return false;
+    }
 
     @Nullable
     public NetHandlerPlayClient getConnection() {
@@ -249,5 +266,49 @@ public class Minecraft implements ISnooperInfo {
 
     public Framebuffer getFramebuffer() {
         return null;
+    }
+
+    public TextureMap getTextureMapBlocks() {
+        return null;
+    }
+
+    public SoundHandler getSoundHandler() {
+        return null;
+    }
+
+    public BlockRendererDispatcher getBlockRendererDispatcher() {
+        return null;
+    }
+
+    public IntegratedServer getIntegratedServer() {
+        return null;
+    }
+
+    public boolean isDemo() {
+        return false;
+    }
+
+    public void setConnectedToRealms(boolean b) {
+
+    }
+
+    public ISaveFormat getSaveLoader() {
+        return null;
+    }
+
+    public LanguageManager getLanguageManager() {
+        return null;
+    }
+
+    public String getVersionType() {
+        return "null";
+    }
+
+    public void dispatchKeypresses() {
+
+    }
+
+    public float getRenderPartialTicks() {
+        return 0;
     }
 }

@@ -4,6 +4,7 @@ import kanade.kill.Launch;
 import kanade.kill.util.FileUtils;
 import kanade.kill.util.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.world.WorldServer;
@@ -49,18 +50,24 @@ public class TimeBack {
         Launch.LOGGER.info("Saving time point at " + time);
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         server.getPlayerList().saveAllPlayerData();
-        for (WorldServer worldserver : server.worlds) {
+        for (WorldServer worldserver : server.Worlds) {
             if (worldserver != null) {
                 worldserver.disableLevelSaving = false;
             }
         }
         server.saveAllWorlds(false);
-        for (WorldServer worldserver : server.worlds) {
+        for (WorldServer worldserver : server.Worlds) {
             if (worldserver != null) {
                 worldserver.flush();
             }
         }
         if (Launch.client && server instanceof IntegratedServer) {
+            WorldClient worldClient = Minecraft.getMinecraft().WORLD;
+            worldClient.getSaveHandler().flush();
+            if (Minecraft.getMinecraft().integratedServer != null) {
+                Minecraft.getMinecraft().integratedServer.saveAllWorlds(false);
+                Minecraft.getMinecraft().integratedServer.getPlayerList().saveAllPlayerData();
+            }
             Minecraft.getMinecraft().saveLoader.flushCache();
         }
         File world;

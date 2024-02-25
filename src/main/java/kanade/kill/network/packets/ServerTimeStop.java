@@ -6,8 +6,6 @@ import kanade.kill.timemanagement.TimeStop;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ServerTimeStop implements IMessage {
     public boolean stop;
@@ -32,7 +30,6 @@ public class ServerTimeStop implements IMessage {
     public static class MessageHandler implements IMessageHandler<ServerTimeStop, IMessage> {
 
         @Override
-        @SideOnly(Side.SERVER)
         public IMessage onMessage(ServerTimeStop message, MessageContext ctx) {
             TimeStop.SetTimeStop(message.stop);
             NetworkHandler.INSTANCE.sendMessageToAllPlayer(new ClientTimeStop(message.stop));

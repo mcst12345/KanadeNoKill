@@ -49,11 +49,12 @@ import java.util.Random;
 public final class ItemStack implements net.minecraftforge.common.capabilities.ICapabilitySerializable<NBTTagCompound> {
     public static final ItemStack EMPTY = new ItemStack((Item) null);
     public static final DecimalFormat DECIMALFORMAT = new DecimalFormat("#.##");
+    public Item ITEM;
     public final Item item;
     public NBTTagCompound stackTagCompound;
     public int itemDamage;
     private int stackSize;
-    private int animationsToGo;
+    public int animationsToGo;
     private boolean isEmpty;
     private EntityItemFrame itemFrame;
     private Block canDestroyCacheBlock;
@@ -248,7 +249,7 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
     }
 
     public ActionResult<ItemStack> useItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand hand) {
-        return this.getItem().onItemRightClick(worldIn, playerIn, hand);
+        return kanade.kill.asm.hooks.ItemStack.useItemRightClick(this, worldIn, playerIn, hand);
     }
 
     public ItemStack onItemUseFinish(World worldIn, EntityLivingBase entityLiving) {
@@ -582,7 +583,7 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
         }
 
         if ((i1 & 32) == 0) {
-            this.getItem().addInformation(this, playerIn == null ? null : playerIn.world, list, advanced);
+            this.getItem().addInformation(this, playerIn == null ? null : playerIn.WORLD, list, advanced);
         }
 
         if (this.hasTagCompound()) {

@@ -21,6 +21,10 @@ public class KanadeSecurityManager extends SecurityManager {
         return false;
     }
 
+    public static Class[] getClassContexts() {
+        return INSTANCE.getClassContext();
+    }
+
     @Override
     public void checkPermission(Permission var1) {
         if (getClassContext()[2] == ReflectionUtil.class) {

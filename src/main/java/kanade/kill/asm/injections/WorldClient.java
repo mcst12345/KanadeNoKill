@@ -7,6 +7,10 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 public class WorldClient implements Opcodes {
+    public static void AddField(ClassNode cn) {
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "EntityList", "Ljava/util/Set;", "Ljava/util/Set<Lnet/minecraft/entity/Entity;>;", null));
+        Launch.LOGGER.info("Adding field.");
+    }
     public static void OverwriteRemoveEntityFromWorld(MethodNode mn) {
         InsnList list = new InsnList();
         LabelNode label0 = new LabelNode();
@@ -23,7 +27,7 @@ public class WorldClient implements Opcodes {
         list.add(new VarInsnNode(ALOAD, 0));
         list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/multiplayer/WorldClient", "field_175729_l", "Lnet/minecraft/util/IntHashMap;"));
         list.add(new VarInsnNode(ILOAD, 1));
-        list.add(new MethodInsnNode(INVOKEVIRTUAL, "net/minecraft/util/IntHashMap", "lookup", "(I)Ljava/lang/Object;", false));
+        list.add(new MethodInsnNode(INVOKEVIRTUAL, "net/minecraft/util/IntHashMap", "func_76041_a", "(I)Ljava/lang/Object;", false));
         list.add(new TypeInsnNode(CHECKCAST, "net/minecraft/entity/Entity"));
         list.add(new VarInsnNode(ASTORE, 2));
         list.add(label1);
@@ -38,7 +42,7 @@ public class WorldClient implements Opcodes {
         list.add(new VarInsnNode(ALOAD, 0));
         list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/multiplayer/WorldClient", "field_175729_l", "Lnet/minecraft/util/IntHashMap;"));
         list.add(new VarInsnNode(ILOAD, 1));
-        list.add(new MethodInsnNode(INVOKEVIRTUAL, "net/minecraft/util/IntHashMap", "removeObject", "(I)Ljava/lang/Object;", false));
+        list.add(new MethodInsnNode(INVOKEVIRTUAL, "net/minecraft/util/IntHashMap", "func_76049_d", "(I)Ljava/lang/Object;", false));
         list.add(new InsnNode(POP));
         list.add(label4);
         list.add(new VarInsnNode(ALOAD, 2));

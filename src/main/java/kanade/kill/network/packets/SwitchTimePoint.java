@@ -10,8 +10,6 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.io.*;
 import java.util.UUID;
@@ -57,7 +55,6 @@ public class SwitchTimePoint implements IMessage {
     public static class MessageHandler implements IMessageHandler<SwitchTimePoint, IMessage> {
 
         @Override
-        @SideOnly(Side.SERVER)
         public IMessage onMessage(SwitchTimePoint message, MessageContext ctx) {
             File file = TimeBack.SwitchTimePoint();
             MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();

@@ -1,5 +1,6 @@
 package kanade.kill;
 
+import net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import net.minecraftforge.fml.relauncher.FMLCorePlugin;
 
 import javax.annotation.Nullable;
@@ -13,9 +14,11 @@ import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Core extends FMLCorePlugin {
-    public static final boolean demo = true;
+    public static final boolean demo = false;
 
     static {
+        System.out.println(FMLDeobfuscatingRemapper.class.getClassLoader().getClass().getName());
+
         boolean AllowAgent = Boolean.parseBoolean(System.getProperty("AllowAgent"));
 
         try {
@@ -96,9 +99,15 @@ public class Core extends FMLCorePlugin {
                     LAUNCH.append("\"-agentpath:").append(path).append("\" ");
                 }
 
+
+                boolean verify_flag = false;
+
                 for (String s : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
                     if ((!AllowAgent && s.contains("-javaagent:")) || s.contains("-agentpath:") || s.contains("-agentlib:") || s.contains("-D")) {
                         continue;
+                    }
+                    if (s.contains("-Xverify:none")) {
+                        verify_flag = true;
                     }
                     if (s.contains("=")) {
                         LAUNCH.append('"');
@@ -107,6 +116,11 @@ public class Core extends FMLCorePlugin {
                     } else LAUNCH.append(s);
                     LAUNCH.append(' ');
                 }
+
+                if (!verify_flag) {
+                    LAUNCH.append("-Xverify:none ");
+                }
+
                 AtomicReference<String> classpath = new AtomicReference<>();
                 ManagementFactory.getRuntimeMXBean().getSystemProperties().forEach((s, v) -> {
                     if (!s.equals("java.class.path")) {
@@ -162,6 +176,16 @@ public class Core extends FMLCorePlugin {
                 }
 
                 try {
+                    if (!win) {
+                        String pid = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
+                        Runtime.getRuntime().exec("/bin/sh", new String[]{"kill -9 " + pid});
+                    }
+                } catch (Throwable ignored) {
+                }
+
+                boolean f = false;
+
+                try {
                     Class<?> clazz = Class.forName("java.lang.Shutdown");
                     Method method = clazz.getDeclaredMethod("halt0", int.class);
                     method.setAccessible(true);
@@ -170,10 +194,10 @@ public class Core extends FMLCorePlugin {
                     if (flag) {
                         out.println(t);
                     }
-                    flag = true;
+                    f = true;
                 }
 
-                if (flag) {
+                if (f) {
                     Runtime.getRuntime().exit(0);
                 }
             } else {

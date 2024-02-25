@@ -97,19 +97,6 @@ public class Minecraft implements Opcodes {
     public static void InjectDisplayGuiScreen(MethodNode mn) {
         InsnList list = new InsnList();
         LabelNode label = new LabelNode();
-        LabelNode label_1 = new LabelNode();
-
-        list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "CurrentScreen", "Lnet/minecraft/client/gui/GuiScreen;"));
-        list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "isKanadeDeathGui", "(Ljava/lang/Object;)Z", false));
-        list.add(new JumpInsnNode(IFEQ, label_1));
-        list.add(new VarInsnNode(ALOAD, 0));
-        list.add(new FieldInsnNode(GETFIELD, "net/minecraft/client/Minecraft", "CurrentScreen", "Lnet/minecraft/client/gui/GuiScreen;"));
-        list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "isKanadeDeathGuiClosed", "(Ljava/lang/Object;)Z", false));
-        list.add(new JumpInsnNode(IFNE, label_1));
-        list.add(new InsnNode(RETURN));
-        list.add(label_1);
-        list.add(new FrameNode(F_SAME, 0, null, 0, null));
         list.add(new VarInsnNode(ALOAD, 0));
         list.add(ASMUtil.inList());
         list.add(new JumpInsnNode(IFEQ, label));
@@ -118,23 +105,9 @@ public class Minecraft implements Opcodes {
         list.add(new JumpInsnNode(IFEQ, label));
         list.add(new InsnNode(RETURN));
         list.add(label);
-
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
         Launch.LOGGER.info("Inject into displayGuiScreen(GuiScreen).");
-    }
-
-    public static void InjectInit(MethodNode mn) {
-        for (int i = mn.instructions.size() - 1; i >= 0; i--) {
-            AbstractInsnNode ain = mn.instructions.get(i);
-            if (ain instanceof InsnNode) {
-                InsnNode in = (InsnNode) ain;
-                if (in.getOpcode() == RETURN) {
-                    mn.instructions.insert(mn.instructions.get(i - 1), new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/Util", "save", "()V", false));
-                }
-            }
-        }
-        Launch.LOGGER.info("Inject into init().");
     }
 
     public static void InjectRun(MethodNode mn) {
@@ -209,5 +182,14 @@ public class Minecraft implements Opcodes {
         mn.maxStack = 1;
         mn.maxLocals = 1;
         Launch.LOGGER.info("Overwrite RightClickMouse().");
+    }
+
+    public static void OverwriteGetSystemTime(MethodNode mn) {
+        mn.instructions.clear();
+        mn.localVariables.clear();
+        mn.tryCatchBlocks.clear();
+        mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/Minecraft", "getSystemTime", "()J", false));
+        mn.instructions.add(new InsnNode(LRETURN));
+        Launch.LOGGER.info("Overwrite getSystemTime().");
     }
 }

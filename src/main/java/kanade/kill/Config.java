@@ -1,6 +1,7 @@
 package kanade.kill;
 
 public class Config {
+    public static boolean SuperMode = false;
     public static boolean SuperAttack = false;
     public static boolean particleEffect = true;
     public static boolean allReturn = false;
@@ -14,4 +15,7 @@ public class Config {
     public static boolean renderProtection = false;
     public static boolean fieldReset = true;
     public static boolean AllowAttach = Boolean.parseBoolean(System.getProperty("AllowAttach"));
+    public static boolean redefineAttack = false;
+    public static boolean outScreenRender = false;
+    public static boolean CrystalBeam = true;
 }

@@ -5,8 +5,6 @@ import kanade.kill.util.EntityUtil;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.io.*;
 import java.util.UUID;
@@ -52,7 +50,6 @@ public class BlackHole implements IMessage {
     public static class MessageHandler implements IMessageHandler<BlackHole, IMessage> {
 
         @Override
-        @SideOnly(Side.SERVER)
         public IMessage onMessage(BlackHole message, MessageContext ctx) {
             if (EntityUtil.blackHolePlayers.contains(message.uuid)) {
                 EntityUtil.blackHolePlayers.remove(message.uuid);

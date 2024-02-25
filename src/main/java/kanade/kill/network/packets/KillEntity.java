@@ -14,22 +14,25 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class KillEntity implements IMessage {
     public int id;
-
+    public boolean reset;
     public KillEntity() {
     }
 
-    public KillEntity(int id) {
+    public KillEntity(int id, boolean reset) {
         this.id = id;
+        this.reset = reset;
     }
 
     @Override
     public void fromBytes(ByteBuf buf) {
         id = buf.readInt();
+        reset = buf.readBoolean();
     }
 
     @Override
     public void toBytes(ByteBuf buf) {
         buf.writeInt(id);
+        buf.writeBoolean(reset);
     }
 
     public static class MessageHandler implements IMessageHandler<KillEntity, IMessage> {
@@ -44,7 +47,7 @@ public class KillEntity implements IMessage {
             if (world != null) {
                 Entity entity = world.getEntityByID(message.id);
                 if (entity != null) {
-                    EntityUtil.Kill(entity, true);
+                    EntityUtil.Kill(entity, message.reset);
                 }
             }
             return null;

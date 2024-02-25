@@ -1,7 +1,6 @@
 package kanade.kill.util;
 
 import kanade.kill.item.KillItem;
-import net.minecraft.entity.Entity;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,15 +8,23 @@ import java.util.List;
 import java.util.function.UnaryOperator;
 
 public class KanadeArrayList<E> extends ArrayList<E> {
+    public KanadeArrayList(Collection<? extends E> c) {
+        for (E e : c) {
+            if (!EntityUtil.isDead(e)) {
+                super.add(e);
+            }
+        }
+    }
+
     public boolean add(E e) {
-        if (e instanceof Entity && EntityUtil.isDead((Entity) e)) {
+        if (EntityUtil.isDead(e)) {
             return false;
         }
         return super.add(e);
     }
 
     public void add(int index, E element) {
-        if (element instanceof Entity && EntityUtil.isDead((Entity) element)) {
+        if (EntityUtil.isDead(element)) {
             return;
         }
         super.add(index, element);
@@ -48,7 +55,7 @@ public class KanadeArrayList<E> extends ArrayList<E> {
     public boolean addAll(int index, Collection<? extends E> c) {
         List<E> list = new ArrayList<>();
         for (E e : c) {
-            if (!(e instanceof Entity && EntityUtil.isDead((Entity) e))) {
+            if (!EntityUtil.isDead(e)) {
                 list.add(e);
             }
         }

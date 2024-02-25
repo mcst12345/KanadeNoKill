@@ -2,6 +2,7 @@ package kanade.kill.asm.hooks;
 
 import kanade.kill.Core;
 import kanade.kill.Keys;
+import kanade.kill.Launch;
 import kanade.kill.ModMain;
 import kanade.kill.item.KillItem;
 import kanade.kill.network.NetworkHandler;
@@ -23,6 +24,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import org.lwjgl.Sys;
 import org.lwjgl.opengl.Display;
 
 import java.util.Queue;
@@ -32,6 +34,7 @@ import static kanade.kill.item.KillItem.mode;
 import static net.minecraft.client.Minecraft.*;
 
 public class Minecraft {
+    public static int tickCount = 0;
     public static final ResourceLocation BlackAndWhite = new ResourceLocation("shaders/post/desaturate.json");
     static final boolean optifineInstalled;
 
@@ -87,6 +90,15 @@ public class Minecraft {
         }
     }
     public static final Queue<Runnable> tasks = new LinkedBlockingQueue<>();
+    private static long lastTime;
+
+    public static void runTickKeyboard(net.minecraft.client.Minecraft minecraft) {
+        if (Keys.SWITCH_TIME_POINT.isKeyDown()) {
+            NetworkHandler.INSTANCE.sendMessageToServer(new SwitchTimePoint(minecraft.PLAYER.getUniqueID()));
+        } else if (Keys.SAVE.isKeyDown()) {
+            NetworkHandler.INSTANCE.sendMessageToServer(new SaveTimePoint(minecraft.PLAYER.getUniqueID()));
+        }
+    }
 
     public static void rightClickMouse(net.minecraft.client.Minecraft mc) {
         if (!mc.PlayerController.getIsHittingBlock()) {
@@ -98,7 +110,7 @@ public class Minecraft {
                 if (mc.PLAYER.isSneaking()) {
                     mc.rightClickDelayTimer = 8;
                     if (mode == 0) {
-                        NetworkHandler.INSTANCE.sendMessageToServer(new Annihilation(mc.PLAYER.dimension, (int) mc.PLAYER.posX, (int) mc.PLAYER.posY, (int) mc.PLAYER.posZ));
+                        NetworkHandler.INSTANCE.sendMessageToServer(new Annihilation(mc.PLAYER.dimension, (int) mc.PLAYER.X, (int) mc.PLAYER.Y, (int) mc.PLAYER.Z));
                     } else if (!Core.demo) {
                         if (mode == 1) {
                             NetworkHandler.INSTANCE.sendMessageToServer(new ServerTimeStop(!TimeStop.isTimeStop()));
@@ -110,7 +122,7 @@ public class Minecraft {
                     }
                 } else {
                     if (mc.PLAYER.getHeldItem(EnumHand.MAIN_HAND).getITEM() == ModMain.kill_item) {
-                        NetworkHandler.INSTANCE.sendMessageToServer(new KillAll());
+                        NetworkHandler.INSTANCE.sendMessageToServer(new KillAll(getMinecraft().PLAYER.getUniqueID()));
                     }
                 }
             }
@@ -168,14 +180,6 @@ public class Minecraft {
         }
     }
 
-    public static void runTickKeyboard(net.minecraft.client.Minecraft minecraft) {
-        if (Keys.SWITCH_TIME_POINT.isKeyDown()) {
-            NetworkHandler.INSTANCE.sendMessageToServer(new SwitchTimePoint(minecraft.PLAYER.getUniqueID()));
-        } else if (Keys.SAVE.isKeyDown()) {
-            NetworkHandler.INSTANCE.sendMessageToServer(new SaveTimePoint(minecraft.PLAYER.getUniqueID()));
-        }
-    }
-
     public static void RunGameLoop(net.minecraft.client.Minecraft mc) {
         if (dead || kanade.kill.util.Util.killing) {
             return;
@@ -208,20 +212,31 @@ public class Minecraft {
         long l = System.nanoTime();
         mc.Profiler.startSection("tick");
 
-        for (int j = 0; j < Math.min(10, mc.timer.elapsedTicks); ++j) {
-            if (TimeStop.isTimeStop()) {
+        int ticks = !stop ? (tickCount > 0 ? tickCount : Math.min(mc.timer.elapsedTicks, 10)) : 5;
+
+        for (int j = 0; j < ticks; ++j) {
+            if (kanade.kill.util.Util.killing) {
+                return;
+            }
+            if (stop) {
                 mc.EntityRenderer.loadShader(BlackAndWhite);
             } else {
                 mc.EntityRenderer.stopUseShader();
             }
-            mc.runTick();
+            try {
+                mc.runTick();
+            } catch (Throwable t) {
+                Launch.LOGGER.warn("Catch exception", t);
+            }
         }
 
         mc.Profiler.endStartSection("preRenderErrors");
         long i1 = System.nanoTime() - l;
-        mc.Profiler.endStartSection("sound");
-        mc.soundHandler.setListener(mc.getRenderViewEntity(), mc.timer.renderPartialTicks); //Forge: MC-46445 Spectator mode particles and sounds computed from where you have been before
-        mc.Profiler.endSection();
+        if (!stop) {
+            mc.Profiler.endStartSection("sound");
+            mc.soundHandler.setListener(mc.getRenderViewEntity(), mc.timer.renderPartialTicks); //Forge: MC-46445 Spectator mode particles and sounds computed from where you have been before
+            mc.Profiler.endSection();
+        }
         mc.Profiler.startSection("render");
         GlStateManager.pushMatrix();
         GlStateManager.clear(16640);
@@ -235,8 +250,12 @@ public class Minecraft {
                 FMLCommonHandler.instance().onRenderTickStart(mc.timer.renderPartialTicks);
             } catch (Throwable ignored) {
             }
+            //onRenderTick();
             mc.Profiler.endStartSection("gameRenderer");
-            mc.EntityRenderer.updateCameraAndRender((mc.isGamePaused || stop) ? mc.renderPartialTicksPaused : mc.timer.renderPartialTicks, i);
+            try {
+                mc.EntityRenderer.updateCameraAndRender((mc.isGamePaused || stop) ? mc.renderPartialTicksPaused : mc.timer.renderPartialTicks, i);
+            } catch (Throwable ignored) {
+            }
             mc.Profiler.endStartSection("toasts");
             mc.toastGui.drawToast(new ScaledResolution(mc));
             mc.Profiler.endSection();
@@ -249,7 +268,7 @@ public class Minecraft {
         mc.Profiler.endSection();
 
         if (!stop) {
-            if (mc.GameSettings.showDebugInfo && mc.GameSettings.showDebugProfilerChart && !mc.GameSettings.hideGUI) {
+            if (mc.gameSettings.showDebugInfo && mc.gameSettings.showDebugProfilerChart && !mc.gameSettings.hideGUI) {
                 if (!mc.Profiler.profilingEnabled) {
                     mc.Profiler.clearProfiling();
                 }
@@ -295,7 +314,7 @@ public class Minecraft {
         if (!stop) {
             while (getSystemTime() >= mc.debugUpdateTime + 1000L) {
                 debugFPS = mc.fpsCounter;
-                mc.debug = String.format("%d fps (%d chunk update%s) T: %s%s%s%s%s", debugFPS, RenderChunk.renderChunksUpdated, RenderChunk.renderChunksUpdated == 1 ? "" : "s", (float) mc.GameSettings.limitFramerate == GameSettings.Options.FRAMERATE_LIMIT.getValueMax() ? "inf" : mc.GameSettings.limitFramerate, mc.GameSettings.enableVsync ? " vsync" : "", mc.GameSettings.fancyGraphics ? "" : " fast", mc.GameSettings.clouds == 0 ? "" : (mc.GameSettings.clouds == 1 ? " fast-clouds" : " fancy-clouds"), OpenGlHelper.useVbo() ? " vbo" : "");
+                mc.debug = String.format("%d fps (%d chunk update%s) T: %s%s%s%s%s", debugFPS, RenderChunk.renderChunksUpdated, RenderChunk.renderChunksUpdated == 1 ? "" : "s", (float) mc.gameSettings.limitFramerate == GameSettings.Options.FRAMERATE_LIMIT.getValueMax() ? "inf" : mc.gameSettings.limitFramerate, mc.gameSettings.enableVsync ? " vsync" : "", mc.gameSettings.fancyGraphics ? "" : " fast", mc.gameSettings.clouds == 0 ? "" : (mc.gameSettings.clouds == 1 ? " fast-clouds" : " fancy-clouds"), OpenGlHelper.useVbo() ? " vbo" : "");
                 RenderChunk.renderChunksUpdated = 0;
                 mc.debugUpdateTime += 1000L;
                 mc.fpsCounter = 0;
@@ -315,4 +334,29 @@ public class Minecraft {
 
         mc.Profiler.endSection();
     }
+
+    public static long getSystemTime() {
+        if (TimeStop.isTimeStop()) {
+            return lastTime;
+        }
+        long ret = Sys.getTime() * 1000L / Sys.getTimerResolution();
+        lastTime = ret;
+        return ret;
+    }
+
+    /*private static FloatBuffer cosmicUVs = BufferUtils.createFloatBuffer(4 * 10);
+
+    private static void onRenderTick(){
+        cosmicUVs = BufferUtils.createFloatBuffer(4 * ModMain.COSMIC.length);
+        TextureAtlasSprite icon;
+        for (TextureAtlasSprite cosmicIcon : ModMain.COSMIC) {
+            icon = cosmicIcon;
+
+            cosmicUVs.put(icon.getMinU());
+            cosmicUVs.put(icon.getMinV());
+            cosmicUVs.put(icon.getMaxU());
+            cosmicUVs.put(icon.getMaxV());
+        }
+        cosmicUVs.flip();
+    }*/
 }
