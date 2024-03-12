@@ -67,6 +67,7 @@ public class KanadeKillCommand extends CommandBase {
                         ret.add("outScreenRender");
                         ret.add("CrystalBeam");
                         ret.add("SuperMode");
+                        ret.add("particleType");
                         break;
                     case "mode":
                         ret.add("timestop");
@@ -191,6 +192,15 @@ public class KanadeKillCommand extends CommandBase {
                             case "CrystalBeam": {
                                 Config.CrystalBeam = Boolean.parseBoolean(arg2);
                                 NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
+                                break;
+                            }
+                            case "particleType": {
+                                try {
+                                    EntityPlayerMP player = getCommandSenderAsPlayer(sender);
+                                    NetworkHandler.INSTANCE.sendMessageToPlayer(new ConfigUpdatePacket(arg1, Integer.parseInt(arg2)), player);
+                                } catch (PlayerNotFoundException e){
+                                    sender.sendMessage(new TextComponentString("No player found. Don't use this in server console."));
+                                }
                                 break;
                             }
                             case "SuperMode": {

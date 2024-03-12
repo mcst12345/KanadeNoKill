@@ -1,12 +1,15 @@
 package kanade.kill.asm;
 
 import kanade.kill.Launch;
+import kanade.kill.util.NativeMethods;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Modifier;
+
+import static kanade.kill.Launch.Debug;
 
 public class ASMUtil implements Opcodes {
     public static void InsertReturn(MethodNode mn, @Nullable Object type, @Nullable Object getReturn, Object getField, AbstractInsnNode shouldReturn) {
@@ -51,7 +54,9 @@ public class ASMUtil implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
-        Launch.LOGGER.info("Insert return in " + mn.name);
+        if(Debug){
+            Launch.LOGGER.info("Insert return in " + mn.name);
+        }
     }
     public static void InsertReturn(MethodNode mn, @Nullable Object type, @Nullable Object getReturn, int varIndex, AbstractInsnNode shouldReturn) {
         InsnList list = new InsnList();
@@ -93,10 +98,16 @@ public class ASMUtil implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
-        Launch.LOGGER.info("Insert return in " + mn.name);
+        if(Debug){
+            Launch.LOGGER.info("Insert return in " + mn.name);
+        }
     }
 
     public static void InsertReturn1(MethodNode mn, Type type) {
+        if(NativeMethods.HaveTag(mn,101)){
+            return;
+        }
+        NativeMethods.SetTag(mn,101);
         InsnList list = new InsnList();
         LabelNode label = new LabelNode();
         list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Config", "allReturn", "Z"));
@@ -142,10 +153,16 @@ public class ASMUtil implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
-        Launch.LOGGER.info("Insert return in " + mn.name + ",type:1.");
+        if(Debug){
+            Launch.LOGGER.info("Insert return in " + mn.name + ",type:1.");
+        }
     }
 
     public static void InsertReturn2(MethodNode mn, Type type) {
+        if(NativeMethods.HaveTag(mn,102)){
+            return;
+        }
+        NativeMethods.SetTag(mn,102);
         InsnList list = new InsnList();
         LabelNode label = new LabelNode();
         list.add(new FieldInsnNode(GETSTATIC, "kanade/kill/Config", "Annihilation", "Z"));
@@ -191,10 +208,16 @@ public class ASMUtil implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
-        Launch.LOGGER.info("Insert return in " + mn.name + ",type:2.");
+        if(Debug){
+            Launch.LOGGER.info("Insert return in " + mn.name + ",type:2.");
+        }
     }
 
     public static void InsertReturn3(MethodNode mn, Type type) {
+        if(NativeMethods.HaveTag(mn,103)){
+            return;
+        }
+        NativeMethods.SetTag(mn,103);
         InsnList list = new InsnList();
         LabelNode label = new LabelNode();
         list.add(new FieldInsnNode(GETSTATIC, "net/minecraft/client/Minecraft", "field_71432_P", "Lnet/minecraft/client/Minecraft;"));
@@ -244,7 +267,9 @@ public class ASMUtil implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
-        Launch.LOGGER.info("Insert return in " + mn.name + ",type:3.");
+        if(Debug){
+            Launch.LOGGER.info("Insert return in " + mn.name + ",type:3.");
+        }
     }
     public static void clearMethod(MethodNode mn) {
         mn.instructions.clear();
@@ -254,7 +279,9 @@ public class ASMUtil implements Opcodes {
             mn.localVariables.clear();
         }
         mn.instructions.add(new InsnNode(RETURN));
-        Launch.LOGGER.info("Clear method:" + mn.name + ".");
+        if(Debug){
+            Launch.LOGGER.info("Clear method:" + mn.name + ".");
+        }
     }
 
     public static MethodInsnNode isDead() {

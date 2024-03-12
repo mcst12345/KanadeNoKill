@@ -2,35 +2,24 @@ package kanade.kill;
 
 import me.xdark.shell.ShellcodeRunner;
 import one.helfy.JVM;
+import one.helfy.Type;
 import org.objectweb.asm.Opcodes;
 import sun.misc.Unsafe;
 
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
 
 import static me.xdark.shell.ShellcodeRunner.getSymbol;
 
-public class Empty {
-    public static final Method EmptyVoidMethod;
+public class Empty implements Opcodes {
     private static final Method getInterfaces0;
-    private static final Method doNothing;
-    private static final Method w;
     static long test = 0;
-    private static int x1;
     private static Unsafe unsafe;
 
     static {
-        try {
-            w = Empty.class.getDeclaredMethod("wuizfnwf");
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            doNothing = Empty.class.getDeclaredMethod("doNothing", long.class);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
         getUnsafe();
         try {
             getInterfaces0 = Class.class.getDeclaredMethod("getInterfaces0");
@@ -40,26 +29,15 @@ public class Empty {
         }
     }
 
-    static {
-        try {
-            EmptyVoidMethod = Empty.class.getDeclaredMethod("EmptyVoidMethod");
-            int i = 20000;
-            while (i-- > 0) {
-                EmptyVoidMethod();
-            }
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public Empty() {
     }
 
-    public static long test(String abc) {
-        x1++;
-        test += 2;
-        System.out.println("now we are going to return");
-        return Integer.parseInt(abc);
+    public static void test() {
+        System.out.println("Test is called!");
+    }
+
+    public static void test1() {
+        System.out.println("Test1  is  called!");
     }
 
     public static void doNothing(long abc) {
@@ -84,36 +62,43 @@ public class Empty {
     }
 
     public static void main(String[] args) throws Throwable {
-        Empty empty = (Empty) getUnsafe().allocateInstance(Empty.class);
+        for(int i = 0 ; i < 20001 ; i++){
+            //test();
+            //test1();
+        }
+
+        //test();
+        //test1();
         String pid = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
         System.out.println(pid);
         //new byte[]{(byte) 0x90, (byte) 0xeb, (byte) 0xfd} halt
         //ShellcodeRunner.SetCompiledEntry(Empty.class, "test", "(Ljava/lang/String;)V",ShellcodeRunner.GetCompiledEntry(Empty.class,"wuizfnwf","()V") );
+        Class<?> clazz = Class.forName("sun.reflect.NativeMethodAccessorImpl");
         JVM jvm = ShellcodeRunner.jvm;
         int oopSize = jvm.intConstant("oopSize");
-        long klassOffset = jvm.getInt(jvm.type("java_lang_Class").global("_klass_offset"));
+        long klassOffset = jvm.	getInt(jvm.type("java_lang_Class").global("_klass_offset"));
         long klass = oopSize == 8
-                ? unsafe.getLong(Empty.class, klassOffset)
-                : unsafe.getInt(Empty.class, klassOffset) & 0xffffffffL;
+                ? unsafe.getLong(clazz, klassOffset)
+                : unsafe.getInt(clazz, klassOffset) & 0xffffffffL;
         long methodArray = jvm.getAddress(klass + jvm.type("InstanceKlass").offset("_methods"));
         int methodCount = jvm.getInt(methodArray);
         long methods = methodArray + jvm.type("Array<Method*>").offset("_data");
 
         long constMethodOffset = jvm.type("Method").offset("_constMethod");
-        one.helfy.Type constMethodType = jvm.type("ConstMethod");
-        one.helfy.Type constantPoolType = jvm.type("ConstantPool");
+        Type constMethodType = jvm.type("ConstMethod");
+        Type constantPoolType = jvm.type("ConstantPool");
         long constantPoolOffset = constMethodType.offset("_constants");
         long nameIndexOffset = constMethodType.offset("_name_index");
         long signatureIndexOffset = constMethodType.offset("_signature_index");
         long _from_compiled_entry = jvm.type("Method").offset("_from_compiled_entry");
-        one.helfy.Type t = jvm.type("ConstMethod");
+        long _from_interpreted_entry = jvm.type("Method").offset("_from_interpreted_entry");//AccessFlags
+        System.out.println(Arrays.toString(jvm.type("AccessFlags").fields));
+	    System.out.println(Arrays.toString(jvm.type("Method").fields));
+        System.out.println(Arrays.toString(jvm.type("ConstantPool").fields));
+        System.out.println(Arrays.toString(jvm.type("InstanceKlass").fields));
+        long access_flag = jvm.type("Method").offset("_access_flags");
 
 
-        System.out.println(test("12132"));
-        System.out.println(test("4343"));
-        System.out.println(test("655656"));
-
-        long a = t.size;
         for (int i = 0; i < methodCount; i++) {
             long method = jvm.getAddress(methods + (long) i * oopSize);
             long constMethod = jvm.getAddress(method + constMethodOffset);
@@ -121,25 +106,22 @@ public class Empty {
             long constantPool = jvm.getAddress(constMethod + constantPoolOffset);
             int nameIndex = jvm.getShort(constMethod + nameIndexOffset) & 0xffff;
             int signatureIndex = jvm.getShort(constMethod + signatureIndexOffset) & 0xffff;
-            if (!getSymbol(constantPool + constantPoolType.size + (long) nameIndex * oopSize).equals("test")) {
-                continue;
-            }
+            String s = getSymbol(constantPool + constantPoolType.size + (long) nameIndex * oopSize);
             System.out.println(getSymbol(constantPool + constantPoolType.size + (long) nameIndex * oopSize) + getSymbol(
                     constantPool + constantPoolType.size + (long) signatureIndex * oopSize));
-            //System.out.println("START");
-            //for(int ii = 0 ; ii < 10 ; ii++){
-            //    System.out.println(scala.concurrent.util.Unsafe.instance.getByte(constMethod+a+ii) & 255);
-            //}
-            scala.concurrent.util.Unsafe.instance.putByte(constMethod + a, (byte) Opcodes.LCONST_1);
-            scala.concurrent.util.Unsafe.instance.putByte(constMethod + a + 2, (byte) Opcodes.LRETURN);
-            //System.out.println("END");
+
+            int access = getUnsafe().getInt(method+access_flag);
+            System.out.println(access);
+            System.out.println(Modifier.toString(access));
+            if(Modifier.isPrivate(access)) {
+                access &= ~ ACC_PRIVATE;
+                access |= ACC_PUBLIC;
+                getUnsafe().putInt(method+access_flag,access);
+            }
         }
 
-        System.out.println(test("12132"));
-        System.out.println(test("4343"));
-        System.out.println(test("655656"));
-        //System.out.println(x1);
-        //System.out.println(test);
+
+
     }
 
     public static void Test() {

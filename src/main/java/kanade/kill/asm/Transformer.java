@@ -28,7 +28,7 @@ import static java.lang.reflect.Modifier.*;
 import static kanade.kill.Launch.Debug;
 
 @SuppressWarnings("SpellCheckingInspection")
-public class Transformer implements IClassTransformer, Opcodes, ClassFileTransformer {
+public class Transformer implements Opcodes, ClassFileTransformer {
     private static final Set<String> transformed = new HashSet<>();
     private static final IClassNameTransformer classNameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(Launch.classLoader, EarlyFields.renameTransformer_offset);
     public static final Transformer instance = new Transformer();
@@ -102,9 +102,6 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         if (ain instanceof MethodInsnNode) {
                             MethodInsnNode min = (MethodInsnNode) ain;
                             if (min.owner.equals("sun/misc/Unsafe")) {
-                                if (min.name.contains("Address")) {
-                                    continue;
-                                }
                                 if (min.name.startsWith("put")) {
                                     MethodInsnNode fuck = new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/UnsafeFucker", min.name + "Fuck", "(Ljava/lang/Object;" + min.desc.substring(1), false);
                                     iterator.set(fuck);
@@ -131,7 +128,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                                 continue;
                             }
                             if (min.owner.startsWith("org/lwjgl") || min.owner.startsWith("net/minecraft/client/renderer") || min.owner.startsWith("sun/awt") || min.owner.startsWith("javax/swing") || min.owner.startsWith("org/eclipse/swt") || min.owner.startsWith("javafx/")) {
-                                Launch.LOGGER.info("Find render method.");
+                                if(Debug){
+                                    Launch.LOGGER.info("Find render method.");
+                                }
                                 ASMUtil.InsertReturn3(mn, type);
                                 changed = true;
                             }
@@ -671,7 +670,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 if (mn.localVariables != null) {
                     for (LocalVariableNode lvn : mn.localVariables) {
                         if (lvn.desc.startsWith("Lnet/minecraftforge/") && lvn.desc.contains("/event/")) {
-                            Launch.LOGGER.info("Find event listsner:" + transformedName);
+                            if(Debug){
+                                Launch.LOGGER.info("Find event listsner:" + transformedName);
+                            }
                             if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY && !(mn.name.equals("<init>") || mn.name.equals("<clinit>"))) {
                                 ASMUtil.InsertReturn2(mn, type);
                                 changed = true;
@@ -692,16 +693,22 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                         }
                     }
                     if (Return == null) {
-                        throw new IllegalStateException("The fuck?");
+                        Launch.LOGGER.warn("No return insn found in instructions. Inject at head.");
                     }
                     InsnList list = new InsnList();
                     list.add(new VarInsnNode(ALOAD, 0));
                     list.add(new LdcInsnNode(25L));
                     list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/NativeMethods", "SetTag", "(Ljava/lang/Object;J)V", false));
-                    mn.instructions.insertBefore(Return, list);
+                    if(Return != null){
+                        mn.instructions.insertBefore(Return, list);
+                    } else {
+                        mn.instructions.insert(list);
+                    }
                     mn.maxStack += 2;
                     changed = true;
-                    Launch.LOGGER.info("Inject into constructor of " + cn.name);
+                    if(Debug){
+                        Launch.LOGGER.info("Inject into constructor of " + cn.name);
+                    }
                 }
             }
             if (mn.name.equals("func_82738_a") || mn.name.equals("func_82572_b") || mn.name.equals("func_147456_g") || mn.name.equals("func_70071_h_") || mn.name.equals("func_73660_a") || mn.name.equals("func_73831_a") || mn.name.equals("func_110550_d")) {
@@ -757,8 +764,7 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         return transformed.contains(str);
     }
 
-    @Override
-    public byte[] transform(String name, String transformedName, byte[] basicClass) {
+    public byte[] transform(String name, String transformedName, byte[] basicClass, byte[] unchanged) {
         if (!DEOBF_STARTED && transformedName.equals(name)) {
             DEOBF_STARTED = true;
         }
@@ -791,15 +797,23 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             assert is != null;
             return Launch.readFully(is);
         } else {
-            try {
-                originalBytes = Launch.classLoader.getClassBytes(name);
-                for (IClassTransformer t : KanadeClassLoader.NecessaryTransformers) {
-                    try {
-                        originalBytes = t.transform(name, transformedName, originalBytes);
-                    } catch (Throwable ignored) {
+            if(unchanged == null){
+                try {
+                    originalBytes = Launch.classLoader.getClassBytes(name);
+                    for (IClassTransformer t : KanadeClassLoader.NecessaryTransformers) {
+                        try {
+                            originalBytes = t.transform(name, transformedName, originalBytes);
+                        } catch (Throwable ignored) {
+                        }
                     }
+                } catch (IOException ignored) {
                 }
-            } catch (IOException ignored) {
+            } else {
+                if(unchanged.length != 0){
+                    originalBytes = Arrays.copyOf(unchanged,unchanged.length);
+                } else {
+                    originalBytes = Arrays.copyOf(basicClass,basicClass.length);
+                }
             }
         }
 
@@ -808,12 +822,10 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
         ClassNode cn = new ClassNode();
         cr.accept(cn, 0);
         ClassNode changedClass = null;
-        if (Launch.betterCompatible && originalBytes != null && !(originalBytes == basicClass)) {
+        if (unchanged != null && Launch.betterCompatible && unchanged.length != 0 && originalBytes != null && !(Arrays.equals(originalBytes, basicClass))) {
             cr = new ClassReader(basicClass);
             changedClass = new ClassNode();
             cr.accept(changedClass, 0);
-        } else if (originalBytes == null && !classes.contains(transformedName)) {
-            Launch.LOGGER.warn("Failed to get bytes of class:" + name + ":" + transformedName);
         }
         byte[] transformed;
 
@@ -839,6 +851,9 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             }
             if (!methods.isEmpty()) {
                 changed = true;
+                if(Debug){
+                    Launch.LOGGER.info("Adding methods to class:"+ Arrays.toString(methods.toArray()));
+                }
                 cn.methods.addAll(methods);
             }
             final List<FieldNode> fields = new ArrayList<>(changedClass.fields);
@@ -852,12 +867,41 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             if (!fields.isEmpty()) {
                 changed = true;
                 cn.fields.addAll(fields);
+                if(Debug){
+                    Launch.LOGGER.info("Adding fields to class:" + Arrays.toString(fields.toArray()));
+                }
+            }
+            final List<String> interfaces = new ArrayList<>(changedClass.interfaces);
+            for (String i1 : changedClass.interfaces) {
+                for (String i2 : cn.interfaces) {
+                    if (i1.equals(i2)) {
+                        interfaces.remove(i1);
+                    }
+                }
+            }
+            if (!interfaces.isEmpty()) {
+                changed = true;
+                cn.interfaces.addAll(interfaces);
+                if(Debug){
+                    Launch.LOGGER.info("Adding interfaces to class:" + Arrays.toString(interfaces.toArray()));
+                }
             }
         }
 
         changed = changed || RedirectAndExamine(cn, goodClass, transformedName);
 
         switch (transformedName) {
+            case "net.minecraftforge.fml.common.ModClassLoader": {
+                changed = true;
+                Launch.LOGGER.info("Get ModClassLoader.");
+                for(MethodNode mn : cn.methods){
+                    if(mn.name.equals("addModAPITransformer")){
+                        ModClassLoader.OverwriteAddModAPITransformer(mn);
+                        break;
+                    }
+                }
+                break;
+            }
             case "net.minecraft.util.ClassInheritanceMultiMap": {
                 Launch.LOGGER.info("Get ClassInheritanceMultiMap.");
                 changed = true;
@@ -1249,6 +1293,17 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
                 for (MethodNode mn : cn.methods) {
                     if (mn.name.equals("func_76986_a") && mn.desc.equals("(Lnet/minecraft/entity/EntityLivingBase;DDDFF)V")) {
                         RenderLivingBase.InjectDoRenderHead(mn);
+                    }
+                }
+                break;
+            }
+            case "net.minecraft.client.renderer.entity.RenderPlayer": {
+                Launch.LOGGER.info("Get RenderPlayer.");
+                changed = true;
+                for(MethodNode mn : cn.methods){
+                    if(mn.name.equals("<init>") && mn.desc.equals("(Lnet/minecraft/client/renderer/entity/RenderManager;Z)V")){
+                        RenderPlayer.InjectConstructor(mn);
+                        break;
                     }
                 }
                 break;
@@ -1754,6 +1809,6 @@ public class Transformer implements IClassTransformer, Opcodes, ClassFileTransfo
             return bytes;
         }
         s = s.replace('/', '.');
-        return transform(s, classNameTransformer.remapClassName(s), bytes);
+        return transform(s, classNameTransformer.remapClassName(s), bytes, null);
     }
 }

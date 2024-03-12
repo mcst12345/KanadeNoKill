@@ -79,7 +79,7 @@ public class ClassUtil implements Opcodes {
                         String desc = getSymbol(
                                 constantPool + constantPoolType.size + (long) signatureIndex * oopSize);
 
-                        if (desc.endsWith(";") || name.startsWith("<")) {
+                        if (desc.endsWith(";") || name.startsWith("<") || name.contains("$") || name.charAt(name.length()-2) == '[') {
                             continue;
                         }
 
@@ -93,19 +93,19 @@ public class ClassUtil implements Opcodes {
                         } else if (desc.endsWith("I") || desc.endsWith("Z") || desc.endsWith("B") || desc.endsWith("C") || desc.endsWith("S")) {
                             second_bytecode.put(constMethod, Unsafe.instance.getByte(constMethod + bytecode_offset + 2));
                             Unsafe.instance.putByte(constMethod + bytecode_offset, (byte) ICONST_0);
-                            Unsafe.instance.putByte(constMethod + bytecode_offset + 2, (byte) IRETURN);
+                            Unsafe.instance.putByte(constMethod + bytecode_offset + 1, (byte) IRETURN);
                         } else if (desc.endsWith("J")) {
                             second_bytecode.put(constMethod, Unsafe.instance.getByte(constMethod + bytecode_offset + 2));
                             Unsafe.instance.putByte(constMethod + bytecode_offset, (byte) LCONST_0);
-                            Unsafe.instance.putByte(constMethod + bytecode_offset + 2, (byte) LRETURN);
+                            Unsafe.instance.putByte(constMethod + bytecode_offset + 1, (byte) LRETURN);
                         } else if (desc.endsWith("D")) {
                             second_bytecode.put(constMethod, Unsafe.instance.getByte(constMethod + bytecode_offset + 2));
                             Unsafe.instance.putByte(constMethod + bytecode_offset, (byte) DCONST_0);
-                            Unsafe.instance.putByte(constMethod + bytecode_offset + 2, (byte) DRETURN);
+                            Unsafe.instance.putByte(constMethod + bytecode_offset + 1, (byte) DRETURN);
                         } else if (desc.endsWith("F")) {
                             second_bytecode.put(constMethod, Unsafe.instance.getByte(constMethod + bytecode_offset + 2));
                             Unsafe.instance.putByte(constMethod + bytecode_offset, (byte) FCONST_0);
-                            Unsafe.instance.putByte(constMethod + bytecode_offset + 2, (byte) FRETURN);
+                            Unsafe.instance.putByte(constMethod + bytecode_offset + 1, (byte) FRETURN);
                         }
                     }
                 }
@@ -189,7 +189,7 @@ public class ClassUtil implements Opcodes {
                         String desc = getSymbol(
                                 constantPool + constantPoolType.size + (long) signatureIndex * oopSize);
 
-                        if (desc.endsWith(";") || name.startsWith("<")) {
+                        if (desc.endsWith(";") || name.startsWith("<") || name.contains("$") || name.charAt(name.length()-2) == '[') {
                             continue;
                         }
 
@@ -198,7 +198,7 @@ public class ClassUtil implements Opcodes {
                             Launch.LOGGER.info("Restoring method:" + name + desc);
                             Unsafe.instance.putByte(constMethod + bytecode_offset, first_bytecode.get(constMethod));
                             if (second_bytecode.containsKey(constMethod)) {
-                                Unsafe.instance.putByte(constMethod + bytecode_offset + 2, second_bytecode.get(constMethod));
+                                Unsafe.instance.putByte(constMethod + bytecode_offset + 1, second_bytecode.get(constMethod));
                             }
                         }
 

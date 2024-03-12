@@ -40,7 +40,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.ProtectionDomain;
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import static kanade.kill.Launch.late_classes;
 
 @Mod(modid = "kanade")
 @Mod.EventBusSubscriber
@@ -83,75 +88,13 @@ public class ModMain {
         try {
             kanade.kill.Launch.LOGGER.info("Defining classes.");
 
-            final List<String> classes = new ArrayList<>();
             ProtectionDomain domain = Loader.class.getProtectionDomain();
 
-            if (Launch.client) {
-                classes.add("kanade.kill.util.BufferBuilder");
-                classes.add("kanade.kill.util.DefaultVertexFormats");
-                classes.add("kanade.kill.util.FontRenderer");
-                classes.add("kanade.kill.util.VertexFormat");
-                classes.add("kanade.kill.util.VertexFormatElement");
-                classes.add("kanade.kill.util.ClientFakeObjects");
-                classes.add("kanade.kill.Keys");
-                classes.add("kanade.kill.render.RenderBeaconBeam");
-                classes.add("kanade.kill.util.KanadeFontRender");
-                classes.add("kanade.kill.util.VertexFormatElement$EnumType");
-                classes.add("kanade.kill.util.VertexFormatElement$EnumUsage");
-                classes.add("kanade.kill.util.VertexFormat$1");
-            }
-
-
-            classes.add("kanade.kill.entity.Lain");
-            classes.add("kanade.kill.entity.EntityBeaconBeam");
-            classes.add("kanade.kill.util.EntityUtil");
-            classes.add("kanade.kill.item.KillItem");
-            classes.add("kanade.kill.item.DeathItem");
-            classes.add("kanade.kill.reflection.LateFields");
-            classes.add("kanade.kill.network.NetworkHandler");
-            classes.add("kanade.kill.network.packets.Annihilation");
-            classes.add("kanade.kill.network.packets.Annihilation$MessageHandler");
-            classes.add("kanade.kill.network.packets.ClientTimeStop");
-            classes.add("kanade.kill.network.packets.ClientTimeStop$MessageHandler");
-            classes.add("kanade.kill.network.packets.CoreDump");
-            classes.add("kanade.kill.network.packets.CoreDump$MessageHandler");
-            classes.add("kanade.kill.network.packets.KillCurrentPlayer");
-            classes.add("kanade.kill.network.packets.KillCurrentPlayer$MessageHandler");
-            classes.add("kanade.kill.network.packets.KillEntity");
-            classes.add("kanade.kill.network.packets.KillEntity$MessageHandler");
-            classes.add("kanade.kill.network.packets.ServerTimeStop");
-            classes.add("kanade.kill.network.packets.ServerTimeStop$MessageHandler");
-            classes.add("kanade.kill.network.packets.SwitchTimePoint");
-            classes.add("kanade.kill.network.packets.SwitchTimePoint$MessageHandler");
-            classes.add("kanade.kill.network.packets.SaveTimePoint$MessageHandler");
-            classes.add("kanade.kill.network.packets.SaveTimePoint");
-            classes.add("kanade.kill.network.packets.TimeBack$MessageHandler");
-            classes.add("kanade.kill.network.packets.TimeBack");
-            classes.add("kanade.kill.network.packets.ClientReload$MessageHandler");
-            classes.add("kanade.kill.network.packets.ClientReload");
-            classes.add("kanade.kill.network.packets.BlackHole");
-            classes.add("kanade.kill.network.packets.BlackHole$MessageHandler");
-            classes.add("kanade.kill.network.packets.ConfigUpdatePacket");
-            classes.add("kanade.kill.network.packets.ConfigUpdatePacket$MessageHandler");
-            classes.add("kanade.kill.network.packets.UpdatePlayerProtectedState");
-            classes.add("kanade.kill.network.packets.UpdatePlayerProtectedState$MessageHandler");
-            classes.add("kanade.kill.network.packets.KillAll");
-            classes.add("kanade.kill.network.packets.KillAll$MessageHandler");
-            classes.add("kanade.kill.network.packets.UpdateSuperMode");
-            classes.add("kanade.kill.network.packets.UpdateSuperMode$MessageHandler");
-            classes.add("kanade.kill.network.packets.Reset");
-            classes.add("kanade.kill.network.packets.Reset$MessageHandler");
-            classes.add("kanade.kill.command.KanadeKillCommand");
-            classes.add("kanade.kill.command.DebugCommand");
-            classes.add("kanade.kill.command.KanadeReflection");
-            classes.add("kanade.kill.network.packets.KillAllEntities");
-            classes.add("kanade.kill.network.packets.KillAllEntities$MessageHandler");
-            classes.add("kanade.kill.network.packets.UpdateTickCount");
-            classes.add("kanade.kill.network.packets.UpdateTickCount$MessageHandler");
 
 
 
-            for (String s : classes) {
+
+            for (String s : late_classes) {
                 kanade.kill.Launch.LOGGER.info("Defining class:" + s);
                 try (InputStream is = Empty.class.getResourceAsStream('/' + s.replace('.', '/') + ".class")) {
                     assert is != null;

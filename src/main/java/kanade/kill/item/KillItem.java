@@ -14,6 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
@@ -36,6 +37,12 @@ import java.util.UUID;
 
 @SuppressWarnings("unused")
 public class KillItem extends ItemSword {
+    @Nonnull
+    @Override
+    public final EnumAction getItemUseAction(@Nonnull ItemStack p_77661_1_) {
+        return EnumAction.BOW;
+    }
+
     private static final ToolMaterial TOOL_MATERIAL = EnumHelper.addToolMaterial("KANADE", 32, 9999, 9999F, Float.MAX_VALUE, 200);
 
     public KillItem(){

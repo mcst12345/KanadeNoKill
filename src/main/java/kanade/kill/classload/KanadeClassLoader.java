@@ -1,5 +1,12 @@
 package kanade.kill.classload;
 
+import LZMA.LzmaInputStream;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.hash.Hashing;
+import com.google.common.io.ByteArrayDataInput;
+import com.google.common.io.ByteStreams;
 import kanade.kill.Launch;
 import kanade.kill.asm.Transformer;
 import kanade.kill.reflection.EarlyFields;
@@ -8,13 +15,17 @@ import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import net.minecraft.launchwrapper.LogWrapper;
+import net.minecraftforge.fml.common.FMLLog;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.patcher.ClassPatch;
+import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.repackage.com.nothome.delta.GDiffPatcher;
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Level;
 import scala.concurrent.util.Unsafe;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -26,11 +37,10 @@ import java.security.ProtectionDomain;
 import java.security.cert.Certificate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
+import java.util.jar.*;
+import java.util.regex.Pattern;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings("UnstableApiUsage")
 public class KanadeClassLoader extends LaunchClassLoader {
     public static final Set<String> exclusions = new HashSet<>();
     private final Map<String, byte[]> resourceCache = new ConcurrentHashMap<>(1000);
@@ -44,8 +54,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
     private static final String[] RESERVED_NAMES = {"CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"};
 
     private static boolean goodTransformer(String name) {
-        return name.equals("net.minecraftforge.fml.common.asm.transformers.PatchingTransformer") ||
-                name.equals("optifine.OptiFineClassTransformer") ||
+        return  name.equals("optifine.OptiFineClassTransformer") ||
                 name.equals("$wrapper.net.minecraftforge.fml.common.asm.transformers.SideTransformer") ||
                 name.equals("$wrapper.net.minecraftforge.fml.common.asm.transformers.EventSubscriptionTransformer") ||
                 name.equals("$wrapper.net.minecraftforge.fml.common.asm.transformers.EventSubscriberTransformer") ||
@@ -58,7 +67,8 @@ public class KanadeClassLoader extends LaunchClassLoader {
                 name.equals("net.minecraftforge.fml.common.asm.transformers.ItemBlockSpecialTransformer") ||
                 name.equals("net.minecraftforge.fml.common.asm.transformers.PotionEffectTransformer") ||
                 name.equals("net.minecraftforge.fml.common.asm.transformers.TerminalTransformer") ||
-                name.equals("net.minecraftforge.fml.common.asm.transformers.ModAPITransformer");
+                name.equals("net.minecraftforge.fml.common.asm.transformers.ModAPITransformer") ||
+                name.equals("net.minecraftforge.fml.common.asm.transformers.MarkerTransformer");
     }
     private static void closeSilently(Closeable closeable) {
         if (closeable != null) {
@@ -111,6 +121,9 @@ public class KanadeClassLoader extends LaunchClassLoader {
     }
 
     private byte[] runTransformers(final String name, final String transformedName, byte[] basicClass) {
+        if(!Launch.betterCompatible){
+            return basicClass;
+        }
         List<IClassTransformer> Transformers = (List<IClassTransformer>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformers_offset);
         if (Transformers.getClass() != ArrayList.class) {
             Transformers = new ArrayList<>(Transformers);
@@ -137,15 +150,20 @@ public class KanadeClassLoader extends LaunchClassLoader {
 
     @Override
     public void registerTransformer(String transformerClassName) {
+        if(transformerClassName.equals("net.minecraftforge.fml.common.asm.transformers.PatchingTransformer")){
+            return;
+        }
         Launch.LOGGER.info("Register transformer:" + transformerClassName);
         try {
             IClassTransformer transformer = (IClassTransformer) loadClass(transformerClassName).newInstance();
             if (goodTransformer(transformerClassName)) {
+                Launch.LOGGER.info("This is a necessary transformer.");
                 NecessaryTransformers.add(transformer);
-            }
-            transformers.add(transformer);
-            if (transformer instanceof IClassNameTransformer && DeobfuscatingTransformer == null) {
-                DeobfuscatingTransformer = (IClassNameTransformer) transformer;
+                if (transformer instanceof IClassNameTransformer && DeobfuscatingTransformer == null) {
+                    DeobfuscatingTransformer = (IClassNameTransformer) transformer;
+                }
+            } else if(Launch.betterCompatible){
+                transformers.add(transformer);
             }
         } catch (Exception e) {
             LogWrapper.log(Level.ERROR, e, "A critical problem occurred registering the ASM transformer class %s", transformerClassName);
@@ -160,6 +178,8 @@ public class KanadeClassLoader extends LaunchClassLoader {
     }
 
     static {
+        exclusions.add("kanade.kill.thread.ClassLoaderCheckThread");
+        exclusions.add("net.minecraftforge.fml.common.patcher.ClassPatchManager");
         exclusions.add("me.xdark.shell.JVMUtil");
         exclusions.add("me.xdark.shell.NativeLibrary");
         exclusions.add("me.xdark.shell.ShellcodeRunner");
@@ -285,7 +305,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
     public static Class<?> defineClass(Object unused, String name, byte[] b, int off, int len,
                                        ClassLoader loader,
                                        ProtectionDomain protectionDomain) {
-        b = Transformer.instance.transform(name, ((KanadeClassLoader) Launch.classLoader).untransformName(name), b);
+        b = Transformer.instance.transform(name, ((KanadeClassLoader) Launch.classLoader).untransformName(name), b, null);
         if (debug) {
             save(b, name);
         }
@@ -296,7 +316,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
 
     @SuppressWarnings("unused")
     public static Class<?> defineAnonymousClass(Object unused, Class<?> hostClass, byte[] data, Object[] cpPatches) {
-        data = Transformer.instance.transform("", "", data);
+        data = Transformer.instance.transform("", "", data, null);
         if (debug) {
             save(data, "AnonyClass" + num++);
         }
@@ -346,7 +366,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
                     if (CLASS == null) {
                         throw new ClassNotFoundException(name);
                     }
-                    CLASS = Transformer.instance.transform(untransformedName, transformedName, CLASS);
+                    CLASS = Transformer.instance.transform(untransformedName, transformedName, CLASS, new byte[0]);
                     final Class<?> clazz = Unsafe.instance.defineClass(transformedName, CLASS, 0, CLASS.length, this, new ProtectionDomain(new CodeSource(urlConnection != null ? urlConnection.getURL() : null, new Certificate[0]), null));
                     cachedClasses.put(name, clazz);
                     return clazz;
@@ -391,14 +411,30 @@ public class KanadeClassLoader extends LaunchClassLoader {
 
             byte[] bytes = getClassBytes(untransformedName);
 
+            {
+                //Launch.LOGGER.info(ClassPatchManager.class.getClassLoader().getClass().getName());
+                bytes = patchClass(untransformedName,transformedName,bytes);
+                save(bytes,name+"-patched");
+            }
+
             if (bytes == null) {
                 Launch.LOGGER.warn("Failed to get bytes of class:" + name);
                 Launch.LOGGER.warn("Untransformed name:" + untransformedName);
             }
 
+            for (IClassTransformer t : NecessaryTransformers) {
+                try {
+                    bytes = t.transform(untransformedName, transformedName, bytes);
+                } catch (Throwable th) {
+                    Launch.LOGGER.error("Catch exception:",th);
+                }
+            }
+
+            byte[] unchanged = bytes != null ? Arrays.copyOf(bytes,bytes.length) : null;
+
             byte[] transformedClass = runTransformers(untransformedName, transformedName, bytes);
             transformedClass = Transformer.instance.transform(untransformedName, transformedName
-                    , transformedClass);
+                    , transformedClass,unchanged);
 
             if (debug) {
                 save(transformedClass, name);
@@ -412,5 +448,201 @@ public class KanadeClassLoader extends LaunchClassLoader {
         } catch (Throwable e) {
             throw new ClassNotFoundException(name, e);
         }
+    }
+
+    private static byte[] patchClass(String name, String transformedName, byte[] bytes){
+        if (patches == null)
+        {
+            return bytes;
+        }
+        if (patchedClasses.containsKey(name))
+        {
+            return patchedClasses.get(name);
+        }
+        if(Launch.Debug){
+            Launch.LOGGER.info("Looking for patches of class:"+name+":"+transformedName);
+        }
+        List<ClassPatch> list = patches.get(name);
+        if (list.isEmpty())
+        {
+            if(Launch.Debug){
+                Launch.LOGGER.info("No patches found.");
+            }
+            return bytes;
+        }
+        boolean ignoredError = false;
+        if (Launch.Debug)
+            Launch.LOGGER.info("Runtime patching class {} (input size {}), found {} patch{}", transformedName, (bytes == null ? 0 : bytes.length), list.size(), list.size()!=1 ? "es" : "");
+        for (ClassPatch patch: list)
+        {
+            if (!patch.targetClassName.equals(transformedName) && !patch.sourceClassName.equals(name))
+            {
+                Launch.LOGGER.warn("Binary patch found {} for wrong class {}", patch.targetClassName, transformedName);
+            }
+            if (!patch.existsAtTarget && (bytes == null || bytes.length == 0))
+            {
+                bytes = new byte[0];
+            }
+            else if (!patch.existsAtTarget)
+            {
+                Launch.LOGGER.warn("Patcher expecting empty class data file for {}, but received non-empty", patch.targetClassName);
+            }
+            else if (bytes == null || bytes.length == 0)
+            {
+                Launch.LOGGER.fatal("Patcher expecting non-empty class data file for {}, but received empty.", patch.targetClassName);
+                throw new RuntimeException(String.format("Patcher expecting non-empty class data file for %s, but received empty, your vanilla jar may be corrupt.", patch.targetClassName));
+            }
+            else
+            {
+                int inputChecksum = Hashing.adler32().hashBytes(bytes).asInt();
+                if (patch.inputChecksum != inputChecksum)
+                {
+                    Launch.LOGGER.fatal("There is a binary discrepancy between the expected input class {} ({}) and the actual class. Checksum on disk is {}, in patch {}. Things are probably about to go very wrong. Did you put something into the jar file?", transformedName, name, Integer.toHexString(inputChecksum), Integer.toHexString(patch.inputChecksum));
+                    if (!Boolean.parseBoolean(System.getProperty("fml.ignorePatchDiscrepancies","false")))
+                    {
+                        Launch.LOGGER.fatal("The game is going to exit, because this is a critical error, and it is very improbable that the modded game will work, please obtain clean jar files.");
+                        System.exit(1);
+                    }
+                    else
+                    {
+                        Launch.LOGGER.fatal("FML is going to ignore this error, note that the patch will not be applied, and there is likely to be a malfunctioning behaviour, including not running at all");
+                        ignoredError = true;
+                        continue;
+                    }
+                }
+            }
+            synchronized (patcher)
+            {
+                try
+                {
+                    if(Launch.Debug){
+                        Launch.LOGGER.info("Patching class:"+transformedName+":"+patch.patch.length);
+                    }
+                    bytes = patcher.patch(bytes, patch.patch);
+                }
+                catch (IOException e)
+                {
+                    Launch.LOGGER.error("Encountered problem runtime patching class {}", name, e);
+                }
+            }
+        }
+        if (!ignoredError && Launch.Debug)
+        {
+            Launch.LOGGER.info("Successfully applied runtime patches for {} (new size {})", transformedName, bytes != null ? bytes.length : 0);
+        }
+        patchedClasses.put(name,bytes);
+        return bytes;
+    }
+
+    static {
+        patchedClasses = new HashMap<>();
+        patcher = new GDiffPatcher();
+        setup(Launch.client ? Side.CLIENT : Side.SERVER);
+    }
+
+    private static final GDiffPatcher patcher;
+    private static ListMultimap<String, ClassPatch> patches;
+
+    private static final Map<String,byte[]> patchedClasses;
+
+    private static void setup(Side side)
+    {
+        Pattern binpatchMatcher = Pattern.compile(String.format("binpatch/%s/.*.binpatch", side.toString().toLowerCase(Locale.ENGLISH)));
+        JarInputStream jis = null;
+        try
+        {
+            try
+            {
+                InputStream binpatchesCompressed = Loader.class.getResourceAsStream("/binpatches.pack.lzma");
+                if (binpatchesCompressed==null)
+                {
+                    if (!FMLLaunchHandler.isDeobfuscatedEnvironment())
+                    {
+                        FMLLog.log.fatal("The binary patch set is missing, things are not going to work!");
+                    }
+                    return;
+                }
+                try (LzmaInputStream binpatchesDecompressed = new LzmaInputStream(binpatchesCompressed))
+                {
+                    ByteArrayOutputStream jarBytes = new ByteArrayOutputStream();
+                    try (JarOutputStream jos = new JarOutputStream(jarBytes))
+                    {
+                        Pack200.newUnpacker().unpack(binpatchesDecompressed, jos);
+                        jis = new JarInputStream(new ByteArrayInputStream(jarBytes.toByteArray()));
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException("Error occurred reading binary patches. Expect severe problems!", e);
+            }
+
+            patches = ArrayListMultimap.create();
+
+            do
+            {
+                try
+                {
+                    JarEntry entry = jis.getNextJarEntry();
+                    if (entry == null)
+                    {
+                        break;
+                    }
+                    if (binpatchMatcher.matcher(entry.getName()).matches())
+                    {
+                        ClassPatch cp = readPatch(entry, jis);
+                        if (cp != null)
+                        {
+                            patches.put(cp.sourceClassName, cp);
+                        }
+                    }
+                    else
+                    {
+                        jis.closeEntry();
+                    }
+                }
+                catch (IOException ignored)
+                {
+                }
+            } while (true);
+        }
+        finally
+        {
+            IOUtils.closeQuietly(jis);
+        }
+        Launch.LOGGER.info("Read {} binary patches", patches.size());
+        if (Launch.Debug)
+            Launch.LOGGER.info("Patch list :\n\t{}", Joiner.on("\t\n").join(patches.asMap().entrySet()));
+        patchedClasses.clear();
+    }
+
+    private static ClassPatch readPatch(JarEntry patchEntry, JarInputStream jis)
+    {
+        if (Launch.Debug)
+            Launch.LOGGER.info("Reading patch data from {}", patchEntry.getName());
+        ByteArrayDataInput input;
+        try
+        {
+            input = ByteStreams.newDataInput(ByteStreams.toByteArray(jis));
+        }
+        catch (IOException e)
+        {
+            FMLLog.log.warn(FMLLog.log.getMessageFactory().newMessage("Unable to read binpatch file {} - ignoring", patchEntry.getName()), e);
+            return null;
+        }
+        String name = input.readUTF();
+        String sourceClassName = input.readUTF();
+        String targetClassName = input.readUTF();
+        boolean exists = input.readBoolean();
+        int inputChecksum = 0;
+        if (exists)
+        {
+            inputChecksum = input.readInt();
+        }
+        int patchLength = input.readInt();
+        byte[] patchBytes = new byte[patchLength];
+        input.readFully(patchBytes);
+
+        return new ClassPatch(name, sourceClassName, targetClassName, exists, inputChecksum, patchBytes);
     }
 }

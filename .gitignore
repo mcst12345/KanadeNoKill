@@ -4,3 +4,7 @@
 /build/classes/java/main/
 /mods
 /transformedClasses/
+/libs/
+.sh/
+/out/
+/run/

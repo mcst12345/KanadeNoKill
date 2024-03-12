@@ -547,6 +547,9 @@ public class ObjectUtil {
     }
 
     public static boolean ModClass(String name) {
+        if(Launch.classes.contains(name) || Launch.late_classes.contains(name)){
+            return false;
+        }
         name = ((KanadeClassLoader) Launch.classLoader).untransformName(name);
         final URL res = Launch.classLoader.findResource(name.replace('.', '/').concat(".class"));
         if (res != null) {

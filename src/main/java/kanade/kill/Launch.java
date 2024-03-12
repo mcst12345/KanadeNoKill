@@ -5,9 +5,11 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.reflection.EarlyFields;
+import kanade.kill.reflection.ReflectionUtil;
 import kanade.kill.thread.ClassLoaderCheckThread;
 import kanade.kill.thread.KillerThread;
 import kanade.kill.util.NativeMethods;
+import kanade.kill.util.ObjectUtil;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;
@@ -19,12 +21,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.opengl.GL11;
 import scala.concurrent.util.Unsafe;
+import sun.reflect.Reflection;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -50,6 +54,8 @@ public class Launch {
     public static final boolean win = System.getProperty("os.name").startsWith("Windows");
     public static final boolean betterCompatible = System.getProperty("BetterCompatible") != null;
     public static final Instrumentation INSTRUMENTATION;
+    public static final List<String> classes = new ArrayList<>();
+    public static final List<String> late_classes = new ArrayList<>();
 
     static {
         System.out.println(FMLDeobfuscatingRemapper.class.getClassLoader().getClass().getName());
@@ -84,11 +90,82 @@ public class Launch {
         blackboard = new HashMap<>();
         Thread.currentThread().setContextClassLoader(classLoader);
 
-        final List<String> classes = new ArrayList<>();
+
         ProtectionDomain domain = Loader.class.getProtectionDomain();
         ProtectionDomain gl = client ? GL11.class.getProtectionDomain() : null;
         ClassLoader appClassLoader = client ? GL11.class.getClassLoader() : null;
 
+        if (Launch.client) {
+            late_classes.add("kanade.kill.util.BufferBuilder");
+            late_classes.add("kanade.kill.util.DefaultVertexFormats");
+            late_classes.add("kanade.kill.util.FontRenderer");
+            late_classes.add("kanade.kill.util.VertexFormat");
+            late_classes.add("kanade.kill.util.VertexFormatElement");
+            late_classes.add("kanade.kill.util.ClientFakeObjects");
+            late_classes.add("kanade.kill.Keys");
+            late_classes.add("kanade.kill.render.RenderBeaconBeam");
+            late_classes.add("kanade.kill.util.KanadeFontRender");
+            late_classes.add("kanade.kill.util.VertexFormatElement$EnumType");
+            late_classes.add("kanade.kill.util.VertexFormatElement$EnumUsage");
+            late_classes.add("kanade.kill.util.VertexFormat$1");
+            late_classes.add("kanade.kill.render.WingLayer");
+        }
+
+
+        late_classes.add("kanade.kill.entity.Lain");
+        late_classes.add("kanade.kill.entity.EntityBeaconBeam");
+        late_classes.add("kanade.kill.util.EntityUtil");
+        late_classes.add("kanade.kill.item.KillItem");
+        late_classes.add("kanade.kill.item.DeathItem");
+        late_classes.add("kanade.kill.reflection.LateFields");
+        late_classes.add("kanade.kill.network.NetworkHandler");
+        late_classes.add("kanade.kill.network.packets.Annihilation");
+        late_classes.add("kanade.kill.network.packets.Annihilation$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.ClientTimeStop");
+        late_classes.add("kanade.kill.network.packets.ClientTimeStop$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.CoreDump");
+        late_classes.add("kanade.kill.network.packets.CoreDump$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.KillCurrentPlayer");
+        late_classes.add("kanade.kill.network.packets.KillCurrentPlayer$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.KillEntity");
+        late_classes.add("kanade.kill.network.packets.KillEntity$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.ServerTimeStop");
+        late_classes.add("kanade.kill.network.packets.ServerTimeStop$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.SwitchTimePoint");
+        late_classes.add("kanade.kill.network.packets.SwitchTimePoint$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.SaveTimePoint$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.SaveTimePoint");
+        late_classes.add("kanade.kill.network.packets.TimeBack$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.TimeBack");
+        late_classes.add("kanade.kill.network.packets.ClientReload$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.ClientReload");
+        late_classes.add("kanade.kill.network.packets.BlackHole");
+        late_classes.add("kanade.kill.network.packets.BlackHole$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.ConfigUpdatePacket");
+        late_classes.add("kanade.kill.network.packets.ConfigUpdatePacket$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.UpdatePlayerProtectedState");
+        late_classes.add("kanade.kill.network.packets.UpdatePlayerProtectedState$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.KillAll");
+        late_classes.add("kanade.kill.network.packets.KillAll$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.UpdateSuperMode");
+        late_classes.add("kanade.kill.network.packets.UpdateSuperMode$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.Reset");
+        late_classes.add("kanade.kill.network.packets.Reset$MessageHandler");
+        late_classes.add("kanade.kill.command.KanadeKillCommand");
+        late_classes.add("kanade.kill.command.DebugCommand");
+        late_classes.add("kanade.kill.command.KanadeReflection");
+        late_classes.add("kanade.kill.network.packets.KillAllEntities");
+        late_classes.add("kanade.kill.network.packets.KillAllEntities$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.UpdateTickCount");
+        late_classes.add("kanade.kill.network.packets.UpdateTickCount$MessageHandler");
+
+        classes.add("me.xdark.shell.JVMUtil");
+        classes.add("me.xdark.shell.NativeLibrary");
+        classes.add("me.xdark.shell.ShellcodeRunner");
+        classes.add("one.helfy.Field");
+        classes.add("one.helfy.JVM");
+        classes.add("one.helfy.JVMException");
+        classes.add("one.helfy.Type");
         classes.add("kanade.kill.util.memory.MemoryHelper");
         classes.add("kanade.kill.util.UnsafeFucker");
         classes.add("kanade.kill.classload.FakeClassLoadr");
@@ -111,6 +188,7 @@ public class Launch {
         classes.add("kanade.kill.asm.hooks.FMLModContainer");
         classes.add("kanade.kill.asm.hooks.ItemStack");
         classes.add("kanade.kill.asm.hooks.MinecraftServer");
+        classes.add("kanade.kill.asm.hooks.ModClassLoader");
         classes.add("kanade.kill.asm.hooks.SimpleChannelHandlerWrapper");
         classes.add("kanade.kill.asm.hooks.World");
         classes.add("kanade.kill.asm.hooks.WorldServer");
@@ -133,12 +211,15 @@ public class Launch {
         classes.add("kanade.kill.asm.injections.Minecraft");
         classes.add("kanade.kill.asm.injections.MinecraftForge");
         classes.add("kanade.kill.asm.injections.MinecraftServer");
+        classes.add("kanade.kill.asm.injections.ModClassLoader");
         classes.add("kanade.kill.asm.injections.MouseHelper");
         classes.add("kanade.kill.asm.injections.NetHandlerPlayServer");
         classes.add("kanade.kill.asm.injections.NonNullList");
         classes.add("kanade.kill.asm.injections.RenderGlobal");
         classes.add("kanade.kill.asm.injections.RenderItem");
         classes.add("kanade.kill.asm.injections.RenderLivingBase");
+        classes.add("kanade.kill.asm.injections.RenderManager");
+        classes.add("kanade.kill.asm.injections.RenderPlayer");
         classes.add("kanade.kill.asm.injections.ServerCommandManager");
         classes.add("kanade.kill.asm.injections.SimpleChannelHandlerWrapper");
         classes.add("kanade.kill.asm.injections.Timer");
@@ -212,6 +293,16 @@ public class Launch {
         net.minecraft.launchwrapper.Launch.blackboard = blackboard;
 
         INSTRUMENTATION = NativeMethods.ConstructInst();
+
+        LOGGER.info("Fucking reflection filters.");
+        try {
+            Field filter = ReflectionUtil.getField(Reflection.class,"fieldFilterMap");
+            ObjectUtil.putStatic(filter,null);
+            filter = ReflectionUtil.getField(Reflection.class,"methodFilterMap");
+            ObjectUtil.putStatic(filter,null);
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(e);
+        }
         //INSTRUMENTATION.addTransformer(Transformer.instance);
     }
 

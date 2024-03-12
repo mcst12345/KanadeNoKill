@@ -3,16 +3,21 @@ package kanade.kill.asm.hooks;
 import kanade.kill.Config;
 import kanade.kill.item.KillItem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.model.ModelElytra;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderDragon;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EnumPlayerModelParts;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.lwjgl.opengl.GL11;
@@ -21,8 +26,48 @@ import java.util.Random;
 
 @SuppressWarnings("unused")
 public class RenderLivingBase {
+    private static float handleRotationFloat(EntityLivingBase livingBase, float partialTicks) {
+        return (float) livingBase.ticksExisted + partialTicks;
+    }
+    private static float interpolateRotation(float prevYawOffset, float yawOffset, float partialTicks) {
+        float f;
+
+        for (f = yawOffset - prevYawOffset; f < -180.0F; f += 360.0F) {
+        }
+
+        while (f >= 180.0F) {
+            f -= 360.0F;
+        }
+
+        return prevYawOffset + partialTicks * f;
+    }
     public static void doRender(net.minecraft.client.renderer.entity.RenderLivingBase renderer, EntityLivingBase entity, double x, double y, double z, float entityYaw, float partialTicks) {
         if (entity instanceof EntityPlayer) {
+            /*if(KillItem.inList(entity)){
+                float f = interpolateRotation(entity.prevRenderYawOffset, entity.renderYawOffset, partialTicks);
+                float f1 = interpolateRotation(entity.prevRotationYawHead, entity.rotationYawHead, partialTicks);
+                float f2 = f1 - f;
+                float f7 = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
+                float f8 = handleRotationFloat(entity, partialTicks);
+                float f4 = 0.0625F;
+                float f5 = 0.0F;
+                float f6 = 0.0F;
+
+                if (!entity.isRiding()) {
+                    f5 = entity.prevLimbSwingAmount + (entity.limbSwingAmount - entity.prevLimbSwingAmount) * partialTicks;
+                    f6 = entity.limbSwing - entity.limbSwingAmount * (1.0F - partialTicks);
+
+                    if (entity.isChild()) {
+                        f6 *= 3.0F;
+                    }
+
+                    if (f5 > 1.0F) {
+                        f5 = 1.0F;
+                    }
+                    f2 = f1 - f; // Forge: Fix MC-1207
+                }
+                renderSwing(renderer,entity, f6, f5, partialTicks, f8, f2, f7, f4);
+            }*/
             return;
         }
         WorldClient world = Minecraft.getMinecraft().WORLD;
@@ -60,7 +105,7 @@ public class RenderLivingBase {
         }
     }
 
-    public static void renderCrystalBeams(double p_188325_0_, double p_188325_2_, double p_188325_4_, float p_188325_6_, double p_188325_7_, double p_188325_9_, double p_188325_11_, int p_188325_13_, double p_188325_14_, double p_188325_16_, double p_188325_18_) {
+    private static void renderCrystalBeams(double p_188325_0_, double p_188325_2_, double p_188325_4_, float p_188325_6_, double p_188325_7_, double p_188325_9_, double p_188325_11_, int p_188325_13_, double p_188325_14_, double p_188325_16_, double p_188325_18_) {
         float f = (float) (p_188325_14_ - p_188325_7_);
         float f1 = (float) (p_188325_16_ - 1.0D - p_188325_9_);
         float f2 = (float) (p_188325_18_ - p_188325_11_);
@@ -96,7 +141,7 @@ public class RenderLivingBase {
         GlStateManager.popMatrix();
     }
 
-    public static void drawNameplate(String str, float x, float y, float z, int verticalShift, float viewerYaw, float viewerPitch, boolean isThirdPersonFrontal, boolean isSneaking) {
+    private static void drawNameplate(String str, float x, float y, float z, int verticalShift, float viewerYaw, float viewerPitch, boolean isThirdPersonFrontal, boolean isSneaking) {
         FontRenderer fontRendererIn = Minecraft.getMinecraft().FontRenderer;
         GlStateManager.pushMatrix();
         GlStateManager.translate(x, y, z);
@@ -139,4 +184,43 @@ public class RenderLivingBase {
         GlStateManager.disableBlend();
         GlStateManager.popMatrix();
     }
+
+    private static void renderSwing(Render render,EntityLivingBase entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale){
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.enableBlend();
+        GlStateManager.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+
+        if (entitylivingbaseIn instanceof AbstractClientPlayer)
+        {
+            AbstractClientPlayer abstractclientplayer = (AbstractClientPlayer)entitylivingbaseIn;
+
+            if (abstractclientplayer.isPlayerInfoSet() && abstractclientplayer.getLocationElytra() != null)
+            {
+                render.bindTexture(abstractclientplayer.getLocationElytra());
+            }
+            else if (abstractclientplayer.hasPlayerInfo() && abstractclientplayer.getLocationCape() != null && abstractclientplayer.isWearing(EnumPlayerModelParts.CAPE))
+            {
+                render.bindTexture(abstractclientplayer.getLocationCape());
+            }
+            else
+            {
+                render.bindTexture(TEXTURE_ELYTRA);
+            }
+        }
+        else
+        {
+            render.bindTexture(TEXTURE_ELYTRA);
+        }
+
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(0.0F, 0.0F, 0.125F);
+        modelElytra.setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale, entitylivingbaseIn);
+        modelElytra.render(entitylivingbaseIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale);
+
+        GlStateManager.disableBlend();
+        GlStateManager.popMatrix();
+    }
+
+    private static final ModelElytra modelElytra = new ModelElytra();
+    private static final ResourceLocation TEXTURE_ELYTRA = new ResourceLocation("textures/entity/elytra.png");
 }

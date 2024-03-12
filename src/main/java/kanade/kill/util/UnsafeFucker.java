@@ -131,12 +131,18 @@ public class UnsafeFucker {
     public static Class<?> defineClass(Object o, String name, byte[] b, int off, int len,
                                        ClassLoader loader,
                                        ProtectionDomain protectionDomain) {
-        b = Transformer.instance.transform(name, name, b);
+        b = Transformer.instance.transform(name, name, b, null);
         return Unsafe.instance.defineClass(name, b, 0, b.length, loader, protectionDomain);
     }
 
     public static Class<?> defineAnonymousClass(Object o, Class<?> hostClass, byte[] data, Object[] cpPatches) {
-        data = Transformer.instance.transform("", "", data);
+        data = Transformer.instance.transform("", "", data, null);
         return Unsafe.instance.defineAnonymousClass(hostClass, data, cpPatches);
+    }
+
+    public static void putAddressFuck(Object u,long address, long x){}
+
+    public static long getAddressFuck(Object u,long address){
+        return 0L;
     }
 }
