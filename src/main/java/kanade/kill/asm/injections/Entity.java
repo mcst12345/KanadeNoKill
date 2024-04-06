@@ -7,7 +7,7 @@ import org.objectweb.asm.tree.*;
 public class Entity implements Opcodes {
     public static void AddField(ClassNode cn) {
         Launch.LOGGER.info("Adding field.");
-        cn.fields.add(new FieldNode(ACC_PUBLIC, "public EntityDataManager dataManager;", "Lnet/minecraft/network/datasync/EntityDataManager;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "DataManager;", "Lnet/minecraft/network/datasync/EntityDataManager;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "HatedByLife", "Z", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "mX", "D", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "X", "D", null, null));
