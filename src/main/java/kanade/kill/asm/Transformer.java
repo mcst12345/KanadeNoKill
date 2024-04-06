@@ -526,6 +526,7 @@ public class Transformer implements Opcodes {
                                 fin.name = "DataManager";
                                 changed = true;
                             }
+                            break;
                         }
                         case "field_175616_W":
                         case "field_175010_j": {
