@@ -4,8 +4,6 @@ import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 import kanade.kill.Config;
 import kanade.kill.Launch;
-import kanade.kill.ModMain;
-import kanade.kill.util.NativeMethods;
 import kanade.kill.util.Util;
 import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.Loader;
@@ -40,8 +38,8 @@ public class EventBus {
     }
 
     public static void register(net.minecraftforge.fml.common.eventhandler.EventBus bus, Object target) {
-        if (ModMain.NoMoreEventsShouldBeRegistered) {
-            NativeMethods.SetTag(target, 14514L);
+        if (bus == null || bus.listenerOwners == null || bus.listeners == null) {
+            return;
         }
         if (bus.listeners.containsKey(target)) {
             return;

@@ -1,5 +1,6 @@
 package kanade.kill.asm.hooks;
 
+import kanade.kill.Config;
 import kanade.kill.Launch;
 import kanade.kill.item.KillItem;
 import kanade.kill.timemanagement.TimeStop;
@@ -19,7 +20,7 @@ public class ItemStack {
             --stack.animationsToGo;
         }
 
-        if (stack.ITEM != null) {
+        if (stack.ITEM != null && !Config.SuperMode && !Config.allReturn) {
             try {
                 stack.ITEM.onUpdate(stack, worldIn, entityIn, inventorySlot, isCurrentItem);
             } catch (Throwable t) {

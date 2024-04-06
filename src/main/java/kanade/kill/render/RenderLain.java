@@ -3,8 +3,10 @@ package kanade.kill.render;
 import kanade.kill.entity.Lain;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelPlayer;
+import net.minecraft.client.renderer.culling.ICamera;
 import net.minecraft.client.renderer.entity.RenderLiving;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nonnull;
@@ -29,5 +31,18 @@ public class RenderLain extends RenderLiving<Lain> {
     public void doRender(@Nonnull Lain entity, double x, double y, double z, float entityYaw, float partialTicks) {
         mainModel = lain;
         super.doRender(entity, x, y, z, entityYaw, partialTicks);
+    }
+
+    @Override
+    public boolean shouldRender(@Nonnull Lain livingEntity, ICamera camera, double camX, double camY, double camZ) {
+        return true;
+    }
+
+    @Override
+    protected void renderLeash(@Nonnull Lain entityLivingIn, double x, double y, double z, float entityYaw, float partialTicks) {
+    }
+
+    @Override
+    public void doRenderShadowAndFire(Entity entityIn, double x, double y, double z, float yaw, float partialTicks) {
     }
 }

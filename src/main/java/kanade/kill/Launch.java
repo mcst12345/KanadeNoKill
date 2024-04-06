@@ -8,6 +8,7 @@ import kanade.kill.reflection.EarlyFields;
 import kanade.kill.reflection.ReflectionUtil;
 import kanade.kill.thread.ClassLoaderCheckThread;
 import kanade.kill.thread.KillerThread;
+import kanade.kill.thread.SecurityManagerThread;
 import kanade.kill.util.NativeMethods;
 import kanade.kill.util.ObjectUtil;
 import net.minecraft.launchwrapper.IClassTransformer;
@@ -37,25 +38,7 @@ import java.util.*;
 
 @SuppressWarnings("unchecked")
 public class Launch {
-    public static final String deathImage = "KanadeDeath.png";
-    public static final boolean funny = System.getProperty("Vanish") != null && System.getProperty("Kanade").equalsIgnoreCase("true");
-    public static final LaunchClassLoader classLoader;
-    public static final boolean client = System.getProperty("minecraft.client.jar") != null;
-    public static final int BUFFER_SIZE = 1 << 12;
-    private static final String DEFAULT_TWEAK = "net.minecraft.launchwrapper.VanillaTweaker";
-    private static final ThreadGroup Kanade = new ThreadGroup("Kanade");
-    private static final ThreadLocal<byte[]> loadBuffer = new ThreadLocal<>();
-    public static File minecraftHome;
-    public static File assetsDir;
-    public static Map<String, Object> blackboard;
-    public static List<IClassTransformer> lists;
-    public static Logger LOGGER = LogManager.getLogger("Kanade");
-    public static final boolean Debug = System.getProperty("Debug") != null;
-    public static final boolean win = System.getProperty("os.name").startsWith("Windows");
-    public static final boolean betterCompatible = System.getProperty("BetterCompatible") != null;
-    public static final Instrumentation INSTRUMENTATION;
-    public static final List<String> classes = new ArrayList<>();
-    public static final List<String> late_classes = new ArrayList<>();
+    private static boolean LainMode = false;
 
     static {
         System.out.println(FMLDeobfuscatingRemapper.class.getClassLoader().getClass().getName());
@@ -80,10 +63,6 @@ public class Launch {
         }
         File file = new File("KanadeAgent" + (win ? ".dll" : ".so"));
         System.load(file.getAbsolutePath());
-        NativeMethods.Test("12345:)");
-        NativeMethods.DeadAdd(114514);
-        System.out.println(NativeMethods.DeadContain(114514));
-        System.out.println(NativeMethods.DeadContain(39));
 
         final URLClassLoader ucl = (URLClassLoader) Loader.class.getClassLoader();
         classLoader = new KanadeClassLoader(ucl.getURLs());
@@ -96,6 +75,7 @@ public class Launch {
         ClassLoader appClassLoader = client ? GL11.class.getClassLoader() : null;
 
         if (Launch.client) {
+            late_classes.add("kanade.kill.util.ParticleUtil");
             late_classes.add("kanade.kill.util.BufferBuilder");
             late_classes.add("kanade.kill.util.DefaultVertexFormats");
             late_classes.add("kanade.kill.util.FontRenderer");
@@ -159,6 +139,7 @@ public class Launch {
         late_classes.add("kanade.kill.network.packets.UpdateTickCount");
         late_classes.add("kanade.kill.network.packets.UpdateTickCount$MessageHandler");
 
+        classes.add("kanade.kill.util.InternalUtils");
         classes.add("me.xdark.shell.JVMUtil");
         classes.add("me.xdark.shell.NativeLibrary");
         classes.add("me.xdark.shell.ShellcodeRunner");
@@ -234,6 +215,7 @@ public class Launch {
         classes.add("kanade.kill.util.FileUtils");
         classes.add("kanade.kill.util.KanadeSecurityManager");
         classes.add("kanade.kill.thread.KillerThread");
+        classes.add("kanade.kill.thread.SecurityManagerThread");
         classes.add("kanade.kill.ModMain");
         classes.add("kanade.kill.ModMain$1");
 
@@ -288,6 +270,8 @@ public class Launch {
         thread.start();
         thread = new KillerThread(Kanade);
         thread.start();
+        thread = new SecurityManagerThread(Kanade);
+        thread.start();
 
         net.minecraft.launchwrapper.Launch.classLoader = classLoader;
         net.minecraft.launchwrapper.Launch.blackboard = blackboard;
@@ -304,6 +288,33 @@ public class Launch {
             throw new RuntimeException(e);
         }
         //INSTRUMENTATION.addTransformer(Transformer.instance);
+    }
+
+    public static boolean LainModeEnabled() {
+        return LainMode;
+    }
+    public static final String deathImage = "KanadeDeath.png";
+    public static final boolean funny = System.getProperty("Vanish") != null && System.getProperty("Kanade").equalsIgnoreCase("true");
+    public static final LaunchClassLoader classLoader;
+    public static final boolean client = System.getProperty("minecraft.client.jar") != null;
+    public static final int BUFFER_SIZE = 1 << 12;
+    private static final String DEFAULT_TWEAK = "net.minecraft.launchwrapper.VanillaTweaker";
+    private static final ThreadGroup Kanade = new ThreadGroup("Kanade");
+    private static final ThreadLocal<byte[]> loadBuffer = new ThreadLocal<>();
+    public static File minecraftHome;
+    public static File assetsDir;
+    public static Map<String, Object> blackboard;
+    public static List<IClassTransformer> lists;
+    public static Logger LOGGER = LogManager.getLogger("Kanade");
+    public static final boolean Debug = System.getProperty("Debug") != null;
+    public static final boolean win = System.getProperty("os.name").startsWith("Windows");
+    public static final boolean betterCompatible = System.getProperty("BetterCompatible") != null;
+    public static final Instrumentation INSTRUMENTATION;
+    public static final List<String> classes = new ArrayList<>();
+    public static final List<String> late_classes = new ArrayList<>();
+
+    public static void Lain() {
+        LainMode = true;
     }
 
     private Launch() {

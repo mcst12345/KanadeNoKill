@@ -51,6 +51,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 public abstract class EntityLivingBase extends Entity {
+    public int Death_Time;
     public static final IAttribute SWIM_SPEED = new net.minecraft.entity.ai.attributes.RangedAttribute(null, "forge.swimSpeed", 1.0D, 0.0D, 1024.0D).setShouldWatch(true);
     protected static final DataParameter<Byte> HAND_STATES = EntityDataManager.<Byte>createKey(EntityLivingBase.class, DataSerializers.BYTE);
     private static final Logger LOGGER = LogManager.getLogger();

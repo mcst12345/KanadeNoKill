@@ -58,7 +58,7 @@ import java.util.stream.Collectors;
 
 public class WorldServer extends World implements IThreadListener {
     private static final Logger LOGGER = LogManager.getLogger();
-    public final Map<UUID, Entity> entitiesByUuid = Maps.<UUID, Entity>newHashMap();
+    public Map<UUID, Entity> entitiesByUuid = Maps.<UUID, Entity>newHashMap();
     protected final VillageSiege villageSiege = new VillageSiege(this);
     private final MinecraftServer server;
     private final EntityTracker entityTracker;

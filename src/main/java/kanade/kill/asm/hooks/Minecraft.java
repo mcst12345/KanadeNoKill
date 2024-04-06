@@ -184,6 +184,7 @@ public class Minecraft {
         if (dead || kanade.kill.util.Util.killing) {
             return;
         }
+        Display.setTitle("Kanade's Kill 1.12.2 " + Sys.getTime());
         while (!tasks.isEmpty()) {
             Runnable run = tasks.poll();
             run.run();

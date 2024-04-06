@@ -5,32 +5,25 @@ import kanade.kill.Launch;
 import kanade.kill.asm.injections.Timer;
 import kanade.kill.asm.injections.*;
 import kanade.kill.classload.KanadeClassLoader;
-import kanade.kill.reflection.EarlyFields;
 import kanade.kill.util.ObjectUtil;
-import net.minecraft.launchwrapper.IClassNameTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
-import scala.concurrent.util.Unsafe;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.instrument.ClassFileTransformer;
 import java.nio.file.Files;
-import java.security.ProtectionDomain;
 import java.util.*;
 
 import static java.lang.reflect.Modifier.*;
 import static kanade.kill.Launch.Debug;
 
 @SuppressWarnings("SpellCheckingInspection")
-public class Transformer implements Opcodes, ClassFileTransformer {
-    private static final Set<String> transformed = new HashSet<>();
-    private static final IClassNameTransformer classNameTransformer = (IClassNameTransformer) Unsafe.instance.getObjectVolatile(Launch.classLoader, EarlyFields.renameTransformer_offset);
+public class Transformer implements Opcodes {
     public static final Transformer instance = new Transformer();
 
     private Transformer(){}
@@ -57,11 +50,6 @@ public class Transformer implements Opcodes, ClassFileTransformer {
             throw new RuntimeException(e);
         }
     }
-    private static final Set<String> modClasses = new HashSet<>();
-
-    public static boolean isModClass(String s) {
-        return modClasses.contains(s);
-    }
 
     private static boolean RedirectAndExamine(ClassNode cn, boolean goodClass, String transformedName) {
         if (Debug) {
@@ -77,10 +65,40 @@ public class Transformer implements Opcodes, ClassFileTransformer {
                 ASMUtil.FuckMethod(mn);
                 continue;
             }
+            boolean init = mn.name.equals("<init>") || mn.name.equals("<clinit>");
             ListIterator<AbstractInsnNode> iterator = mn.instructions.iterator();
             boolean f = false;
             Type type = Type.getReturnType(mn.desc);
             boolean flag = type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY;
+            if (mn.name.equals("<init>")) {
+                AbstractInsnNode Return = null;
+                for (AbstractInsnNode ain : mn.instructions.toArray()) {
+                    if (ain instanceof InsnNode) {
+                        InsnNode in = (InsnNode) ain;
+                        if (in.getOpcode() == RETURN) {
+                            Return = in;
+                            break;
+                        }
+                    }
+                }
+                if (Return == null) {
+                    Launch.LOGGER.warn("No return insn found in instructions. Inject at head.");
+                }
+                InsnList list = new InsnList();
+                list.add(new VarInsnNode(ALOAD, 0));
+                list.add(new LdcInsnNode(25L));
+                list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/NativeMethods", "SetTag", "(Ljava/lang/Object;J)V", false));
+                if (Return != null) {
+                    mn.instructions.insertBefore(Return, list);
+                } else {
+                    mn.instructions.insert(list);
+                }
+                mn.maxStack += 2;
+                changed = true;
+                if (Debug) {
+                    Launch.LOGGER.info("Inject into constructor of " + cn.name);
+                }
+            }
             while (iterator.hasNext()) {
                 AbstractInsnNode ain = iterator.next();
                 if (!goodClass) {
@@ -97,10 +115,24 @@ public class Transformer implements Opcodes, ClassFileTransformer {
                                 f = true;
                             }
                             changed = true;
+                            /*if(tin.desc.equals("javax/swing/JWindow")){
+                                mn.maxStack++;
+                                int index = mn.maxStack;
+                                mn.instructions.insertBefore(tin.getNext(),new VarInsnNode(ASTORE,index));
+                                InsnList list1 = new InsnList();
+                                list1.add(new VarInsnNode(ALOAD,index));
+                                list1.add(new MethodInsnNode(INVOKEVIRTUAL,"java.awt.Window","removeNotify","()V",false));
+
+                            }*/
                         }
                     } else if (flag) {
                         if (ain instanceof MethodInsnNode) {
                             MethodInsnNode min = (MethodInsnNode) ain;
+                            if (min.name.equals("sleep") && min.owner.equals("java/lang/Thread")) {
+                                iterator.set(new InsnNode(POP2));
+                                changed = true;
+                                continue;
+                            }
                             if (min.owner.equals("sun/misc/Unsafe")) {
                                 if (min.name.startsWith("put")) {
                                     MethodInsnNode fuck = new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/UnsafeFucker", min.name + "Fuck", "(Ljava/lang/Object;" + min.desc.substring(1), false);
@@ -111,6 +143,7 @@ public class Transformer implements Opcodes, ClassFileTransformer {
                                     iterator.set(fuck);
                                     changed = true;
                                 }
+                                continue;
                             } else if (min.owner.equals("java.lang.reflect.Field")) {
                                 if (min.name.equals("set")) {
                                     iterator.set(new InsnNode(POP2));
@@ -118,16 +151,12 @@ public class Transformer implements Opcodes, ClassFileTransformer {
                                     changed = true;
                                 }
                             }
-                            if (min.owner.equals("java/lang/System")) {
-                                if (min.name.equals("load")) {
-                                    mn.instructions.set(min, new InsnNode(POP));
-                                    changed = true;
-                                }
-                            }
-                            if (mn.name.equals("<init>") || mn.name.equals("<clinit>")) {
+                            if ((min.name.equals("setContentPane") && min.desc.equals("(Ljava/awt/Container;)V")) || (min.name.equals("setAlwaysOnTop") && min.desc.equals("(Z)V")) || (min.name.equals("setVisible") && min.desc.equals("(Z)V")) || (min.owner.equals("java/lang/System") && min.name.equals("load")) || (min.owner.equals("org/lwjgl/opengl/Display") && min.name.equals("setFullscreen"))) {
+                                mn.instructions.set(min, new InsnNode(POP));
+                                changed = true;
                                 continue;
                             }
-                            if (min.owner.startsWith("org/lwjgl") || min.owner.startsWith("net/minecraft/client/renderer") || min.owner.startsWith("sun/awt") || min.owner.startsWith("javax/swing") || min.owner.startsWith("org/eclipse/swt") || min.owner.startsWith("javafx/")) {
+                            if (!init && min.owner.startsWith("org/lwjgl") || min.owner.startsWith("net/minecraft/client/renderer") || min.owner.startsWith("sun/awt") || min.owner.startsWith("javax/swing") || min.owner.startsWith("org/eclipse/swt") || min.owner.startsWith("javafx/")) {
                                 if(Debug){
                                     Launch.LOGGER.info("Find render method.");
                                 }
@@ -168,6 +197,13 @@ public class Transformer implements Opcodes, ClassFileTransformer {
                 } else if (ain instanceof FieldInsnNode) {
                     FieldInsnNode fin = (FieldInsnNode) ain;
                     switch (fin.name) {
+                        case "field_146106_i": {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
+                                fin.name = "gameProfile";
+                                changed = true;
+                            }
+                            break;
+                        }
                         case "field_151002_e": {
                             if (fin.getOpcode() == GETFIELD) {
                                 fin.name = "ITEM";
@@ -485,6 +521,12 @@ public class Transformer implements Opcodes, ClassFileTransformer {
                             }
                             break;
                         }
+                        case "field_70180_af": {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
+                                fin.name = "DataManager";
+                                changed = true;
+                            }
+                        }
                         case "field_175616_W":
                         case "field_175010_j": {
                             if (fin.getOpcode() == GETFIELD) {
@@ -629,11 +671,11 @@ public class Transformer implements Opcodes, ClassFileTransformer {
                             break;
                         }
                         case "setGrabbed": {
-                            if (!min.owner.equals("org.lwjgl.input.Mouse")) {
+                            if (!min.owner.equals("org/lwjgl/input/Mouse")) {
                                 break;
                             }
                             if (!goodClass) {
-                                iterator.remove();
+                                iterator.set(new InsnNode(POP));
                                 changed = true;
                             }
                             break;
@@ -658,6 +700,11 @@ public class Transformer implements Opcodes, ClassFileTransformer {
                 }
             }
             if (!goodClass) {
+                if (mn.name.equals("func_76986_a") || (mn.desc.endsWith("V") && mn.name.toLowerCase().contains("render") && mn.desc.startsWith("(L"))) {
+                    changed = true;
+                    ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, 0, ASMUtil.isDead());
+                }
+
                 if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY) {
                     if (!(mn.name.equals("<init>") || mn.name.equals("<clinit>") || isAbstract(mn.access) || isNative(mn.access))) {
                         ASMUtil.InsertReturn1(mn, type);
@@ -679,35 +726,6 @@ public class Transformer implements Opcodes, ClassFileTransformer {
                             }
                             break;
                         }
-                    }
-                }
-                if (mn.name.equals("<init>")) {
-                    AbstractInsnNode Return = null;
-                    for (AbstractInsnNode ain : mn.instructions.toArray()) {
-                        if (ain instanceof InsnNode) {
-                            InsnNode in = (InsnNode) ain;
-                            if (in.getOpcode() == RETURN) {
-                                Return = in;
-                                break;
-                            }
-                        }
-                    }
-                    if (Return == null) {
-                        Launch.LOGGER.warn("No return insn found in instructions. Inject at head.");
-                    }
-                    InsnList list = new InsnList();
-                    list.add(new VarInsnNode(ALOAD, 0));
-                    list.add(new LdcInsnNode(25L));
-                    list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/NativeMethods", "SetTag", "(Ljava/lang/Object;J)V", false));
-                    if(Return != null){
-                        mn.instructions.insertBefore(Return, list);
-                    } else {
-                        mn.instructions.insert(list);
-                    }
-                    mn.maxStack += 2;
-                    changed = true;
-                    if(Debug){
-                        Launch.LOGGER.info("Inject into constructor of " + cn.name);
                     }
                 }
             }
@@ -752,23 +770,19 @@ public class Transformer implements Opcodes, ClassFileTransformer {
                 changed = true;
                 ASMUtil.InsertReturn(mn, Type.BOOLEAN_TYPE, Boolean.FALSE, 1, ASMUtil.isDead());
             }
-            if (!isStatic(mn.access) && !goodClass && mn.desc.endsWith("V")) {
+            if (!init && !isStatic(mn.access) && !goodClass && mn.desc.endsWith("V")) {
                 changed = true;
                 ASMUtil.InsertReturn(mn, Type.VOID_TYPE, null, 0, new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/NativeMethods", "HaveDeadTag", "(Ljava/lang/Object;)Z", false));
             }
+
         }
         return changed;
     }
 
-    public static boolean isTransformed(String str) {
-        return transformed.contains(str);
-    }
-
     public byte[] transform(String name, String transformedName, byte[] basicClass, byte[] unchanged) {
-        if (!DEOBF_STARTED && transformedName.equals(name)) {
+        if (!DEOBF_STARTED && !transformedName.equals(name)) {
             DEOBF_STARTED = true;
         }
-        transformed.add(name.replace('.', '/'));
         if (transformedName.equals("net.minecraft.item.ItemStackLoader")) {
             ClassNode cn = new ClassNode();
             cn.version = V1_8;
@@ -785,6 +799,7 @@ public class Transformer implements Opcodes, ClassFileTransformer {
         }
         boolean changed = false;
         int compute = ClassWriter.COMPUTE_MAXS;
+        ;
         boolean goodClass = true;
         byte[] originalBytes = null;
         if (classes.contains(transformedName)) {
@@ -833,7 +848,6 @@ public class Transformer implements Opcodes, ClassFileTransformer {
             if (name.equals(transformedName)) {
                 if (ObjectUtil.ModClass(name)) {
                     goodClass = false;
-                    modClasses.add(name);
                 }
             }
         } else {
@@ -1010,7 +1024,6 @@ public class Transformer implements Opcodes, ClassFileTransformer {
                 break;
             }
             case "net.minecraft.client.audio.SoundManager$SoundSystemStarterThread": {
-                compute = 0;
                 changed = true;
                 Launch.LOGGER.info("Get SoundManager$SoundSystemStarterThread.");
                 for (MethodNode mn : cn.methods) {
@@ -1564,7 +1577,6 @@ public class Transformer implements Opcodes, ClassFileTransformer {
                 break;
             }
             case "net.minecraftforge.fml.common.eventhandler.EventBus": {
-                compute = 0;
                 Launch.LOGGER.info("Get EventBus.");
                 changed = true;
                 for (MethodNode mn : cn.methods) {
@@ -1703,6 +1715,9 @@ public class Transformer implements Opcodes, ClassFileTransformer {
                 }
                 break;
             }
+            default: {
+                compute = 0;
+            }
         }
 
 
@@ -1800,15 +1815,5 @@ public class Transformer implements Opcodes, ClassFileTransformer {
             return basicClass;
         }
 
-    }
-
-    @Override
-    public byte[] transform(ClassLoader classLoader, String s, Class<?> aClass, ProtectionDomain protectionDomain, byte[] bytes) {
-        System.out.println(s);
-        if (isTransformed(s)) {
-            return bytes;
-        }
-        s = s.replace('/', '.');
-        return transform(s, classNameTransformer.remapClassName(s), bytes, null);
     }
 }

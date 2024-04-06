@@ -1,17 +1,14 @@
 package kanade.kill;
 
+import com.wzz.death.ItemDeath;
+import org.objectweb.asm.Opcodes;
 import sun.misc.Unsafe;
 
-public class Test {
+public class Test implements Opcodes {
+    static Unsafe unsafe;
+
     public static void main(String[] args) throws Throwable {
-        for(int i = 0 ; i <= 360; i++){
-            double tmp = i * 0.017453292519943295;
-            double tmp1 = Math.cosh(tmp)*Math.cosh(tmp)*Math.cosh(tmp);
-            double tmp2 = Math.sinh(tmp)*Math.sinh(tmp)*Math.sinh(tmp);
-            System.out.println(tmp1*2.5+":"+tmp2*2.5);
-            //world.spawnParticle(type,X - tmp1*2.5 - 5,y,Z - tmp2*2.5 - 5,tmp1*0.14514,0,tmp2*0.14514);
-            //world.spawnParticle(type,X + tmp1*2.5 + 5,y,Z - tmp2*2.5 + 5,tmp1*0.14514,0,tmp2*0.14514);
-        }
+        System.out.println(ItemDeath.ALLATORIxDEMO("V\u0003{\u0015^\u0014"));
     }
 
     private static class A {

@@ -1,5 +1,6 @@
 package kanade.kill.entity;
 
+import kanade.kill.Launch;
 import kanade.kill.util.EntityUtil;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.*;
@@ -13,15 +14,35 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class Lain extends EntityCreature {
+
+
     @Override
     public void setDead() {
     }
     public Lain(World worldIn) {
         super(worldIn);
+        Launch.Lain();
     }
+
 
     @Override
     public void setOnFireFromLava() {
+    }
+
+    @Override
+    public void onUpdate() {
+        this.noClip = false;
+        this.Death_Time = 0;
+        this.hurtTime = 0;
+        this.maxHurtTime = 0;
+        this.isAddedToWorld = true;
+        this.fire = 0;
+        this.isInWeb = false;
+        this.height = 2;
+        this.width = 1;
+        this.preventEntitySpawning = false;
+        this.forceSpawn = true;
+        super.onUpdate();
     }
 
     @Override

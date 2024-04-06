@@ -6,7 +6,6 @@ buildscript {
 }
 
 plugins {
-
     id 'net.minecraftforge.gradle' version '5.+'
 }
 

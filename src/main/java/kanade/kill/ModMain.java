@@ -3,10 +3,10 @@ package kanade.kill;
 import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.entity.EntityBeaconBeam;
 import kanade.kill.entity.Lain;
+import kanade.kill.item.SuperModeToggle;
 import kanade.kill.reflection.EarlyFields;
 import kanade.kill.render.RenderBeaconBeam;
 import kanade.kill.render.RenderLain;
-import kanade.kill.util.ObjectUtil;
 import kanade.kill.util.ShaderHelper;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.RenderGlobal;
@@ -15,19 +15,17 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
@@ -36,6 +34,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.Display;
 import scala.concurrent.util.Unsafe;
 
+import javax.annotation.Nonnull;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,7 +53,6 @@ public class ModMain {
     public static final ResourceLocation Kanade = new ResourceLocation("kanade", "textures/misc/kanade.png");
     public static Object listeners;
     public static Object listenerOwners;
-    public static boolean NoMoreEventsShouldBeRegistered = false;
     @SideOnly(Side.CLIENT)
     public static TextureAtlasSprite[] COSMIC;
     public static final Item EMPTY = new Item();
@@ -149,20 +147,6 @@ public class ModMain {
         }
     }
 
-    public static void ServerStart(FMLServerStartingEvent event) {
-        if (listeners == null) {
-            listeners = ObjectUtil.clone(MinecraftForge.Event_bus.listeners);
-        }
-        if (listenerOwners == null) {
-            listenerOwners = ObjectUtil.clone(MinecraftForge.Event_bus.listenerOwners);
-        }
-    }
-
-    @Mod.EventHandler
-    public static void ServerStopped(FMLServerStoppedEvent event) {
-        NoMoreEventsShouldBeRegistered = false;
-    }
-
     @SideOnly(Side.CLIENT)
     private static TextureAtlasSprite register(String sprite) {
 
@@ -199,20 +183,14 @@ public class ModMain {
         }
     }
 
-    @SubscribeEvent
-    public static void RegItem(RegistryEvent.Register<Item> event) {
-        Launch.LOGGER.info("Registering items.");
-        event.getRegistry().register(kill_item);
-        event.getRegistry().register(death_item);
-    }
-
-    @SubscribeEvent
-    @SideOnly(Side.CLIENT)
-    public static void RegModel(ModelRegistryEvent event) {
-        Launch.LOGGER.info("Registering item models.");
-        ModelLoader.setCustomModelResourceLocation(kill_item, 0, new ModelResourceLocation(Objects.requireNonNull(kill_item.getRegistryName()), "inventory"));
-        ModelLoader.setCustomModelResourceLocation(death_item, 0, new ModelResourceLocation(Objects.requireNonNull(death_item.getRegistryName()), "inventory"));
-    }
+    public static final CreativeTabs KanadeTab = new CreativeTabs("Kanade") {
+        @Override
+        @Nonnull
+        public ItemStack createIcon() {
+            return new ItemStack(kill_item);
+        }
+    };
+    public static final Item SuperMode = new SuperModeToggle();
 
     @SubscribeEvent
     public static void RegisterEntity(RegistryEvent.Register<EntityEntry> event) {
@@ -246,10 +224,28 @@ public class ModMain {
         }
     }
 
+    @SubscribeEvent
+    public static void RegItem(RegistryEvent.Register<Item> event) {
+        Launch.LOGGER.info("Registering items.");
+        event.getRegistry().register(kill_item);
+        event.getRegistry().register(death_item);
+        event.getRegistry().register(SuperMode);
+    }
+
+    @SubscribeEvent
+    @SideOnly(Side.CLIENT)
+    public static void RegModel(ModelRegistryEvent event) {
+        Launch.LOGGER.info("Registering item models.");
+        ModelLoader.setCustomModelResourceLocation(kill_item, 0, new ModelResourceLocation(Objects.requireNonNull(kill_item.getRegistryName()), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(death_item, 0, new ModelResourceLocation(Objects.requireNonNull(death_item.getRegistryName()), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(SuperMode, 0, new ModelResourceLocation(Objects.requireNonNull(SuperMode.getRegistryName()), "inventory"));
+    }
+
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event) {
-        kill_item.setCreativeTab(CreativeTabs.COMBAT);
-        death_item.setCreativeTab(CreativeTabs.COMBAT);
+        kill_item.setCreativeTab(KanadeTab);
+        death_item.setCreativeTab(KanadeTab);
+        SuperMode.setCreativeTab(KanadeTab);
         if (event.getSide() == Side.CLIENT) {
             RenderGlobal.SUN_TEXTURES = Kanade;
             RenderGlobal.CLOUDS_TEXTURES = Kanade;

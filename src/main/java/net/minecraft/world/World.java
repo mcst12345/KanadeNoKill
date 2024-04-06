@@ -57,7 +57,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
      */
     public static double MAX_ENTITY_RADIUS = 2.0D;
     public final List<Entity> weathers = Lists.newArrayList();
-    public final List<Entity> loadedEntityList = Lists.newArrayList();
+    public List<Entity> loadedEntityList = Lists.newArrayList();
     public final List<TileEntity> loadedTileEntityList = Lists.newArrayList();
     public final List<TileEntity> tickableTileEntities = Lists.newArrayList();
     public final List<EntityPlayer> playerEntities = Lists.newArrayList();
@@ -68,7 +68,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     public final Profiler profiler;
     public final boolean isRemote;
     public final List<Entity> unloadedEntityList = Lists.newArrayList();
-    public final IntHashMap<Entity> entitiesById = new IntHashMap<>();
+    public IntHashMap<Entity> entitiesById = new IntHashMap<>();
     public Profiler Profiler;
     protected final int DIST_HASH_MAGIC = 1013904223;
     protected final ISaveHandler saveHandler;

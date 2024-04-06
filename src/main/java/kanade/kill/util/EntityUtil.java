@@ -12,6 +12,7 @@ import kanade.kill.network.packets.KillCurrentPlayer;
 import kanade.kill.network.packets.KillEntity;
 import kanade.kill.reflection.LateFields;
 import kanade.kill.reflection.ReflectionUtil;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
@@ -23,14 +24,16 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.InventoryEnderChest;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.PathWorldListener;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ClassInheritanceMultiMap;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.ITickable;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldEventListener;
 import net.minecraft.world.ServerWorldEventHandler;
 import net.minecraft.world.World;
@@ -44,12 +47,33 @@ import net.minecraftforge.fml.common.eventhandler.IEventListener;
 import scala.concurrent.util.Unsafe;
 
 import javax.annotation.Nonnull;
-import javax.vecmath.Vector2d;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static net.minecraft.entity.Entity.FLAGS;
+
 @SuppressWarnings("unused")
 public class EntityUtil {
+    public static synchronized void kill(TileEntity tileEntity) {
+        Util.killing = true;
+        tileEntity.tileEntityInvalid = true;
+        World world = tileEntity.getWorld();
+        world.addedTileEntityList.remove(tileEntity);
+        world.loadedTileEntityList.remove(tileEntity);
+        if (tileEntity instanceof ITickable) {
+            world.tickableTileEntities.remove(tileEntity);
+        }
+        Chunk chunk = world.getChunk(tileEntity.getPos());
+        chunk.tileEntities.remove(tileEntity.getPos());
+        chunk.markDirty();
+
+        if (world.isRemote) {
+            BlockPos blockpos1 = tileEntity.getPos();
+            IBlockState iblockstate1 = world.getBlockState(blockpos1);
+            world.notifyBlockUpdate(blockpos1, iblockstate1, iblockstate1, 2);
+        }
+        Util.killing = false;
+    }
     public static final Set<UUID> blackHolePlayers = new HashSet<>();
     public static final Set<UUID> Dead = new HashSet<>();
     private static final Set<Class<?>> redefined = new HashSet<>();
@@ -266,16 +290,15 @@ public class EntityUtil {
         return false;
     }
 
-    public static void clearNBT(Object nbt) {
-        if (nbt instanceof NBTTagCompound) {
-            ((NBTTagCompound) nbt).tagMap.clear();
-        }
-    }
-
     public static void updatePlayer(@Nonnull
                                     EntityPlayer player) {
         boolean blackhole = blackHolePlayers.contains(player.getUniqueID());
         player.getActivePotionEffects().clear();
+        if (player.customEntityData != null) {
+            player.customEntityData.setBoolean("isDead", false);
+        }
+        byte b0 = player.DataManager.get(FLAGS);
+        player.DataManager.set(FLAGS, (byte) (b0 & ~(1 << 5)));
         player.hurtTime = 0;
         player.addedToChunk = true;
         player.capabilities.allowEdit = true;

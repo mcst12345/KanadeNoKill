@@ -1,7 +1,6 @@
 package kanade.kill.classload;
 
 import LZMA.LzmaInputStream;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.hash.Hashing;
@@ -200,6 +199,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
         exclusions.add("kanade.kill.classload.FakeClassLoadr");
         exclusions.add("kanade.kill.util.superRender.ImagePanel");
         exclusions.add("kanade.kill.util.superRender.DeathWindow");
+        exclusions.add("kanade.kill.util.InternalUtils");
     }
 
     //Launch.classLoader.getClass().getDeclaredField("transformerExceptions")
@@ -459,20 +459,12 @@ public class KanadeClassLoader extends LaunchClassLoader {
         {
             return patchedClasses.get(name);
         }
-        if(Launch.Debug){
-            Launch.LOGGER.info("Looking for patches of class:"+name+":"+transformedName);
-        }
         List<ClassPatch> list = patches.get(name);
         if (list.isEmpty())
         {
-            if(Launch.Debug){
-                Launch.LOGGER.info("No patches found.");
-            }
             return bytes;
         }
         boolean ignoredError = false;
-        if (Launch.Debug)
-            Launch.LOGGER.info("Runtime patching class {} (input size {}), found {} patch{}", transformedName, (bytes == null ? 0 : bytes.length), list.size(), list.size()!=1 ? "es" : "");
         for (ClassPatch patch: list)
         {
             if (!patch.targetClassName.equals(transformedName) && !patch.sourceClassName.equals(name))
@@ -515,9 +507,6 @@ public class KanadeClassLoader extends LaunchClassLoader {
             {
                 try
                 {
-                    if(Launch.Debug){
-                        Launch.LOGGER.info("Patching class:"+transformedName+":"+patch.patch.length);
-                    }
                     bytes = patcher.patch(bytes, patch.patch);
                 }
                 catch (IOException e)
@@ -611,15 +600,11 @@ public class KanadeClassLoader extends LaunchClassLoader {
             IOUtils.closeQuietly(jis);
         }
         Launch.LOGGER.info("Read {} binary patches", patches.size());
-        if (Launch.Debug)
-            Launch.LOGGER.info("Patch list :\n\t{}", Joiner.on("\t\n").join(patches.asMap().entrySet()));
         patchedClasses.clear();
     }
 
     private static ClassPatch readPatch(JarEntry patchEntry, JarInputStream jis)
     {
-        if (Launch.Debug)
-            Launch.LOGGER.info("Reading patch data from {}", patchEntry.getName());
         ByteArrayDataInput input;
         try
         {

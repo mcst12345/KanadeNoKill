@@ -45,7 +45,7 @@ import java.util.Set;
 @SideOnly(Side.CLIENT)
 public class WorldClient extends World {
     public final Set<Entity> EntityList = Sets.<Entity>newHashSet();
-    public final Set<Entity> entityList = Sets.<Entity>newHashSet();
+    public Set<Entity> entityList = Sets.newHashSet();
     public final Set<Entity> entitySpawnQueue = Sets.<Entity>newHashSet();
     private final NetHandlerPlayClient connection;
     private final Minecraft mc = Minecraft.getMinecraft();

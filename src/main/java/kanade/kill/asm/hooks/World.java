@@ -7,15 +7,16 @@ import kanade.kill.util.KanadeArrayList;
 import kanade.kill.util.Util;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.*;
 
 public class World {
     public static void UpdateEntities(net.minecraft.world.World world) {
@@ -34,10 +35,27 @@ public class World {
 
         if (world.entities.getClass() != ArrayList.class)
             world.entities = new ArrayList<>(world.entities);
+        Map<UUID, Entity> byUUID = null;
+        if (world instanceof WorldServer) {
+            WorldServer ws = (WorldServer) world;
+            byUUID = ws.entitiesByUuid;
+        }
+        Set<Entity> list = null;
+        if (Launch.client && world instanceof WorldClient) {
+            WorldClient wc = (WorldClient) world;
+            list = wc.entityList;
+        }
         for (Entity entity : world.protects) {
             if (!world.entities.contains(entity))
                 world.entities.add(entity);
+            if (!world.entitiesById.containsItem(entity.entityId))
+                world.entitiesById.addKey(entity.entityId, entity);
+            if (byUUID != null && !byUUID.containsKey(entity.entityUniqueID))
+                byUUID.put(entity.entityUniqueID, entity);
+            if (list != null)
+                list.add(entity);
         }
+
 
         world.Profiler.startSection("entities");
         world.Profiler.startSection("global");

@@ -1,7 +1,7 @@
 package kanade.kill.thread;
 
 
-import kanade.kill.util.ObjectUtil;
+import kanade.kill.util.NativeMethods;
 import kanade.kill.util.ThreadUtil;
 
 @SuppressWarnings("unused")
@@ -16,12 +16,7 @@ public class KillerThread extends Thread {
     @Override
     public void run() {
         for (Thread thread : Thread.getAllStackTraces().keySet()) {
-            boolean good = true;
-            if (thread != this && thread.getClass() != ClassLoaderCheckThread.class) {
-                good = !ObjectUtil.FromModClass(thread);
-            }
-
-            if (!good) {
+            if (NativeMethods.HaveTag(thread, 25L)) {
                 kanade.kill.Launch.LOGGER.warn("Killing thread:" + thread.getName());
                 try {
                     ThreadUtil.StopThread(thread);

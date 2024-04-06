@@ -24,6 +24,7 @@ public class EntityPlayer implements Opcodes {
 
     public static void AddField(ClassNode cn) {
         Launch.LOGGER.info("Adding field.");
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "gameProfile", "Lcom/mojang/authlib/GameProfile;", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "Inventory", "Lnet/minecraft/entity/player/InventoryPlayer;", null, null));
     }
 

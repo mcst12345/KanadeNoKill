@@ -54,7 +54,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
     private final boolean[] updateSkylightColumns;
     private final World world;
     private final int[] heightMap;
-    private final Map<BlockPos, TileEntity> tileEntities;
+    public final Map<BlockPos, TileEntity> tileEntities;
     private final ConcurrentLinkedQueue<BlockPos> tileEntityPosQueue;
     private final net.minecraftforge.common.capabilities.CapabilityDispatcher capabilities;
     public boolean unloadQueued;

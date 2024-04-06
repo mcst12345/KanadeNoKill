@@ -57,7 +57,7 @@ import java.util.*;
 
 public abstract class Entity implements ICommandSender, net.minecraftforge.common.capabilities.ICapabilitySerializable<NBTTagCompound> {
     public boolean HatedByLife;
-    protected static final DataParameter<Byte> FLAGS = EntityDataManager.<Byte>createKey(Entity.class, DataSerializers.BYTE);
+    public static final DataParameter<Byte> FLAGS = EntityDataManager.<Byte>createKey(Entity.class, DataSerializers.BYTE);
     private static final Logger LOGGER = LogManager.getLogger();
     private static final List<ItemStack> EMPTY_EQUIPMENT = Collections.<ItemStack>emptyList();
     private static final AxisAlignedBB ZERO_AABB = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D);
@@ -149,6 +149,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     protected boolean firstUpdate;
     protected boolean isImmuneToFire;
     public EntityDataManager dataManager;
+    public EntityDataManager DataManager;
     protected boolean inPortal;
     protected int portalCounter;
     protected BlockPos lastPortalPos;
@@ -1916,7 +1917,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     }
 
     protected void setFlag(int flag, boolean set) {
-        byte b0 = ((Byte) this.dataManager.get(FLAGS)).byteValue();
+        byte b0 = this.dataManager.get(FLAGS).byteValue();
 
         if (set) {
             this.dataManager.set(FLAGS, Byte.valueOf((byte) (b0 | 1 << flag)));

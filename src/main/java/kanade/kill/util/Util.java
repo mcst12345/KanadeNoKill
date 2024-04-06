@@ -3,7 +3,6 @@ package kanade.kill.util;
 import kanade.kill.Config;
 import kanade.kill.Launch;
 import kanade.kill.ModMain;
-import kanade.kill.asm.Transformer;
 import kanade.kill.item.KillItem;
 import kanade.kill.reflection.EarlyMethods;
 import kanade.kill.reflection.ReflectionUtil;
@@ -18,11 +17,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.RenderTooltipEvent;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityEvent;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.fml.common.eventhandler.*;
+import net.minecraftforge.fml.common.eventhandler.ASMEventHandler;
+import net.minecraftforge.fml.common.eventhandler.Event;
+import net.minecraftforge.fml.common.eventhandler.IEventListener;
 import org.lwjgl.MemoryUtil;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
@@ -34,8 +33,6 @@ import scala.concurrent.util.Unsafe;
 
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 @SuppressWarnings({"unused", "raw"})
@@ -56,7 +53,7 @@ public class Util {
         }
         String name = ReflectionUtil.getName(gui.getClass());
         String l = name.toLowerCase();
-        return (Config.guiProtect && (Transformer.isModClass(name) || gui.getClass().getProtectionDomain() == null || gui.getClass().getProtectionDomain().getCodeSource() == null)) || l.contains("death") || l.contains("over") || l.contains("die") || l.contains("dead");
+        return (Config.guiProtect && (ObjectUtil.ModClass(name) || gui.getClass().getProtectionDomain() == null || gui.getClass().getProtectionDomain().getCodeSource() == null)) || l.contains("death") || l.contains("over") || l.contains("die") || l.contains("dead");
     }
 
     public static void DisplayDeathGui() {
@@ -81,9 +78,6 @@ public class Util {
             } else if (MemoryHelper.getClassName(event.getClass()).replace('/', '.').startsWith("net.minecraftforge.client.event.")) {
                 return !KillItem.inList(Minecraft.getMinecraft());
             }
-        }
-        if (event instanceof EntityJoinWorldEvent) {
-            ModMain.NoMoreEventsShouldBeRegistered = true;
         }
         if (event instanceof PlayerEvent) {
             PlayerEvent playerEvent = (PlayerEvent) event;
@@ -301,24 +295,6 @@ public class Util {
                         Launch.LOGGER.info("                desc" + ain.desc);
                     }
                 }
-            }
-        }
-    }
-
-    public static void FuckEvents() {
-        EventBus bus = MinecraftForge.Event_bus;
-        List<Object> shouldRemove = new ArrayList<>();
-        bus.listenerOwners.forEach((obj, container) -> {
-            if (NativeMethods.HaveTag(obj, 14514L)) {
-                Launch.LOGGER.info("Remove:" + container.getName());
-                shouldRemove.add(obj);
-            }
-        });
-        shouldRemove.forEach(o -> bus.listenerOwners.remove(o));
-        for (ListenerList listenerList : ListenerList.allLists) {
-            for (int i = 0; i < listenerList.lists.length; i++) {
-                ListenerList.ListenerListInst inst = listenerList.lists[i];
-                inst.priorities.forEach(l -> l.removeIf(Util::shouldRemove));
             }
         }
     }

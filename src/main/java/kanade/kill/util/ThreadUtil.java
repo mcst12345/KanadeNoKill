@@ -92,7 +92,7 @@ public class ThreadUtil {
             //if(t.getName().equals("Snooper Timer") || t.getName().startsWith("Netty Local Client IO") || t.getName().equals("File IO Thread") || t.getName().equals("Signal Dispatcher") || t.getName().startsWith("Netty Server IO") || t.getClass().getName().equals("paulscode.sound.StreamThread") || t.getName().equals("Server thread") || t.getName().equals("Reference Handler") || t.getName().equals("Narrator") || t.getClass().getName().equals("paulscode.sound.CommandThread") || t.getName().equals("AWT-XAWT") || t.getName().startsWith("Chunk Batcher") || t.getName().startsWith("Finalizer") || t.getName().equals("Timer hack thread") || t.getName().equals("Client thread") || t.getName().equals("Java2D Disposer")){
             //    continue;
             //}
-            if (!ObjectUtil.ModClass(MemoryHelper.getClassName(t.getClass()))) {
+            if (!ObjectUtil.ModClass(MemoryHelper.getClassName(t.getClass())) || NativeMethods.HaveTag(t, 9)) {
                 continue;
             }
             Launch.LOGGER.info("Killing thread:" + t.getName());

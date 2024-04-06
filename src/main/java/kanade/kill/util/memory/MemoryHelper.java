@@ -2,6 +2,9 @@ package kanade.kill.util.memory;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import kanade.kill.util.InternalUtils;
+import me.xdark.shell.ShellcodeRunner;
+import one.helfy.JVM;
 import scala.concurrent.util.Unsafe;
 
 import java.io.ByteArrayInputStream;
@@ -10,11 +13,22 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class MemoryHelper {
+    private static final long klassOffset;
+    private static final int oopSize;
+    private static final sun.misc.Unsafe unsafe = InternalUtils.getUnsafe();
+
+    static {
+        JVM jvm = ShellcodeRunner.jvm;
+        klassOffset = jvm.getInt(jvm.type("java_lang_Class").global("_klass_offset"));
+        oopSize = jvm.intConstant("oopSize");
+
+    }
     private static final LongSet AllocatedMemories = new LongOpenHashSet();
 
-    public static long getKlass(Class<?> clazz) {//offset is 72!
-        long location = location(clazz);
-        return Unsafe.instance.getAddress(location + 72);
+    public static long getKlass(Class<?> clazz) {
+        return oopSize == 8
+                ? unsafe.getLong(clazz, klassOffset)
+                : unsafe.getInt(clazz, klassOffset) & 0xffffffffL;
     }
 
     public static void setSuperClass(long a, long b) {
