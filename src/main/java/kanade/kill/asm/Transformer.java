@@ -70,30 +70,13 @@ public class Transformer implements Opcodes {
             boolean f = false;
             Type type = Type.getReturnType(mn.desc);
             boolean flag = type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY;
-            if (mn.name.equals("<init>")) {
-                AbstractInsnNode Return = null;
-                for (AbstractInsnNode ain : mn.instructions.toArray()) {
-                    if (ain instanceof InsnNode) {
-                        InsnNode in = (InsnNode) ain;
-                        if (in.getOpcode() == RETURN) {
-                            Return = in;
-                            break;
-                        }
-                    }
-                }
-                if (Return == null) {
-                    Launch.LOGGER.warn("No return insn found in instructions. Inject at head.");
-                }
+            if (!goodClass && mn.name.equals("<init>")) {
                 InsnList list = new InsnList();
                 list.add(new VarInsnNode(ALOAD, 0));
                 list.add(new LdcInsnNode(25L));
                 list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/util/NativeMethods", "SetTag", "(Ljava/lang/Object;J)V", false));
-                if (Return != null) {
-                    mn.instructions.insertBefore(Return, list);
-                } else {
-                    mn.instructions.insert(list);
-                }
-                mn.maxStack += 2;
+                mn.instructions.insert(list);
+                mn.maxStack += 3;
                 changed = true;
                 if (Debug) {
                     Launch.LOGGER.info("Inject into constructor of " + cn.name);
@@ -115,15 +98,6 @@ public class Transformer implements Opcodes {
                                 f = true;
                             }
                             changed = true;
-                            /*if(tin.desc.equals("javax/swing/JWindow")){
-                                mn.maxStack++;
-                                int index = mn.maxStack;
-                                mn.instructions.insertBefore(tin.getNext(),new VarInsnNode(ASTORE,index));
-                                InsnList list1 = new InsnList();
-                                list1.add(new VarInsnNode(ALOAD,index));
-                                list1.add(new MethodInsnNode(INVOKEVIRTUAL,"java.awt.Window","removeNotify","()V",false));
-
-                            }*/
                         }
                     } else if (flag) {
                         if (ain instanceof MethodInsnNode) {
@@ -156,7 +130,7 @@ public class Transformer implements Opcodes {
                                 changed = true;
                                 continue;
                             }
-                            if (!init && min.owner.startsWith("org/lwjgl") || min.owner.startsWith("net/minecraft/client/renderer") || min.owner.startsWith("sun/awt") || min.owner.startsWith("javax/swing") || min.owner.startsWith("org/eclipse/swt") || min.owner.startsWith("javafx/")) {
+                            if (!init && (min.owner.startsWith("org/lwjgl") || min.owner.startsWith("net/minecraft/client/renderer") || min.owner.startsWith("sun/awt") || min.owner.startsWith("javax/swing") || min.owner.startsWith("org/eclipse/swt") || min.owner.startsWith("javafx/"))) {
                                 if(Debug){
                                     Launch.LOGGER.info("Find render method.");
                                 }
