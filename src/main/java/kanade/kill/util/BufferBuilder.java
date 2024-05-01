@@ -12,7 +12,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import java.nio.*;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Comparator;
 
 @SideOnly(Side.CLIENT)
 public class BufferBuilder {
@@ -54,16 +53,16 @@ public class BufferBuilder {
     }
 
     private static float getDistanceSq(FloatBuffer p_181665_0_, float p_181665_1_, float p_181665_2_, float p_181665_3_, int p_181665_4_, int p_181665_5_) {
-        float f = p_181665_0_.get(p_181665_5_ + p_181665_4_ * 0 + 0);
-        float f1 = p_181665_0_.get(p_181665_5_ + p_181665_4_ * 0 + 1);
-        float f2 = p_181665_0_.get(p_181665_5_ + p_181665_4_ * 0 + 2);
-        float f3 = p_181665_0_.get(p_181665_5_ + p_181665_4_ * 1 + 0);
-        float f4 = p_181665_0_.get(p_181665_5_ + p_181665_4_ * 1 + 1);
-        float f5 = p_181665_0_.get(p_181665_5_ + p_181665_4_ * 1 + 2);
-        float f6 = p_181665_0_.get(p_181665_5_ + p_181665_4_ * 2 + 0);
+        float f = p_181665_0_.get(p_181665_5_);
+        float f1 = p_181665_0_.get(p_181665_5_ + 0 + 1);
+        float f2 = p_181665_0_.get(p_181665_5_ + 0 + 2);
+        float f3 = p_181665_0_.get(p_181665_5_ + p_181665_4_);
+        float f4 = p_181665_0_.get(p_181665_5_ + p_181665_4_ + 1);
+        float f5 = p_181665_0_.get(p_181665_5_ + p_181665_4_ + 2);
+        float f6 = p_181665_0_.get(p_181665_5_ + p_181665_4_ * 2);
         float f7 = p_181665_0_.get(p_181665_5_ + p_181665_4_ * 2 + 1);
         float f8 = p_181665_0_.get(p_181665_5_ + p_181665_4_ * 2 + 2);
-        float f9 = p_181665_0_.get(p_181665_5_ + p_181665_4_ * 3 + 0);
+        float f9 = p_181665_0_.get(p_181665_5_ + p_181665_4_ * 3);
         float f10 = p_181665_0_.get(p_181665_5_ + p_181665_4_ * 3 + 1);
         float f11 = p_181665_0_.get(p_181665_5_ + p_181665_4_ * 3 + 2);
         float f12 = (f + f3 + f6 + f9) * 0.25F - p_181665_1_;
@@ -76,7 +75,7 @@ public class BufferBuilder {
         if (num < min) {
             return min;
         } else {
-            return num > max ? max : num;
+            return Math.min(num, max);
         }
     }
 
@@ -113,11 +112,7 @@ public class BufferBuilder {
             ainteger[k] = k;
         }
 
-        Arrays.sort(ainteger, new Comparator<Integer>() {
-            public int compare(Integer p_compare_1_, Integer p_compare_2_) {
-                return Float.compare(afloat[p_compare_2_], afloat[p_compare_1_]);
-            }
-        });
+        Arrays.sort(ainteger, (p_compare_1_, p_compare_2_) -> Float.compare(afloat[p_compare_2_], afloat[p_compare_1_]));
         BitSet bitset = new BitSet();
         int l = this.vertexFormat.getNextOffset();
         int[] aint = new int[l];
@@ -338,9 +333,7 @@ public class BufferBuilder {
     }
 
     public BufferBuilder color(int red, int green, int blue, int alpha) {
-        if (this.noColor) {
-            return this;
-        } else {
+        if (!this.noColor) {
             int i = this.vertexCount * this.vertexFormat.getNextOffset() + this.vertexFormat.getOffset(this.vertexFormatIndex);
             switch (this.vertexFormatElement.getType()) {
                 case FLOAT:
@@ -379,8 +372,8 @@ public class BufferBuilder {
             }
 
             this.nextVertexFormatIndex();
-            return this;
         }
+        return this;
     }
 
     public void addVertexData(int[] vertexData) {

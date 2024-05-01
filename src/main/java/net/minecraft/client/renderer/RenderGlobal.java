@@ -622,8 +622,8 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
                         RenderHelper.disableStandardItemLighting();
                         this.renderManager.setRenderOutlines(true);
 
-                        for (int j = 0; j < list1.size(); ++j) {
-                            this.renderManager.renderEntityStatic(list1.get(j), partialTicks, false);
+                        for (Entity value : list1) {
+                            this.renderManager.renderEntityStatic(value, partialTicks, false);
                         }
 
                         this.renderManager.setRenderOutlines(false);

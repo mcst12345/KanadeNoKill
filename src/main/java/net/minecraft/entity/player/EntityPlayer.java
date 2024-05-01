@@ -44,7 +44,9 @@ import net.minecraft.tileentity.TileEntityCommandBlock;
 import net.minecraft.tileentity.TileEntitySign;
 import net.minecraft.tileentity.TileEntityStructure;
 import net.minecraft.util.*;
-import net.minecraft.util.datafix.*;
+import net.minecraft.util.datafix.DataFixer;
+import net.minecraft.util.datafix.DataFixesManager;
+import net.minecraft.util.datafix.FixTypes;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -73,8 +75,8 @@ public abstract class EntityPlayer extends EntityLivingBase {
     private static final DataParameter<Integer> PLAYER_SCORE = EntityDataManager.createKey(EntityPlayer.class, DataSerializers.VARINT);
     private final GameProfile gameProfile;
     private final CooldownTracker cooldownTracker = this.createCooldownTracker();
-    private final java.util.Collection<ITextComponent> prefixes = new java.util.LinkedList<ITextComponent>();
-    private final java.util.Collection<ITextComponent> suffixes = new java.util.LinkedList<ITextComponent>();
+    private final java.util.Collection<ITextComponent> prefixes = new java.util.LinkedList<>();
+    private final java.util.Collection<ITextComponent> suffixes = new java.util.LinkedList<>();
     public float eyeHeight = this.getDefaultEyeHeight();
     public InventoryPlayer inventory = new InventoryPlayer(this);
     private final net.minecraftforge.items.IItemHandler playerMainHandler = new net.minecraftforge.items.wrapper.PlayerMainInvWrapper(inventory);
@@ -105,8 +107,8 @@ public abstract class EntityPlayer extends EntityLivingBase {
     public float experience;
     @Nullable
     public EntityFishHook fishEntity;
-    protected java.util.HashMap<Integer, BlockPos> spawnChunkMap = new java.util.HashMap<Integer, BlockPos>();
-    protected java.util.HashMap<Integer, Boolean> spawnForcedMap = new java.util.HashMap<Integer, Boolean>();
+    protected java.util.HashMap<Integer, BlockPos> spawnChunkMap = new java.util.HashMap<>();
+    protected java.util.HashMap<Integer, Boolean> spawnForcedMap = new java.util.HashMap<>();
     protected FoodStats foodStats = new FoodStats();
     protected int flyToggleTimer;
     protected boolean sleeping;
@@ -135,21 +137,19 @@ public abstract class EntityPlayer extends EntityLivingBase {
     }
 
     public static void registerFixesPlayer(DataFixer fixer) {
-        fixer.registerWalker(FixTypes.PLAYER, new IDataWalker() {
-            public NBTTagCompound process(IDataFixer fixer, NBTTagCompound compound, int versionIn) {
-                DataFixesManager.processInventory(fixer, compound, versionIn, "Inventory");
-                DataFixesManager.processInventory(fixer, compound, versionIn, "EnderItems");
+        fixer.registerWalker(FixTypes.PLAYER, (fixer1, compound, versionIn) -> {
+            DataFixesManager.processInventory(fixer1, compound, versionIn, "Inventory");
+            DataFixesManager.processInventory(fixer1, compound, versionIn, "EnderItems");
 
-                if (compound.hasKey("ShoulderEntityLeft", 10)) {
-                    compound.setTag("ShoulderEntityLeft", fixer.process(FixTypes.ENTITY, compound.getCompoundTag("ShoulderEntityLeft"), versionIn));
-                }
-
-                if (compound.hasKey("ShoulderEntityRight", 10)) {
-                    compound.setTag("ShoulderEntityRight", fixer.process(FixTypes.ENTITY, compound.getCompoundTag("ShoulderEntityRight"), versionIn));
-                }
-
-                return compound;
+            if (compound.hasKey("ShoulderEntityLeft", 10)) {
+                compound.setTag("ShoulderEntityLeft", fixer1.process(FixTypes.ENTITY, compound.getCompoundTag("ShoulderEntityLeft"), versionIn));
             }
+
+            if (compound.hasKey("ShoulderEntityRight", 10)) {
+                compound.setTag("ShoulderEntityRight", fixer1.process(FixTypes.ENTITY, compound.getCompoundTag("ShoulderEntityRight"), versionIn));
+            }
+
+            return compound;
         });
     }
 
@@ -200,10 +200,10 @@ public abstract class EntityPlayer extends EntityLivingBase {
 
     protected void entityInit() {
         super.entityInit();
-        this.dataManager.register(ABSORPTION, Float.valueOf(0.0F));
-        this.dataManager.register(PLAYER_SCORE, Integer.valueOf(0));
-        this.dataManager.register(PLAYER_MODEL_FLAG, Byte.valueOf((byte) 0));
-        this.dataManager.register(MAIN_HAND, Byte.valueOf((byte) 1));
+        this.dataManager.register(ABSORPTION, 0.0F);
+        this.dataManager.register(PLAYER_SCORE, 0);
+        this.dataManager.register(PLAYER_MODEL_FLAG, (byte) 0);
+        this.dataManager.register(MAIN_HAND, (byte) 1);
         this.dataManager.register(LEFT_SHOULDER_ENTITY, new NBTTagCompound());
         this.dataManager.register(RIGHT_SHOULDER_ENTITY, new NBTTagCompound());
     }
@@ -510,9 +510,7 @@ public abstract class EntityPlayer extends EntityLivingBase {
 
             List<Entity> list = this.WORLD.getEntitiesWithinAABBExcludingEntity(this, axisalignedbb);
 
-            for (int i = 0; i < list.size(); ++i) {
-                Entity entity = list.get(i);
-
+            for (Entity entity : list) {
                 if (!entity.isDead) {
                     this.collideWithPlayer(entity);
                 }
@@ -542,16 +540,16 @@ public abstract class EntityPlayer extends EntityLivingBase {
     }
 
     public int getScore() {
-        return this.dataManager.get(PLAYER_SCORE).intValue();
+        return this.dataManager.get(PLAYER_SCORE);
     }
 
     public void setScore(int scoreIn) {
-        this.dataManager.set(PLAYER_SCORE, Integer.valueOf(scoreIn));
+        this.dataManager.set(PLAYER_SCORE, scoreIn);
     }
 
     public void addScore(int scoreIn) {
         int i = this.getScore();
-        this.dataManager.set(PLAYER_SCORE, Integer.valueOf(i + scoreIn));
+        this.dataManager.set(PLAYER_SCORE, i + scoreIn);
     }
 
     public void onDeath(DamageSource cause) {
@@ -1511,8 +1509,9 @@ public abstract class EntityPlayer extends EntityLivingBase {
 
     public void addMovementStat(double p_71000_1_, double p_71000_3_, double p_71000_5_) {
         if (!this.isRiding()) {
+            double value = p_71000_1_ * p_71000_1_ + p_71000_3_ * p_71000_3_ + p_71000_5_ * p_71000_5_;
             if (this.isInsideOfMaterial(Material.WATER)) {
-                int i = Math.round(MathHelper.sqrt(p_71000_1_ * p_71000_1_ + p_71000_3_ * p_71000_3_ + p_71000_5_ * p_71000_5_) * 100.0F);
+                int i = Math.round(MathHelper.sqrt(value) * 100.0F);
 
                 if (i > 0) {
                     this.addStat(StatList.DIVE_ONE_CM, i);
@@ -1545,7 +1544,7 @@ public abstract class EntityPlayer extends EntityLivingBase {
                     }
                 }
             } else if (this.isElytraFlying()) {
-                int l = Math.round(MathHelper.sqrt(p_71000_1_ * p_71000_1_ + p_71000_3_ * p_71000_3_ + p_71000_5_ * p_71000_5_) * 100.0F);
+                int l = Math.round(MathHelper.sqrt(value) * 100.0F);
                 this.addStat(StatList.AVIATE_ONE_CM, l);
             } else {
                 int i1 = Math.round(MathHelper.sqrt(p_71000_1_ * p_71000_1_ + p_71000_5_ * p_71000_5_) * 100.0F);
@@ -1706,7 +1705,7 @@ public abstract class EntityPlayer extends EntityLivingBase {
     protected int getExperiencePoints(EntityPlayer player) {
         if (!this.WORLD.getGameRules().getBoolean("keepInventory") && !this.isSpectator()) {
             int i = this.experienceLevel * 7;
-            return i > 100 ? 100 : i;
+            return Math.min(i, 100);
         } else {
             return 0;
         }
@@ -1867,7 +1866,7 @@ public abstract class EntityPlayer extends EntityLivingBase {
     }
 
     public float getAbsorptionAmount() {
-        return this.getDataManager().get(ABSORPTION).floatValue();
+        return this.getDataManager().get(ABSORPTION);
     }
 
     public void setAbsorptionAmount(float amount) {
@@ -1875,7 +1874,7 @@ public abstract class EntityPlayer extends EntityLivingBase {
             amount = 0.0F;
         }
 
-        this.getDataManager().set(ABSORPTION, Float.valueOf(amount));
+        this.getDataManager().set(ABSORPTION, amount);
     }
 
     public boolean canOpen(LockCode code) {
@@ -1889,7 +1888,7 @@ public abstract class EntityPlayer extends EntityLivingBase {
 
     @SideOnly(Side.CLIENT)
     public boolean isWearing(EnumPlayerModelParts part) {
-        return (this.getDataManager().get(PLAYER_MODEL_FLAG).byteValue() & part.getPartMask()) == part.getPartMask();
+        return (this.getDataManager().get(PLAYER_MODEL_FLAG) & part.getPartMask()) == part.getPartMask();
     }
 
     public boolean sendCommandFeedback() {
@@ -1958,11 +1957,11 @@ public abstract class EntityPlayer extends EntityLivingBase {
     }
 
     public EnumHandSide getPrimaryHand() {
-        return this.dataManager.get(MAIN_HAND).byteValue() == 0 ? EnumHandSide.LEFT : EnumHandSide.RIGHT;
+        return this.dataManager.get(MAIN_HAND) == 0 ? EnumHandSide.LEFT : EnumHandSide.RIGHT;
     }
 
     public void setPrimaryHand(EnumHandSide hand) {
-        this.dataManager.set(MAIN_HAND, Byte.valueOf((byte) (hand == EnumHandSide.LEFT ? 0 : 1)));
+        this.dataManager.set(MAIN_HAND, (byte) (hand == EnumHandSide.LEFT ? 0 : 1));
     }
 
     public NBTTagCompound getLeftShoulderEntity() {

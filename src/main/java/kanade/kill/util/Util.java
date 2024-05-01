@@ -1,11 +1,13 @@
 package kanade.kill.util;
 
+import com.google.common.collect.Sets;
 import kanade.kill.Config;
 import kanade.kill.Launch;
 import kanade.kill.ModMain;
 import kanade.kill.item.KillItem;
 import kanade.kill.reflection.EarlyMethods;
 import kanade.kill.reflection.ReflectionUtil;
+import kanade.kill.timemanagement.TimeStop;
 import kanade.kill.util.memory.MemoryHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -13,15 +15,19 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.inventory.GuiContainerCreative;
 import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraft.client.renderer.block.model.ModelBakery;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
-import net.minecraftforge.client.event.RenderTooltipEvent;
+import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.ASMEventHandler;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.IEventListener;
+import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.MemoryUtil;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
@@ -37,6 +43,9 @@ import java.util.Random;
 
 @SuppressWarnings({"unused", "raw"})
 public class Util {
+
+    private static long last;
+
     public static boolean killing;
 
     public static boolean NoRemove(Object item) {
@@ -68,13 +77,6 @@ public class Util {
             } else if (event instanceof EntityViewRenderEvent) {
                 EntityViewRenderEvent cameraSetup = (EntityViewRenderEvent) event;
                 return !KillItem.inList(cameraSetup.getEntity());
-            } else if (event instanceof RenderTooltipEvent.Pre) {
-                RenderTooltipEvent.Pre tooltipEvent = (RenderTooltipEvent.Pre) event;
-                if (tooltipEvent.getStack().getITEM() == ModMain.kill_item) {
-                    for (int i = 0; i < 4; ++i) {
-                        drawRandomString();
-                    }
-                }
             } else if (MemoryHelper.getClassName(event.getClass()).replace('/', '.').startsWith("net.minecraftforge.client.event.")) {
                 return !KillItem.inList(Minecraft.getMinecraft());
             }
@@ -101,44 +103,12 @@ public class Util {
         return (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, new Object[]{addr});
     }
 
-
-    private static void drawRandomString() {
-        if (!Launch.client) {
-            return;
+    public static void setItemModel(Item item, int meta, ModelResourceLocation model, boolean clear) {
+        ModelLoader.customModels.put(Pair.of(item.delegate, meta), model);
+        if (clear) {
+            ModelBakery.customVariantNames.put(item.delegate, Sets.newHashSet());
         }
-
-        int i = new Random().nextInt(28);
-        GL11.glPushMatrix();
-        Random random = new Random();
-        GL11.glColor4f(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0F);
-        GL11.glScalef(2.0F, 2.0F, 2.0F);
-        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
-        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
-        GL11.glPopMatrix();
-        i = new Random().nextInt(28);
-        GL11.glPushMatrix();
-        random = new Random();
-        GL11.glColor4f(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0F);
-        GL11.glScalef(1.7F, 1.7F, 1.7F);
-        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
-        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
-        GL11.glPopMatrix();
-        i = new Random().nextInt(28);
-        GL11.glPushMatrix();
-        random = new Random();
-        GL11.glColor4f(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0F);
-        GL11.glScalef(1.3F, 1.3F, 1.3F);
-        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
-        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
-        GL11.glPopMatrix();
-        i = new Random().nextInt(28);
-        GL11.glPushMatrix();
-        random = new Random();
-        GL11.glColor4f(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0F);
-        GL11.glScalef(2.7F, 2.7F, 2.7F);
-        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
-        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
-        GL11.glPopMatrix();
+        ModelBakery.customVariantNames.get(item.delegate).add(model.toString());
     }
 
     public static void drawString(String text, int x, int y, int color, FontRenderer fontRenderer) {
@@ -262,41 +232,86 @@ public class Util {
         drawString(text, x, y, color, fontRenderer);
     }
 
+    static void drawRandomString() {
+        if (!Launch.client) {
+            return;
+        }
+
+        int i = new Random().nextInt(28);
+        GL11.glPushMatrix();
+        Random random = new Random();
+        GL11.glColor4f(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0F);
+        GL11.glScalef(2.0F, 2.0F, 2.0F);
+        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
+        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
+        GL11.glPopMatrix();
+        i = new Random().nextInt(28);
+        GL11.glPushMatrix();
+        random = new Random();
+        GL11.glColor4f(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0F);
+        GL11.glScalef(1.7F, 1.7F, 1.7F);
+        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
+        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
+        GL11.glPopMatrix();
+        i = new Random().nextInt(28);
+        GL11.glPushMatrix();
+        random = new Random();
+        GL11.glColor4f(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0F);
+        GL11.glScalef(1.3F, 1.3F, 1.3F);
+        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
+        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
+        GL11.glPopMatrix();
+        i = new Random().nextInt(28);
+        GL11.glPushMatrix();
+        random = new Random();
+        GL11.glColor4f(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1.0F);
+        GL11.glScalef(2.7F, 2.7F, 2.7F);
+        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
+        randomDrawString(0, Minecraft.getMinecraft().FontRenderer, i);
+        GL11.glPopMatrix();
+    }
+
     public static void printClassNode(ClassNode cn) {
         Launch.LOGGER.info("Printing ClassNode.");
-        Launch.LOGGER.info("name:" + cn.name);
-        Launch.LOGGER.info("super:" + cn.superName);
+        Launch.LOGGER.info("name:{}", cn.name);
+        Launch.LOGGER.info("super:{}", cn.superName);
         if (cn.signature != null) {
-            Launch.LOGGER.info("sign:" + cn.signature);
+            Launch.LOGGER.info("sign:{}", cn.signature);
         }
         if (!cn.fields.isEmpty()) {
             Launch.LOGGER.info("Printing fields.");
             for (FieldNode fn : cn.fields) {
-                Launch.LOGGER.info("        field:" + fn.name);
-                Launch.LOGGER.info("        desc:" + fn.desc);
+                Launch.LOGGER.info("        field:{}", fn.name);
+                Launch.LOGGER.info("        desc:{}", fn.desc);
                 if (fn.signature != null) {
-                    Launch.LOGGER.info("        sign:" + fn.signature);
+                    Launch.LOGGER.info("        sign:{}", fn.signature);
                 }
             }
         }
         if (!cn.methods.isEmpty()) {
             Launch.LOGGER.info("Printing methods.");
             for (MethodNode mn : cn.methods) {
-                Launch.LOGGER.info("        method:" + mn.name);
-                Launch.LOGGER.info("        desc:" + mn.desc);
+                Launch.LOGGER.info("        method:{}", mn.name);
+                Launch.LOGGER.info("        desc:{}", mn.desc);
                 if (mn.signature != null) {
-                    Launch.LOGGER.info("        sign:" + mn.signature);
+                    Launch.LOGGER.info("        sign:{}", mn.signature);
                 }
                 if (!mn.localVariables.isEmpty()) {
                     Launch.LOGGER.info("        Printing local variables.");
                     for (LocalVariableNode ain : mn.localVariables) {
-                        Launch.LOGGER.info("                index:" + ain.index);
-                        Launch.LOGGER.info("                local:" + ain.name);
-                        Launch.LOGGER.info("                desc" + ain.desc);
+                        Launch.LOGGER.info("                index:{}", ain.index);
+                        Launch.LOGGER.info("                local:{}", ain.name);
+                        Launch.LOGGER.info("                desc{}", ain.desc);
                     }
                 }
             }
         }
+    }
+
+    public static void printStackTrace() {
+        Throwable t = new Throwable();
+        t.fillInStackTrace();
+        Launch.LOGGER.info("Stacktrace:", t);
     }
 
     private static boolean shouldRemove(IEventListener listener) {
@@ -305,7 +320,7 @@ public class Util {
             try {
                 Field field = internal.getClass().getField("instance");
                 Object callback = field.get(internal);
-                Launch.LOGGER.info("Remove:" + ((ASMEventHandler) listener).owner.getName());
+                Launch.LOGGER.info("Remove:{}", ((ASMEventHandler) listener).owner.getName());
                 return NativeMethods.HaveTag(callback, 14514L);
             } catch (NoSuchFieldException | IllegalAccessException e) {
                 return false;
@@ -314,9 +329,10 @@ public class Util {
         return false;
     }
 
-    public static void printStackTrace() {
-        Throwable t = new Throwable();
-        t.fillInStackTrace();
-        Launch.LOGGER.info("Stacktrace:", t);
+    public static long nanoTime() {
+        if (!TimeStop.isTimeStop()) {
+            last = System.nanoTime();
+        }
+        return last;
     }
 }

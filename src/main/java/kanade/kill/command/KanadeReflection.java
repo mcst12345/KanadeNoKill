@@ -22,7 +22,7 @@ public class KanadeReflection extends CommandBase {
     private static final Object NULL = new Object();
     Stack<Object> stack = new Stack<>();
 
-    private static Class getClass(String name) throws ClassNotFoundException {
+    private static Class<?> getClass(String name) throws ClassNotFoundException {
         switch (name) {
             case "int":
                 return int.class;
@@ -168,7 +168,7 @@ public class KanadeReflection extends CommandBase {
                         sender.sendMessage(new TextComponentString("Not enough objects!"));
                         return;
                     }
-                    Class[] arg = new Class[arguments.length];
+                    Class<?>[] arg = new Class<?>[arguments.length];
                     for (int i = 0; i < arguments.length; i++) {
                         arg[i] = getClass(arguments[i].getClassName());
                     }

@@ -50,11 +50,11 @@ public class ClassUtil implements Opcodes {
         long bytecode_offset = t.size;
 
         try {
-            for (Class clazz : Launch.INSTRUMENTATION.getAllLoadedClasses()) {
+            for (Class<?> clazz : Launch.INSTRUMENTATION.getAllLoadedClasses()) {
                 String clz_name = ReflectionUtil.getName(clazz);
                 if (!clz_name.startsWith("kanade.kill.") && ObjectUtil.ModClass(clz_name)) {
 
-                    Launch.LOGGER.info("Class:" + clz_name);
+                    Launch.LOGGER.info("Class:{}", clz_name);
 
                     int oopSize = jvm.intConstant("oopSize");
                     long klassOffset = jvm.getInt(jvm.type("java_lang_Class").global("_klass_offset"));
@@ -83,7 +83,7 @@ public class ClassUtil implements Opcodes {
                             continue;
                         }
 
-                        Launch.LOGGER.info("Fucking method:" + name + desc);
+                        Launch.LOGGER.info("Fucking method:{}{}", name, desc);
 
                         if (!first_bytecode.containsKey(constMethod)) {
                             first_bytecode.put(constMethod, Unsafe.instance.getByte(constMethod + bytecode_offset));
@@ -128,11 +128,11 @@ public class ClassUtil implements Opcodes {
         Unsafe.instance.putIntVolatile(clazz, EarlyFields.classRedefinedCount_offset, count);
     }
 
-    public static SoftReference getReflectionData(Class<?> clazz) {
-        return (SoftReference) Unsafe.instance.getObjectVolatile(clazz, EarlyFields.reflectionData_offset);
+    public static SoftReference<?> getReflectionData(Class<?> clazz) {
+        return (SoftReference<?>) Unsafe.instance.getObjectVolatile(clazz, EarlyFields.reflectionData_offset);
     }
 
-    public static void setReflectionData(Class<?> clazz, SoftReference sr) {
+    public static void setReflectionData(Class<?> clazz, SoftReference<?> sr) {
         Unsafe.instance.putObjectVolatile(clazz, EarlyFields.reflectionData_offset, sr);
     }
 
@@ -161,10 +161,10 @@ public class ClassUtil implements Opcodes {
         long bytecode_offset = t.size;
 
         try {
-            for (Class clazz : Launch.INSTRUMENTATION.getAllLoadedClasses()) {
+            for (Class<?> clazz : Launch.INSTRUMENTATION.getAllLoadedClasses()) {
                 if (ObjectUtil.ModClass(ReflectionUtil.getName(clazz))) {
 
-                    Launch.LOGGER.info("Class:" + ReflectionUtil.getName(clazz));
+                    Launch.LOGGER.info("Class:{}", ReflectionUtil.getName(clazz));
 
                     int oopSize = jvm.intConstant("oopSize");
                     long klassOffset = jvm.getInt(jvm.type("java_lang_Class").global("_klass_offset"));
@@ -195,7 +195,7 @@ public class ClassUtil implements Opcodes {
 
 
                         if (first_bytecode.containsKey(constMethod)) {
-                            Launch.LOGGER.info("Restoring method:" + name + desc);
+                            Launch.LOGGER.info("Restoring method:{}{}", name, desc);
                             Unsafe.instance.putByte(constMethod + bytecode_offset, first_bytecode.get(constMethod));
                             if (second_bytecode.containsKey(constMethod)) {
                                 Unsafe.instance.putByte(constMethod + bytecode_offset + 1, second_bytecode.get(constMethod));
@@ -215,7 +215,7 @@ public class ClassUtil implements Opcodes {
 
     public static byte[] generateClassBytes(String name) throws ClassNotFoundException {
         try {
-            Launch.LOGGER.info("Generating bytes of class:" + name);
+            Launch.LOGGER.info("Generating bytes of class:{}", name);
             byte[] bytes = Launch.classLoader.getClassBytes(name);
             String mapped = ((KanadeClassLoader) Launch.classLoader).DeobfuscatingTransformer.remapClassName(name);
             for (IClassTransformer transformer : KanadeClassLoader.NecessaryTransformers) {

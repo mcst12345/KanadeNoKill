@@ -8,7 +8,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
-import net.minecraft.crash.ICrashReportDetail;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Biomes;
 import net.minecraft.init.Blocks;
@@ -75,9 +74,9 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
         this.blockBiomeArray = new byte[256];
         this.precipitationHeightMap = new int[256];
         this.updateSkylightColumns = new boolean[256];
-        this.tileEntities = Maps.<BlockPos, TileEntity>newHashMap();
+        this.tileEntities = Maps.newHashMap();
         this.queuedLightChecks = 4096;
-        this.tileEntityPosQueue = Queues.<BlockPos>newConcurrentLinkedQueue();
+        this.tileEntityPosQueue = Queues.newConcurrentLinkedQueue();
         this.entityLists = (ClassInheritanceMultiMap[]) (new ClassInheritanceMultiMap[16]);
         this.world = worldIn;
         this.x = x;
@@ -201,7 +200,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
                     int k1 = 15;
                     int i1 = i + 16 - 1;
 
-                    while (true) {
+                    do {
                         int j1 = this.getBlockLightOpacity(j, i1, k);
 
                         if (j1 == 0 && k1 != 15) {
@@ -221,10 +220,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
 
                         --i1;
 
-                        if (i1 <= 0 || k1 <= 0) {
-                            break;
-                        }
-                    }
+                    } while (i1 > 0 && k1 > 0);
                 }
             }
         }
@@ -296,11 +292,8 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
 
     private void relightBlock(int x, int y, int z) {
         int i = this.heightMap[z << 4 | x] & 255;
-        int j = i;
 
-        if (y > i) {
-            j = y;
-        }
+        int j = Math.max(y, i);
 
         while (j > 0 && this.getBlockLightOpacity(x, j - 1, z) == 0) {
             --j;
@@ -422,11 +415,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
             } catch (Throwable throwable) {
                 CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Getting block state");
                 CrashReportCategory crashreportcategory = crashreport.makeCategory("Block being got");
-                crashreportcategory.addDetail("Location", new ICrashReportDetail<String>() {
-                    public String call() throws Exception {
-                        return CrashReportCategory.getCoordinateInfo(x, y, z);
-                    }
-                });
+                crashreportcategory.addDetail("Location", () -> CrashReportCategory.getCoordinateInfo(x, y, z));
                 throw new ReportedException(crashreport);
             }
         }
@@ -592,7 +581,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
         int j = MathHelper.floor(entityIn.posZ / 16.0D);
 
         if (i != this.x || j != this.z) {
-            LOGGER.warn("Wrong location! ({}, {}) should be ({}, {}), {}", Integer.valueOf(i), Integer.valueOf(j), Integer.valueOf(this.x), Integer.valueOf(this.z), entityIn);
+            LOGGER.warn("Wrong location! ({}, {}) should be ({}, {}), {}", i, j, this.x, this.z, entityIn);
             entityIn.setDead();
         }
 
@@ -682,7 +671,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
 
         if (this.getBlockState(pos).getBlock().hasTileEntity(this.getBlockState(pos))) {
             if (this.tileEntities.containsKey(pos)) {
-                ((TileEntity) this.tileEntities.get(pos)).invalidate();
+                this.tileEntities.get(pos).invalidate();
             }
 
             tileEntityIn.validate();
@@ -785,7 +774,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
     }
 
     public Random getRandomWithSeed(long seed) {
-        return new Random(this.world.getSeed() + (long) (this.x * this.x * 4987142) + (long) (this.x * 5947611) + (long) (this.z * this.z) * 4392871L + (long) (this.z * 389711) ^ seed);
+        return new Random(this.world.getSeed() + (long) ((long) this.x * this.x * 4987142) + (long) (this.x * 5947611L) + (long) ((long) this.z * this.z) * 4392871L + (long) (this.z * 389711L) ^ seed);
     }
 
     public boolean isEmpty() {
@@ -921,7 +910,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
 
     public void setStorageArrays(ExtendedBlockStorage[] newStorageArrays) {
         if (this.storageArrays.length != newStorageArrays.length) {
-            LOGGER.warn("Could not set level chunk sections, array length is {} instead of {}", Integer.valueOf(newStorageArrays.length), Integer.valueOf(this.storageArrays.length));
+            LOGGER.warn("Could not set level chunk sections, array length is {} instead of {}", newStorageArrays.length, this.storageArrays.length);
         } else {
             System.arraycopy(newStorageArrays, 0, this.storageArrays, 0, this.storageArrays.length);
         }
@@ -973,7 +962,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
         this.isTerrainPopulated = true;
         this.generateHeightMap();
 
-        List<TileEntity> invalidList = new java.util.ArrayList<TileEntity>();
+        List<TileEntity> invalidList = new java.util.ArrayList<>();
 
         for (TileEntity tileentity : this.tileEntities.values()) {
             if (tileentity.shouldRefresh(this.world, tileentity.getPos(), tileentity.getBlockType().getStateFromMeta(tileentity.getBlockMetadata()), getBlockState(tileentity.getPos())))
@@ -1010,7 +999,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
 
     public void setBiomeArray(byte[] biomeArray) {
         if (this.blockBiomeArray.length != biomeArray.length) {
-            LOGGER.warn("Could not set level chunk biomes, array length is {} instead of {}", Integer.valueOf(biomeArray.length), Integer.valueOf(this.blockBiomeArray.length));
+            LOGGER.warn("Could not set level chunk biomes, array length is {} instead of {}", biomeArray.length, this.blockBiomeArray.length);
         } else {
             System.arraycopy(biomeArray, 0, this.blockBiomeArray, 0, this.blockBiomeArray.length);
         }
@@ -1087,9 +1076,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
     }
 
     private void setSkylightUpdated() {
-        for (int i = 0; i < this.updateSkylightColumns.length; ++i) {
-            this.updateSkylightColumns[i] = true;
-        }
+        Arrays.fill(this.updateSkylightColumns, true);
 
         this.recheckGaps(false);
     }
@@ -1167,7 +1154,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
 
     public void setHeightMap(int[] newHeightMap) {
         if (this.heightMap.length != newHeightMap.length) {
-            LOGGER.warn("Could not set level chunk heightmap, array length is {} instead of {}", Integer.valueOf(newHeightMap.length), Integer.valueOf(this.heightMap.length));
+            LOGGER.warn("Could not set level chunk heightmap, array length is {} instead of {}", newHeightMap.length, this.heightMap.length);
         } else {
             System.arraycopy(newHeightMap, 0, this.heightMap, 0, this.heightMap.length);
             this.heightMapMinimum = com.google.common.primitives.Ints.min(this.heightMap); // Forge: fix MC-117412
@@ -1230,7 +1217,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
      */
     public void removeInvalidTileEntity(BlockPos pos) {
         if (loaded) {
-            TileEntity entity = (TileEntity) tileEntities.get(pos);
+            TileEntity entity = tileEntities.get(pos);
             if (entity != null && entity.isInvalid()) {
                 tileEntities.remove(pos);
             }
@@ -1257,7 +1244,7 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
 
     @Override
     public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability, @Nullable EnumFacing facing) {
-        return capabilities == null ? false : capabilities.hasCapability(capability, facing);
+        return capabilities != null && capabilities.hasCapability(capability, facing);
     }
 
     @Override
@@ -1269,6 +1256,6 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
     public static enum EnumCreateEntityType {
         IMMEDIATE,
         QUEUED,
-        CHECK;
+        CHECK
     }
 }

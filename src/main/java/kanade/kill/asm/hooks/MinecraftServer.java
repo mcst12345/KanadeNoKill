@@ -25,7 +25,7 @@ public class MinecraftServer {
     public static final Queue<FutureTask<?>> futureTaskQueue = Queues.newArrayDeque();
 
     public static void AddTask(Runnable runnable) {
-        ListenableFutureTask task = ListenableFutureTask.create(runnable, null);
+        ListenableFutureTask<Object> task = ListenableFutureTask.create(runnable, null);
         synchronized (futureTaskQueue) {
             futureTaskQueue.add(task);
         }

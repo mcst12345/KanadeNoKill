@@ -70,13 +70,13 @@ public class KanadeKillCommand extends CommandBase {
                         ret.add("particleType");
                         break;
                     case "mode":
-                        ret.add("timestop");
                         ret.add("timeback");
                         ret.add("Annihilation");
+                        ret.add("reload");
                         break;
                     case "fuckmod":
                         Map<String, ModContainer> namedMods = (Map<String, ModContainer>) Unsafe.instance.getObjectVolatile(Loader.instance(), EarlyFields.namedMods_offset);
-                        Launch.LOGGER.info("Find " + namedMods.keySet().size() + " mods.");
+                        Launch.LOGGER.info("Find {} mods.", namedMods.keySet().size());
                         ret.addAll(namedMods.keySet());
                         break;
                 }
@@ -252,18 +252,18 @@ public class KanadeKillCommand extends CommandBase {
                         String arg1 = args[1];
                         switch (arg1) {
                             case "timeback": {
-                                NetworkHandler.INSTANCE.sendMessageToPlayer(new ConfigUpdatePacket("kanade.kill.item.KillItem", "mode", 2), player);
-                                sender.sendMessage(new TextComponentString("Set item shift-right-click mode to timeback"));
-                                break;
-                            }
-                            case "timestop": {
                                 NetworkHandler.INSTANCE.sendMessageToPlayer(new ConfigUpdatePacket("kanade.kill.item.KillItem", "mode", 1), player);
-                                sender.sendMessage(new TextComponentString("Set item shift-right-click mode to timestop"));
+                                sender.sendMessage(new TextComponentString("Set item shift-right-click mode to timeback"));
                                 break;
                             }
                             case "Annihilation": {
                                 NetworkHandler.INSTANCE.sendMessageToPlayer(new ConfigUpdatePacket("kanade.kill.item.KillItem", "mode", 0), player);
                                 sender.sendMessage(new TextComponentString("Set item shift-right-click mode to Annihilation"));
+                                break;
+                            }
+                            case "reload": {
+                                NetworkHandler.INSTANCE.sendMessageToPlayer(new ConfigUpdatePacket("kanade.kill.item.KillItem", "mode", 2), player);
+                                sender.sendMessage(new TextComponentString("Set item shift-right-click mode to reload"));
                                 break;
                             }
                             default: {

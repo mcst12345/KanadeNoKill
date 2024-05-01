@@ -35,7 +35,8 @@ public enum NetworkHandler {
         channel.registerMessage(KillAll.MessageHandler.class, KillAll.class, index++, Side.SERVER);
         channel.registerMessage(UpdateTickCount.MessageHandler.class, UpdateTickCount.class, index++, Side.CLIENT);
         channel.registerMessage(UpdateSuperMode.MessageHandler.class, UpdateSuperMode.class, index, Side.CLIENT);
-        channel.registerMessage(UpdateSuperMode.MessageHandler.class, UpdateSuperMode.class, index, Side.SERVER);
+        channel.registerMessage(UpdateSuperMode.MessageHandler.class, UpdateSuperMode.class, index++, Side.SERVER);
+        channel.registerMessage(ClientReloadChunk.MessageHandler.class, ClientReloadChunk.class, index, Side.CLIENT);
     }
 
     public void sendMessageToPlayer(IMessage msg, EntityPlayerMP player) {

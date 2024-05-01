@@ -6,7 +6,6 @@ import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.IResourceManagerReloadListener;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
-import net.minecraft.crash.ICrashReportDetail;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
@@ -24,10 +23,10 @@ import java.util.Map.Entry;
 public class TextureManager implements ITickable, IResourceManagerReloadListener {
     public static final ResourceLocation RESOURCE_LOCATION_EMPTY = new ResourceLocation("");
     private static final Logger LOGGER = LogManager.getLogger();
-    public final Map<ResourceLocation, ITextureObject> mapTextureObjects = Maps.<ResourceLocation, ITextureObject>newHashMap();
+    public final Map<ResourceLocation, ITextureObject> mapTextureObjects = Maps.newHashMap();
     public final IResourceManager resourceManager;
-    private final List<ITickable> listTickables = Lists.<ITickable>newArrayList();
-    private final Map<String, Integer> mapTextureCounters = Maps.<String, Integer>newHashMap();
+    private final List<ITickable> listTickables = Lists.newArrayList();
+    private final Map<String, Integer> mapTextureCounters = Maps.newHashMap();
 
     public TextureManager(IResourceManager resourceManager) {
         this.resourceManager = resourceManager;
@@ -71,11 +70,7 @@ public class TextureManager implements ITickable, IResourceManagerReloadListener
             CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Registering texture");
             CrashReportCategory crashreportcategory = crashreport.makeCategory("Resource location being registered");
             crashreportcategory.addCrashSection("Resource location", textureLocation);
-            crashreportcategory.addDetail("Texture object class", new ICrashReportDetail<String>() {
-                public String call() throws Exception {
-                    return textureObjf.getClass().getName();
-                }
-            });
+            crashreportcategory.addDetail("Texture object class", () -> textureObjf.getClass().getName());
             throw new ReportedException(crashreport);
         }
 
@@ -91,9 +86,9 @@ public class TextureManager implements ITickable, IResourceManagerReloadListener
         Integer integer = this.mapTextureCounters.get(name);
 
         if (integer == null) {
-            integer = Integer.valueOf(1);
+            integer = 1;
         } else {
-            integer = integer.intValue() + 1;
+            integer = integer + 1;
         }
 
         this.mapTextureCounters.put(name, integer);
@@ -122,7 +117,7 @@ public class TextureManager implements ITickable, IResourceManagerReloadListener
         Iterator<Entry<ResourceLocation, ITextureObject>> iterator = this.mapTextureObjects.entrySet().iterator();
 
         while (iterator.hasNext()) {
-            Entry<ResourceLocation, ITextureObject> entry = (Entry) iterator.next();
+            Entry<ResourceLocation, ITextureObject> entry = iterator.next();
             bar.step(entry.getKey().toString());
             ITextureObject itextureobject = entry.getValue();
 

@@ -55,7 +55,7 @@ public class ASMUtil implements Opcodes {
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
         if(Debug){
-            Launch.LOGGER.info("Insert return in " + mn.name);
+            Launch.LOGGER.info("Insert return in {}", mn.name);
         }
     }
     public static void InsertReturn(MethodNode mn, @Nullable Object type, @Nullable Object getReturn, int varIndex, AbstractInsnNode shouldReturn) {
@@ -99,7 +99,7 @@ public class ASMUtil implements Opcodes {
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
         if(Debug){
-            Launch.LOGGER.info("Insert return in " + mn.name);
+            Launch.LOGGER.info("Insert return in {}", mn.name);
         }
     }
 
@@ -154,7 +154,7 @@ public class ASMUtil implements Opcodes {
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
         if(Debug){
-            Launch.LOGGER.info("Insert return in " + mn.name + ",type:1.");
+            Launch.LOGGER.info("Insert return in {},type:1.", mn.name);
         }
     }
 
@@ -209,7 +209,7 @@ public class ASMUtil implements Opcodes {
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
         if(Debug){
-            Launch.LOGGER.info("Insert return in " + mn.name + ",type:2.");
+            Launch.LOGGER.info("Insert return in {},type:2.", mn.name);
         }
     }
 
@@ -268,7 +268,7 @@ public class ASMUtil implements Opcodes {
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
         if(Debug){
-            Launch.LOGGER.info("Insert return in " + mn.name + ",type:3.");
+            Launch.LOGGER.info("Insert return in {},type:3.", mn.name);
         }
     }
     public static void clearMethod(MethodNode mn) {
@@ -280,7 +280,7 @@ public class ASMUtil implements Opcodes {
         }
         mn.instructions.add(new InsnNode(RETURN));
         if(Debug){
-            Launch.LOGGER.info("Clear method:" + mn.name + ".");
+            Launch.LOGGER.info("Clear method:{}.", mn.name);
         }
     }
 
@@ -313,14 +313,14 @@ public class ASMUtil implements Opcodes {
             return 0;
         }
         if (Modifier.isNative(mn.access)) {
-            Launch.LOGGER.warn("Remove method:" + mn.name);
+            Launch.LOGGER.warn("Remove method:{}", mn.name);
             return 2;
         }
         for (AbstractInsnNode ain : mn.instructions.toArray()) {
             if (ain instanceof MethodInsnNode) {
                 MethodInsnNode min = (MethodInsnNode) ain;
                 if (min.owner.equals("sun/misc/Unsafe") || min.owner.contains("java/lang/reflect") || min.owner.contains("sun/tools") || (min.owner.contains("lwjgl") && !(min.name.equals("getEventButton") || min.name.equals("getEventButtonState") || min.name.equals("getEventDWheel"))) || (min.owner.equals("java/lang/System") && (min.name.equals("exit") || min.name.equals("load") || min.name.equals("loadLibrary"))) || min.owner.equals("java/lang/Runtime") || min.owner.contains("ReflectionHelper") || min.owner.contains("opengl")) {
-                    Launch.LOGGER.warn("Remove method:" + mn.name);
+                    Launch.LOGGER.warn("Remove method:{}", mn.name);
                     return 2;
                 }
                 switch (min.name) {
@@ -352,7 +352,7 @@ public class ASMUtil implements Opcodes {
                     case "func_78328_b":
                     case "func_184429_b":
                     case "func_175598_ae": {
-                        Launch.LOGGER.warn("Insert return in method:" + mn.name);
+                        Launch.LOGGER.warn("Insert return in method:{}", mn.name);
                         return 1;
                     }
                 }
@@ -369,7 +369,7 @@ public class ASMUtil implements Opcodes {
             case "getModContainerClass":
             case "getSetupClass":
             case "injectData": {
-                Launch.LOGGER.warn("Insert return in method:" + mn.name);
+                Launch.LOGGER.warn("Insert return in method:{}", mn.name);
                 return 1;
             }
         }

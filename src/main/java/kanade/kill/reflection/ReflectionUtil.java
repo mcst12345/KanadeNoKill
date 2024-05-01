@@ -42,8 +42,8 @@ public class ReflectionUtil {
     }
 
     @Nonnull
-    public static Constructor getConstructor(Class<?> clazz, Class<?>... parameterTypes) throws NoSuchMethodError {
-        for (Constructor constructor : getConstructors(clazz)) {
+    public static Constructor<?> getConstructor(Class<?> clazz, Class<?>... parameterTypes) throws NoSuchMethodError {
+        for (Constructor<?> constructor : getConstructors(clazz)) {
             //System.out.println(Arrays.toString(constructor.getParameterTypes()));
             //System.out.println(Arrays.toString(parameterTypes));
             if (arrayContentsEq(parameterTypes, constructor.getParameterTypes())) {
@@ -54,9 +54,9 @@ public class ReflectionUtil {
         throw new NoSuchMethodError();
     }
 
-    public static Constructor[] getConstructors(Class<?> clazz) {
+    public static Constructor<?>[] getConstructors(Class<?> clazz) {
         try {
-            return (Constructor[]) EarlyMethods.getDeclaredConstructors0.invoke(clazz, false);
+            return (Constructor<?>[]) EarlyMethods.getDeclaredConstructors0.invoke(clazz, false);
         } catch (IllegalAccessException | InvocationTargetException e) {
             return new Constructor[0];
         }

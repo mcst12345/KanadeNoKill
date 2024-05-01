@@ -12,10 +12,13 @@ import org.lwjgl.input.Keyboard;
 public class Keys {
     public static final KeyBinding SWITCH_TIME_POINT = new KeyBinding("key.kanade.switch", KeyConflictContext.IN_GAME, KeyModifier.ALT, Keyboard.KEY_U, "key.category.kanade");
     public static final KeyBinding SAVE = new KeyBinding("key.kanade.save", KeyConflictContext.IN_GAME, KeyModifier.ALT, Keyboard.KEY_I, "key.category.kanade");
+    public static final KeyBinding TIMESTOP = new KeyBinding("key.kanade.ts", KeyConflictContext.IN_GAME, KeyModifier.ALT, Keyboard.KEY_T, "key.category.kanade");
+
 
     public static void init() {
         Launch.LOGGER.info("Registering keys.");
         ClientRegistry.registerKeyBinding(SWITCH_TIME_POINT);
         ClientRegistry.registerKeyBinding(SAVE);
+        ClientRegistry.registerKeyBinding(TIMESTOP);
     }
 }

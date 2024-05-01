@@ -126,8 +126,7 @@ public class DimensionManager {
         if (check) {
             List<World> allWorlds = Lists.newArrayList(weakWorldMap.keySet());
             allWorlds.removeAll(worlds.values());
-            for (ListIterator<World> li = allWorlds.listIterator(); li.hasNext(); ) {
-                World w = li.next();
+            for (World w : allWorlds) {
                 leakedWorlds.add(System.identityHashCode(w));
             }
             for (World w : allWorlds) {
@@ -158,7 +157,7 @@ public class DimensionManager {
             FMLLog.log.info("Unloading dimension {}", id);
         }
 
-        ArrayList<WorldServer> tmp = new ArrayList<WorldServer>();
+        ArrayList<WorldServer> tmp = new ArrayList<>();
         if (worlds.get(0) != null)
             tmp.add(worlds.get(0));
         if (worlds.get(-1) != null)

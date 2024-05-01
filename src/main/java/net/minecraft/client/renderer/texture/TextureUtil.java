@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.IntBuffer;
@@ -44,7 +43,7 @@ public class TextureUtil {
         COLOR_GAMMAS = new float[256];
 
         for (int i1 = 0; i1 < COLOR_GAMMAS.length; ++i1) {
-            COLOR_GAMMAS[i1] = (float) Math.pow((double) ((float) i1 / 255.0F), 2.2D);
+            COLOR_GAMMAS[i1] = (float) Math.pow((float) i1 / 255.0F, 2.2D);
         }
 
         MIPMAP_BUFFER = new int[4];
@@ -99,7 +98,7 @@ public class TextureUtil {
                         for (int i1 = 0; i1 < j; ++i1) {
                             for (int j1 = 0; j1 < k; ++j1) {
                                 int k1 = 2 * (i1 + j1 * l);
-                                aint2[i1 + j1 * j] = blendColors(aint1[k1 + 0], aint1[k1 + 1], aint1[k1 + 0 + l], aint1[k1 + 1 + l], flag);
+                                aint2[i1 + j1 * j] = blendColors(aint1[k1], aint1[k1 + 1], aint1[k1 + l], aint1[k1 + 1 + l], flag);
                             }
                         }
                     } // end if (j > 0)
@@ -128,7 +127,7 @@ public class TextureUtil {
                     f += getColorGamma(MIPMAP_BUFFER[i1] >> 24);
                     f1 += getColorGamma(MIPMAP_BUFFER[i1] >> 16);
                     f2 += getColorGamma(MIPMAP_BUFFER[i1] >> 8);
-                    f3 += getColorGamma(MIPMAP_BUFFER[i1] >> 0);
+                    f3 += getColorGamma(MIPMAP_BUFFER[i1]);
                 }
             }
 
@@ -136,10 +135,10 @@ public class TextureUtil {
             f1 = f1 / 4.0F;
             f2 = f2 / 4.0F;
             f3 = f3 / 4.0F;
-            int i2 = (int) (Math.pow((double) f, 0.45454545454545453D) * 255.0D);
-            int j1 = (int) (Math.pow((double) f1, 0.45454545454545453D) * 255.0D);
-            int k1 = (int) (Math.pow((double) f2, 0.45454545454545453D) * 255.0D);
-            int l1 = (int) (Math.pow((double) f3, 0.45454545454545453D) * 255.0D);
+            int i2 = (int) (Math.pow(f, 0.45454545454545453D) * 255.0D);
+            int j1 = (int) (Math.pow(f1, 0.45454545454545453D) * 255.0D);
+            int k1 = (int) (Math.pow(f2, 0.45454545454545453D) * 255.0D);
+            int l1 = (int) (Math.pow(f3, 0.45454545454545453D) * 255.0D);
 
             if (i2 < 96) {
                 i2 = 0;
@@ -209,7 +208,7 @@ public class TextureUtil {
         }
 
         for (int i = 0; i <= mipmapLevels; ++i) {
-            GlStateManager.glTexImage2D(3553, i, 6408, width >> i, height >> i, 0, 32993, 33639, (IntBuffer) null);
+            GlStateManager.glTexImage2D(3553, i, 6408, width >> i, height >> i, 0, 32993, 33639, null);
         }
     }
 
@@ -294,7 +293,7 @@ public class TextureUtil {
             bufferedimage.getRGB(0, 0, i, j, aint, 0, i);
             aint1 = aint;
         } finally {
-            IOUtils.closeQuietly((Closeable) iresource);
+            IOUtils.closeQuietly(iresource);
         }
 
         return aint1;

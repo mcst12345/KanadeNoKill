@@ -25,7 +25,6 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.InventoryEnderChest;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.PathWorldListener;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
@@ -101,7 +100,7 @@ public class EntityUtil {
                 summonThunder(e, 4);
                 Entity beacon_beam = new EntityBeaconBeam(e.WORLD);
                 beacon_beam.X = e.X;
-                beacon_beam.Y = e.Y;
+                beacon_beam.Y = 0;
                 beacon_beam.Z = e.Z;
                 beacon_beam.forceSpawn = true;
                 e.WORLD.spawnEntity(beacon_beam);
@@ -170,8 +169,8 @@ public class EntityUtil {
             Chunk chunk = world.getChunk(entity.chunkCoordX, entity.chunkCoordZ);
             ClassInheritanceMultiMap<Entity>[] entityLists = (ClassInheritanceMultiMap<Entity>[]) Unsafe.instance.getObjectVolatile(chunk, LateFields.entities_offset);
             for (ClassInheritanceMultiMap<Entity> map : entityLists) {
-                Map<Class<?>, List> MAP = (Map<Class<?>, List>) Unsafe.instance.getObjectVolatile(map, LateFields.map_offset);
-                List list = MAP.get(entity.getClass());
+                Map<Class<?>, List<?>> MAP = (Map<Class<?>, List<?>>) Unsafe.instance.getObjectVolatile(map, LateFields.map_offset);
+                List<?> list = MAP.get(entity.getClass());
                 if (list != null) {
                     list.remove(entity);
                 }
@@ -183,7 +182,7 @@ public class EntityUtil {
             entity.addedToChunk = false;
             if (entity instanceof EntityLivingBase) {
                 DataParameter<Float> HEALTH = (DataParameter<Float>) Unsafe.instance.getObjectVolatile(LateFields.HEALTH_base, LateFields.HEALTH_offset);
-                ((EntityDataManager) Unsafe.instance.getObjectVolatile(entity, LateFields.dataManager_offset)).set(HEALTH, 0.0f);
+                entity.DataManager.set(HEALTH, 0.0f);
                 if (entity instanceof EntityPlayer) {
                     EntityPlayer player = (EntityPlayer) entity;
                     player.Inventory = new InventoryPlayer(player);

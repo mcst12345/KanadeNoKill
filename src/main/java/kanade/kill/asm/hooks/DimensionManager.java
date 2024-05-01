@@ -8,7 +8,7 @@ import net.minecraft.world.WorldServer;
 @SuppressWarnings("unused")
 public class DimensionManager {
     public static boolean checkWorld(World world) {
-        Launch.LOGGER.info("Checking world:" + world);
+        Launch.LOGGER.info("Checking world:{}", world);
         try {
             return world == null || (world.getClass() != WorldServer.class && (Launch.client && world.getClass() != WorldClient.class));
         } catch (Throwable t) {

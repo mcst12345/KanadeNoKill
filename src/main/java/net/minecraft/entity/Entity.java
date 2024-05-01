@@ -13,7 +13,6 @@ import net.minecraft.command.CommandResultStats;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
-import net.minecraft.crash.ICrashReportDetail;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.EnchantmentProtection;
 import net.minecraft.entity.effect.EntityLightningBolt;
@@ -36,8 +35,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.*;
 import net.minecraft.util.datafix.DataFixer;
 import net.minecraft.util.datafix.FixTypes;
-import net.minecraft.util.datafix.IDataFixer;
-import net.minecraft.util.datafix.IDataWalker;
 import net.minecraft.util.math.*;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
@@ -57,15 +54,15 @@ import java.util.*;
 
 public abstract class Entity implements ICommandSender, net.minecraftforge.common.capabilities.ICapabilitySerializable<NBTTagCompound> {
     public boolean HatedByLife;
-    public static final DataParameter<Byte> FLAGS = EntityDataManager.<Byte>createKey(Entity.class, DataSerializers.BYTE);
+    public static final DataParameter<Byte> FLAGS = EntityDataManager.createKey(Entity.class, DataSerializers.BYTE);
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final List<ItemStack> EMPTY_EQUIPMENT = Collections.<ItemStack>emptyList();
+    private static final List<ItemStack> EMPTY_EQUIPMENT = Collections.emptyList();
     private static final AxisAlignedBB ZERO_AABB = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.0D, 0.0D, 0.0D);
-    private static final DataParameter<Integer> AIR = EntityDataManager.<Integer>createKey(Entity.class, DataSerializers.VARINT);
-    private static final DataParameter<String> CUSTOM_NAME = EntityDataManager.<String>createKey(Entity.class, DataSerializers.STRING);
-    private static final DataParameter<Boolean> CUSTOM_NAME_VISIBLE = EntityDataManager.<Boolean>createKey(Entity.class, DataSerializers.BOOLEAN);
-    private static final DataParameter<Boolean> SILENT = EntityDataManager.<Boolean>createKey(Entity.class, DataSerializers.BOOLEAN);
-    private static final DataParameter<Boolean> NO_GRAVITY = EntityDataManager.<Boolean>createKey(Entity.class, DataSerializers.BOOLEAN);
+    private static final DataParameter<Integer> AIR = EntityDataManager.createKey(Entity.class, DataSerializers.VARINT);
+    private static final DataParameter<String> CUSTOM_NAME = EntityDataManager.createKey(Entity.class, DataSerializers.STRING);
+    private static final DataParameter<Boolean> CUSTOM_NAME_VISIBLE = EntityDataManager.createKey(Entity.class, DataSerializers.BOOLEAN);
+    private static final DataParameter<Boolean> SILENT = EntityDataManager.createKey(Entity.class, DataSerializers.BOOLEAN);
+    private static final DataParameter<Boolean> NO_GRAVITY = EntityDataManager.createKey(Entity.class, DataSerializers.BOOLEAN);
     private static double renderDistanceWeight = 1.0D;
     private static int nextEntityID;
     private final List<Entity> riddenByEntities;
@@ -135,7 +132,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
      */
     public boolean updateBlocked;
     public boolean captureDrops = false;
-    public java.util.ArrayList<EntityItem> capturedDrops = new java.util.ArrayList<EntityItem>();
+    public java.util.ArrayList<EntityItem> capturedDrops = new java.util.ArrayList<>();
     /**
      * Internal use for keeping track of entities that are tracked by a world, to
      * allow guarantees that entity position changes will force a chunk load, avoiding
@@ -175,7 +172,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
 
     public Entity(World worldIn) {
         this.entityId = nextEntityID++;
-        this.riddenByEntities = Lists.<Entity>newArrayList();
+        this.riddenByEntities = Lists.newArrayList();
         this.boundingBox = ZERO_AABB;
         this.width = 0.6F;
         this.height = 1.8F;
@@ -187,7 +184,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         this.entityUniqueID = MathHelper.getRandomUUID(this.rand);
         this.cachedUniqueIdString = this.entityUniqueID.toString();
         this.cmdResultStats = new CommandResultStats();
-        this.tags = Sets.<String>newHashSet();
+        this.tags = Sets.newHashSet();
         this.pistonDeltas = new double[]{0.0D, 0.0D, 0.0D};
         this.WORLD = worldIn;
         this.setPosition(0.0D, 0.0D, 0.0D);
@@ -197,30 +194,28 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         }
 
         this.dataManager = new EntityDataManager(this);
-        this.dataManager.register(FLAGS, Byte.valueOf((byte) 0));
-        this.dataManager.register(AIR, Integer.valueOf(300));
-        this.dataManager.register(CUSTOM_NAME_VISIBLE, Boolean.valueOf(false));
+        this.dataManager.register(FLAGS, (byte) 0);
+        this.dataManager.register(AIR, 300);
+        this.dataManager.register(CUSTOM_NAME_VISIBLE, Boolean.FALSE);
         this.dataManager.register(CUSTOM_NAME, "");
-        this.dataManager.register(SILENT, Boolean.valueOf(false));
-        this.dataManager.register(NO_GRAVITY, Boolean.valueOf(false));
+        this.dataManager.register(SILENT, Boolean.FALSE);
+        this.dataManager.register(NO_GRAVITY, Boolean.FALSE);
         this.entityInit();
         MinecraftForge.Event_bus.post(new net.minecraftforge.event.entity.EntityEvent.EntityConstructing(this));
         capabilities = net.minecraftforge.event.ForgeEventFactory.gatherCapabilities(this);
     }
 
     public static void registerFixes(DataFixer fixer) {
-        fixer.registerWalker(FixTypes.ENTITY, new IDataWalker() {
-            public NBTTagCompound process(IDataFixer fixer, NBTTagCompound compound, int versionIn) {
-                if (compound.hasKey("Passengers", 9)) {
-                    NBTTagList nbttaglist = compound.getTagList("Passengers", 10);
+        fixer.registerWalker(FixTypes.ENTITY, (fixer1, compound, versionIn) -> {
+            if (compound.hasKey("Passengers", 9)) {
+                NBTTagList nbttaglist = compound.getTagList("Passengers", 10);
 
-                    for (int i = 0; i < nbttaglist.tagCount(); ++i) {
-                        nbttaglist.set(i, fixer.process(FixTypes.ENTITY, nbttaglist.getCompoundTagAt(i), versionIn));
-                    }
+                for (int i = 0; i < nbttaglist.tagCount(); ++i) {
+                    nbttaglist.set(i, fixer1.process(FixTypes.ENTITY, nbttaglist.getCompoundTagAt(i), versionIn));
                 }
-
-                return compound;
             }
+
+            return compound;
         });
     }
 
@@ -324,7 +319,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             this.setEntityBoundingBox(new AxisAlignedBB(axisalignedbb.minX, axisalignedbb.minY, axisalignedbb.minZ, axisalignedbb.minX + (double) this.width, axisalignedbb.minY + (double) this.height, axisalignedbb.minZ + (double) this.width));
 
             if (this.width > f && !this.firstUpdate && !this.WORLD.isRemote) {
-                this.move(MoverType.SELF, (double) (f - this.width), 0.0D, (double) (f - this.width));
+                this.move(MoverType.SELF, f - this.width, 0.0D, f - this.width);
             }
         }
     }
@@ -578,7 +573,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             double d4 = z;
 
             if ((type == MoverType.SELF || type == MoverType.PLAYER) && this.onGround && this.isSneaking() && this instanceof EntityPlayer) {
-                for (double d5 = 0.05D; x != 0.0D && this.WORLD.getCollisionBoxes(this, this.getEntityBoundingBox().offset(x, (double) (-this.stepHeight), 0.0D)).isEmpty(); d2 = x) {
+                for (double d5 = 0.05D; x != 0.0D && this.WORLD.getCollisionBoxes(this, this.getEntityBoundingBox().offset(x, -this.stepHeight, 0.0D)).isEmpty(); d2 = x) {
                     if (x < 0.05D && x >= -0.05D) {
                         x = 0.0D;
                     } else if (x > 0.0D) {
@@ -588,7 +583,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                     }
                 }
 
-                for (; z != 0.0D && this.WORLD.getCollisionBoxes(this, this.getEntityBoundingBox().offset(0.0D, (double) (-this.stepHeight), z)).isEmpty(); d4 = z) {
+                for (; z != 0.0D && this.WORLD.getCollisionBoxes(this, this.getEntityBoundingBox().offset(0.0D, -this.stepHeight, z)).isEmpty(); d4 = z) {
                     if (z < 0.05D && z >= -0.05D) {
                         z = 0.0D;
                     } else if (z > 0.0D) {
@@ -598,7 +593,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                     }
                 }
 
-                for (; x != 0.0D && z != 0.0D && this.WORLD.getCollisionBoxes(this, this.getEntityBoundingBox().offset(x, (double) (-this.stepHeight), z)).isEmpty(); d4 = z) {
+                for (; x != 0.0D && z != 0.0D && this.WORLD.getCollisionBoxes(this, this.getEntityBoundingBox().offset(x, -this.stepHeight, z)).isEmpty(); d4 = z) {
                     if (x < 0.05D && x >= -0.05D) {
                         x = 0.0D;
                     } else if (x > 0.0D) {
@@ -626,7 +621,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 int k = 0;
 
                 for (int l = list1.size(); k < l; ++k) {
-                    y = ((AxisAlignedBB) list1.get(k)).calculateYOffset(this.getEntityBoundingBox(), y);
+                    y = list1.get(k).calculateYOffset(this.getEntityBoundingBox(), y);
                 }
 
                 this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
@@ -636,7 +631,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 int j5 = 0;
 
                 for (int l5 = list1.size(); j5 < l5; ++j5) {
-                    x = ((AxisAlignedBB) list1.get(j5)).calculateXOffset(this.getEntityBoundingBox(), x);
+                    x = list1.get(j5).calculateXOffset(this.getEntityBoundingBox(), x);
                 }
 
                 if (x != 0.0D) {
@@ -648,7 +643,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 int k5 = 0;
 
                 for (int i6 = list1.size(); k5 < i6; ++k5) {
-                    z = ((AxisAlignedBB) list1.get(k5)).calculateZOffset(this.getEntityBoundingBox(), z);
+                    z = list1.get(k5).calculateZOffset(this.getEntityBoundingBox(), z);
                 }
 
                 if (z != 0.0D) {
@@ -664,7 +659,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 double d7 = z;
                 AxisAlignedBB axisalignedbb1 = this.getEntityBoundingBox();
                 this.setEntityBoundingBox(axisalignedbb);
-                y = (double) this.stepHeight;
+                y = this.stepHeight;
                 List<AxisAlignedBB> list = this.WORLD.getCollisionBoxes(this, this.getEntityBoundingBox().expand(d2, y, d4));
                 AxisAlignedBB axisalignedbb2 = this.getEntityBoundingBox();
                 AxisAlignedBB axisalignedbb3 = axisalignedbb2.expand(d2, 0.0D, d4);
@@ -672,7 +667,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 int j1 = 0;
 
                 for (int k1 = list.size(); j1 < k1; ++j1) {
-                    d8 = ((AxisAlignedBB) list.get(j1)).calculateYOffset(axisalignedbb3, d8);
+                    d8 = list.get(j1).calculateYOffset(axisalignedbb3, d8);
                 }
 
                 axisalignedbb2 = axisalignedbb2.offset(0.0D, d8, 0.0D);
@@ -680,7 +675,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 int l1 = 0;
 
                 for (int i2 = list.size(); l1 < i2; ++l1) {
-                    d18 = ((AxisAlignedBB) list.get(l1)).calculateXOffset(axisalignedbb2, d18);
+                    d18 = list.get(l1).calculateXOffset(axisalignedbb2, d18);
                 }
 
                 axisalignedbb2 = axisalignedbb2.offset(d18, 0.0D, 0.0D);
@@ -688,7 +683,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 int j2 = 0;
 
                 for (int k2 = list.size(); j2 < k2; ++j2) {
-                    d19 = ((AxisAlignedBB) list.get(j2)).calculateZOffset(axisalignedbb2, d19);
+                    d19 = list.get(j2).calculateZOffset(axisalignedbb2, d19);
                 }
 
                 axisalignedbb2 = axisalignedbb2.offset(0.0D, 0.0D, d19);
@@ -697,7 +692,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 int l2 = 0;
 
                 for (int i3 = list.size(); l2 < i3; ++l2) {
-                    d20 = ((AxisAlignedBB) list.get(l2)).calculateYOffset(axisalignedbb4, d20);
+                    d20 = list.get(l2).calculateYOffset(axisalignedbb4, d20);
                 }
 
                 axisalignedbb4 = axisalignedbb4.offset(0.0D, d20, 0.0D);
@@ -705,7 +700,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 int j3 = 0;
 
                 for (int k3 = list.size(); j3 < k3; ++j3) {
-                    d21 = ((AxisAlignedBB) list.get(j3)).calculateXOffset(axisalignedbb4, d21);
+                    d21 = list.get(j3).calculateXOffset(axisalignedbb4, d21);
                 }
 
                 axisalignedbb4 = axisalignedbb4.offset(d21, 0.0D, 0.0D);
@@ -713,7 +708,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 int l3 = 0;
 
                 for (int i4 = list.size(); l3 < i4; ++l3) {
-                    d22 = ((AxisAlignedBB) list.get(l3)).calculateZOffset(axisalignedbb4, d22);
+                    d22 = list.get(l3).calculateZOffset(axisalignedbb4, d22);
                 }
 
                 axisalignedbb4 = axisalignedbb4.offset(0.0D, 0.0D, d22);
@@ -735,7 +730,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 int j4 = 0;
 
                 for (int k4 = list.size(); j4 < k4; ++j4) {
-                    y = ((AxisAlignedBB) list.get(j4)).calculateYOffset(this.getEntityBoundingBox(), y);
+                    y = list.get(j4).calculateYOffset(this.getEntityBoundingBox(), y);
                 }
 
                 this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
@@ -932,24 +927,24 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
 
     public void playSound(SoundEvent soundIn, float volume, float pitch) {
         if (!this.isSilent()) {
-            this.WORLD.playSound((EntityPlayer) null, this.posX, this.posY, this.posZ, soundIn, this.getSoundCategory(), volume, pitch);
+            this.WORLD.playSound(null, this.posX, this.posY, this.posZ, soundIn, this.getSoundCategory(), volume, pitch);
         }
     }
 
     public boolean isSilent() {
-        return ((Boolean) this.dataManager.get(SILENT)).booleanValue();
+        return (Boolean) this.dataManager.get(SILENT);
     }
 
     public void setSilent(boolean isSilent) {
-        this.dataManager.set(SILENT, Boolean.valueOf(isSilent));
+        this.dataManager.set(SILENT, isSilent);
     }
 
     public boolean hasNoGravity() {
-        return ((Boolean) this.dataManager.get(NO_GRAVITY)).booleanValue();
+        return (Boolean) this.dataManager.get(NO_GRAVITY);
     }
 
     public void setNoGravity(boolean noGravity) {
-        this.dataManager.set(NO_GRAVITY, Boolean.valueOf(noGravity));
+        this.dataManager.set(NO_GRAVITY, noGravity);
     }
 
     protected boolean canTriggerWalking() {
@@ -1049,13 +1044,13 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         for (int i = 0; (float) i < 1.0F + this.width * 20.0F; ++i) {
             float f3 = (this.rand.nextFloat() * 2.0F - 1.0F) * this.width;
             float f4 = (this.rand.nextFloat() * 2.0F - 1.0F) * this.width;
-            this.WORLD.spawnParticle(EnumParticleTypes.WATER_BUBBLE, this.posX + (double) f3, (double) (f2 + 1.0F), this.posZ + (double) f4, this.motionX, this.motionY - (double) (this.rand.nextFloat() * 0.2F), this.motionZ);
+            this.WORLD.spawnParticle(EnumParticleTypes.WATER_BUBBLE, this.posX + (double) f3, f2 + 1.0F, this.posZ + (double) f4, this.motionX, this.motionY - (double) (this.rand.nextFloat() * 0.2F), this.motionZ);
         }
 
         for (int j = 0; (float) j < 1.0F + this.width * 20.0F; ++j) {
             float f5 = (this.rand.nextFloat() * 2.0F - 1.0F) * this.width;
             float f6 = (this.rand.nextFloat() * 2.0F - 1.0F) * this.width;
-            this.WORLD.spawnParticle(EnumParticleTypes.WATER_SPLASH, this.posX + (double) f5, (double) (f2 + 1.0F), this.posZ + (double) f6, this.motionX, this.motionY, this.motionZ);
+            this.WORLD.spawnParticle(EnumParticleTypes.WATER_SPLASH, this.posX + (double) f5, f2 + 1.0F, this.posZ + (double) f6, this.motionX, this.motionY, this.motionZ);
         }
     }
 
@@ -1117,9 +1112,9 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             forward = forward * f;
             float f1 = MathHelper.sin(this.rotationYaw * 0.017453292F);
             float f2 = MathHelper.cos(this.rotationYaw * 0.017453292F);
-            this.motionX += (double) (strafe * f2 - forward * f1);
-            this.motionY += (double) up;
-            this.motionZ += (double) (forward * f2 + strafe * f1);
+            this.motionX += strafe * f2 - forward * f1;
+            this.motionY += up;
+            this.motionZ += forward * f2 + strafe * f1;
         }
     }
 
@@ -1162,7 +1157,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         this.rotationPitch = pitch;
         this.prevRotationYaw = this.rotationYaw;
         this.prevRotationPitch = this.rotationPitch;
-        double d0 = (double) (this.prevRotationYaw - yaw);
+        double d0 = this.prevRotationYaw - yaw;
 
         if (d0 < -180.0D) {
             this.prevRotationYaw += 360.0F;
@@ -1179,7 +1174,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     }
 
     public void moveToBlockPosAndAngles(BlockPos pos, float rotationYawIn, float rotationPitchIn) {
-        this.setLocationAndAngles((double) pos.getX() + 0.5D, (double) pos.getY(), (double) pos.getZ() + 0.5D, rotationYawIn, rotationPitchIn);
+        this.setLocationAndAngles((double) pos.getX() + 0.5D, pos.getY(), (double) pos.getZ() + 0.5D, rotationYawIn, rotationPitchIn);
     }
 
     public void setLocationAndAngles(double x, double y, double z, float yaw, float pitch) {
@@ -1223,7 +1218,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         double d0 = this.posX - x;
         double d1 = this.posY - y;
         double d2 = this.posZ - z;
-        return (double) MathHelper.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
+        return MathHelper.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
     }
 
     public double getDistanceSq(Entity entityIn) {
@@ -1244,7 +1239,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 double d2 = MathHelper.absMax(d0, d1);
 
                 if (d2 >= 0.009999999776482582D) {
-                    d2 = (double) MathHelper.sqrt(d2);
+                    d2 = MathHelper.sqrt(d2);
                     d0 = d0 / d2;
                     d1 = d1 / d2;
                     double d3 = 1.0D / d2;
@@ -1307,7 +1302,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         float f1 = MathHelper.sin(-yaw * 0.017453292F - (float) Math.PI);
         float f2 = -MathHelper.cos(-pitch * 0.017453292F);
         float f3 = MathHelper.sin(-pitch * 0.017453292F);
-        return new Vec3d((double) (f1 * f2), (double) f3, (double) (f * f2));
+        return new Vec3d(f1 * f2, f3, f * f2);
     }
 
     public Vec3d getPositionEyes(float partialTicks) {
@@ -1624,13 +1619,11 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     }
 
     public boolean isEntityInsideOpaqueBlock() {
-        if (this.noClip) {
-            return false;
-        } else {
+        if (!this.noClip) {
             BlockPos.PooledMutableBlockPos blockpos$pooledmutableblockpos = BlockPos.PooledMutableBlockPos.retain();
 
             for (int i = 0; i < 8; ++i) {
-                int j = MathHelper.floor(this.posY + (double) (((float) ((i >> 0) % 2) - 0.5F) * 0.1F) + (double) this.getEyeHeight());
+                int j = MathHelper.floor(this.posY + (double) (((float) ((i) % 2) - 0.5F) * 0.1F) + (double) this.getEyeHeight());
                 int k = MathHelper.floor(this.posX + (double) (((float) ((i >> 1) % 2) - 0.5F) * this.width * 0.8F));
                 int l = MathHelper.floor(this.posZ + (double) (((float) ((i >> 2) % 2) - 0.5F) * this.width * 0.8F));
 
@@ -1645,8 +1638,8 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             }
 
             blockpos$pooledmutableblockpos.release();
-            return false;
         }
+        return false;
     }
 
     public boolean processInitialInteract(EntityPlayer player, EnumHand hand) {
@@ -1725,7 +1718,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
 
     public void removePassengers() {
         for (int i = this.riddenByEntities.size() - 1; i >= 0; --i) {
-            ((Entity) this.riddenByEntities.get(i)).dismountRidingEntity();
+            this.riddenByEntities.get(i).dismountRidingEntity();
         }
     }
 
@@ -1760,7 +1753,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     }
 
     protected boolean canFitPassenger(Entity passenger) {
-        return this.getPassengers().size() < 1;
+        return this.getPassengers().isEmpty();
     }
 
     @SideOnly(Side.CLIENT)
@@ -1797,7 +1790,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 double d0 = blockpattern$patternhelper.getForwards().getAxis() == EnumFacing.Axis.X ? (double) blockpattern$patternhelper.getFrontTopLeft().getZ() : (double) blockpattern$patternhelper.getFrontTopLeft().getX();
                 double d1 = blockpattern$patternhelper.getForwards().getAxis() == EnumFacing.Axis.X ? this.posZ : this.posX;
                 d1 = Math.abs(MathHelper.pct(d1 - (double) (blockpattern$patternhelper.getForwards().rotateY().getAxisDirection() == EnumFacing.AxisDirection.NEGATIVE ? 1 : 0), d0, d0 - (double) blockpattern$patternhelper.getWidth()));
-                double d2 = MathHelper.pct(this.posY - 1.0D, (double) blockpattern$patternhelper.getFrontTopLeft().getY(), (double) (blockpattern$patternhelper.getFrontTopLeft().getY() - blockpattern$patternhelper.getHeight()));
+                double d2 = MathHelper.pct(this.posY - 1.0D, blockpattern$patternhelper.getFrontTopLeft().getY(), blockpattern$patternhelper.getFrontTopLeft().getY() - blockpattern$patternhelper.getHeight());
                 this.lastPortalVec = new Vec3d(d1, d2, 0.0D);
                 this.teleportDirection = blockpattern$patternhelper.getForwards();
             }
@@ -1834,7 +1827,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     }
 
     public Iterable<ItemStack> getEquipmentAndArmor() {
-        return Iterables.<ItemStack>concat(this.getHeldEquipment(), this.getArmorInventoryList());
+        return Iterables.concat(this.getHeldEquipment(), this.getArmorInventoryList());
     }
 
     public void setItemStackToSlot(EntityEquipmentSlot slotIn, ItemStack stack) {
@@ -1895,7 +1888,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             return false;
         } else {
             Team team = this.getTeam();
-            return team != null && player != null && player.getTeam() == team && team.getSeeFriendlyInvisiblesEnabled() ? false : this.isInvisible();
+            return (team == null || player == null || player.getTeam() != team || !team.getSeeFriendlyInvisiblesEnabled()) && this.isInvisible();
         }
     }
 
@@ -1909,29 +1902,29 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     }
 
     public boolean isOnScoreboardTeam(Team teamIn) {
-        return this.getTeam() != null ? this.getTeam().isSameTeam(teamIn) : false;
+        return this.getTeam() != null && this.getTeam().isSameTeam(teamIn);
     }
 
     protected boolean getFlag(int flag) {
-        return (((Byte) this.dataManager.get(FLAGS)).byteValue() & 1 << flag) != 0;
+        return ((Byte) this.dataManager.get(FLAGS) & 1 << flag) != 0;
     }
 
     protected void setFlag(int flag, boolean set) {
-        byte b0 = this.dataManager.get(FLAGS).byteValue();
+        byte b0 = this.dataManager.get(FLAGS);
 
         if (set) {
-            this.dataManager.set(FLAGS, Byte.valueOf((byte) (b0 | 1 << flag)));
+            this.dataManager.set(FLAGS, (byte) (b0 | 1 << flag));
         } else {
-            this.dataManager.set(FLAGS, Byte.valueOf((byte) (b0 & ~(1 << flag))));
+            this.dataManager.set(FLAGS, (byte) (b0 & ~(1 << flag)));
         }
     }
 
     public int getAir() {
-        return ((Integer) this.dataManager.get(AIR)).intValue();
+        return (Integer) this.dataManager.get(AIR);
     }
 
     public void setAir(int air) {
-        this.dataManager.set(AIR, Integer.valueOf(air));
+        this.dataManager.set(AIR, air);
     }
 
     public void onStruckByLightning(EntityLightningBolt lightningBolt) {
@@ -1987,17 +1980,17 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
             float f1 = (float) enumfacing.getAxisDirection().getOffset();
 
             if (enumfacing.getAxis() == EnumFacing.Axis.X) {
-                this.motionX = (double) (f1 * f);
+                this.motionX = f1 * f;
                 this.motionY *= 0.75D;
                 this.motionZ *= 0.75D;
             } else if (enumfacing.getAxis() == EnumFacing.Axis.Y) {
                 this.motionX *= 0.75D;
-                this.motionY = (double) (f1 * f);
+                this.motionY = f1 * f;
                 this.motionZ *= 0.75D;
             } else if (enumfacing.getAxis() == EnumFacing.Axis.Z) {
                 this.motionX *= 0.75D;
                 this.motionY *= 0.75D;
-                this.motionZ = (double) (f1 * f);
+                this.motionZ = f1 * f;
             }
 
             return true;
@@ -2115,16 +2108,16 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
                 double d1 = MathHelper.clamp(this.posZ * moveFactor, worldserver1.getWorldBorder().minZ() + 16.0D, worldserver1.getWorldBorder().maxZ() - 16.0D);
                 double d2 = 8.0D;
 
-                if (false && dimensionIn == -1) {
+                if (false) {
                     d0 = MathHelper.clamp(d0 / 8.0D, worldserver1.getWorldBorder().minX() + 16.0D, worldserver1.getWorldBorder().maxX() - 16.0D);
                     d1 = MathHelper.clamp(d1 / 8.0D, worldserver1.getWorldBorder().minZ() + 16.0D, worldserver1.getWorldBorder().maxZ() - 16.0D);
-                } else if (false && dimensionIn == 0) {
+                } else if (false) {
                     d0 = MathHelper.clamp(d0 * 8.0D, worldserver1.getWorldBorder().minX() + 16.0D, worldserver1.getWorldBorder().maxX() - 16.0D);
                     d1 = MathHelper.clamp(d1 * 8.0D, worldserver1.getWorldBorder().minZ() + 16.0D, worldserver1.getWorldBorder().maxZ() - 16.0D);
                 }
 
-                d0 = (double) MathHelper.clamp((int) d0, -29999872, 29999872);
-                d1 = (double) MathHelper.clamp((int) d1, -29999872, 29999872);
+                d0 = MathHelper.clamp((int) d0, -29999872, 29999872);
+                d1 = MathHelper.clamp((int) d1, -29999872, 29999872);
                 float f = this.rotationYaw;
                 this.setLocationAndAngles(d0, this.posY, d1, 90.0F, 0.0F);
                 teleporter.placeEntity(worldserver1, this, f);
@@ -2192,30 +2185,14 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     }
 
     public void addEntityCrashInfo(CrashReportCategory category) {
-        category.addDetail("Entity Type", new ICrashReportDetail<String>() {
-            public String call() throws Exception {
-                return EntityList.getKey(Entity.this) + " (" + Entity.this.getClass().getCanonicalName() + ")";
-            }
-        });
-        category.addCrashSection("Entity ID", Integer.valueOf(this.entityId));
-        category.addDetail("Entity Name", new ICrashReportDetail<String>() {
-            public String call() throws Exception {
-                return Entity.this.getName();
-            }
-        });
+        category.addDetail("Entity Type", () -> EntityList.getKey(Entity.this) + " (" + Entity.this.getClass().getCanonicalName() + ")");
+        category.addCrashSection("Entity ID", this.entityId);
+        category.addDetail("Entity Name", () -> Entity.this.getName());
         category.addCrashSection("Entity's Exact location", String.format("%.2f, %.2f, %.2f", this.posX, this.posY, this.posZ));
         category.addCrashSection("Entity's Block location", CrashReportCategory.getCoordinateInfo(MathHelper.floor(this.posX), MathHelper.floor(this.posY), MathHelper.floor(this.posZ)));
         category.addCrashSection("Entity's Momentum", String.format("%.2f, %.2f, %.2f", this.motionX, this.motionY, this.motionZ));
-        category.addDetail("Entity's Passengers", new ICrashReportDetail<String>() {
-            public String call() throws Exception {
-                return Entity.this.getPassengers().toString();
-            }
-        });
-        category.addDetail("Entity's Vehicle", new ICrashReportDetail<String>() {
-            public String call() throws Exception {
-                return Entity.this.getRidingEntity().toString();
-            }
-        });
+        category.addDetail("Entity's Passengers", () -> Entity.this.getPassengers().toString());
+        category.addDetail("Entity's Vehicle", () -> Entity.this.getRidingEntity().toString());
     }
 
     public void setUniqueId(UUID uniqueIdIn) {
@@ -2249,7 +2226,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     }
 
     public String getCustomNameTag() {
-        return (String) this.dataManager.get(CUSTOM_NAME);
+        return this.dataManager.get(CUSTOM_NAME);
     }
 
     public void setCustomNameTag(String name) {
@@ -2257,15 +2234,15 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     }
 
     public boolean hasCustomName() {
-        return !((String) this.dataManager.get(CUSTOM_NAME)).isEmpty();
+        return !this.dataManager.get(CUSTOM_NAME).isEmpty();
     }
 
     public boolean getAlwaysRenderNameTag() {
-        return ((Boolean) this.dataManager.get(CUSTOM_NAME_VISIBLE)).booleanValue();
+        return (Boolean) this.dataManager.get(CUSTOM_NAME_VISIBLE);
     }
 
     public void setAlwaysRenderNameTag(boolean alwaysRenderNameTag) {
-        this.dataManager.set(CUSTOM_NAME_VISIBLE, Boolean.valueOf(alwaysRenderNameTag));
+        this.dataManager.set(CUSTOM_NAME_VISIBLE, alwaysRenderNameTag);
     }
 
     public void setPositionAndUpdate(double x, double y, double z) {
@@ -2336,9 +2313,6 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         return false;
     }
 
-    public void sendMessage(ITextComponent component) {
-    }
-
     public boolean canUseCommand(int permLevel, String commandName) {
         return true;
     }
@@ -2358,10 +2332,6 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
 
     public Entity getCommandSenderEntity() {
         return this;
-    }
-
-    public boolean sendCommandFeedback() {
-        return false;
     }
 
     public void setCommandStat(CommandResultStats.Type type, int amount) {
@@ -2629,7 +2599,7 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     }
 
     public List<Entity> getPassengers() {
-        return (List<Entity>) (this.riddenByEntities.isEmpty() ? Collections.emptyList() : Lists.newArrayList(this.riddenByEntities));
+        return this.riddenByEntities.isEmpty() ? Collections.emptyList() : Lists.newArrayList(this.riddenByEntities);
     }
 
     public boolean isPassenger(Entity entityIn) {
@@ -2643,13 +2613,13 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
     }
 
     public Collection<Entity> getRecursivePassengers() {
-        Set<Entity> set = Sets.<Entity>newHashSet();
+        Set<Entity> set = Sets.newHashSet();
         this.getRecursivePassengersByType(Entity.class, set);
         return set;
     }
 
     public <T extends Entity> Collection<T> getRecursivePassengersByType(Class<T> entityClass) {
-        Set<T> set = Sets.<T>newHashSet();
+        Set<T> set = Sets.newHashSet();
         this.getRecursivePassengersByType(entityClass, set);
         return set;
     }
@@ -2668,7 +2638,6 @@ public abstract class Entity implements ICommandSender, net.minecraftforge.commo
         Entity entity;
 
         for (entity = this; entity.isRiding(); entity = entity.getRidingEntity()) {
-            ;
         }
 
         return entity;

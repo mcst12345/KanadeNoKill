@@ -13,7 +13,7 @@ import java.util.Timer;
 
 public class ThreadUtil {
     public static void StopThread(Thread t) {
-        Launch.LOGGER.info("Stopping thread:" + t.getName());
+        Launch.LOGGER.info("Stopping thread:{}", t.getName());
         try {
             ReflectionUtil.invoke(EarlyMethods.stop0, t, Unsafe.instance.allocateInstance(ThreadDeath.class));
         } catch (Throwable e) {
@@ -27,7 +27,7 @@ public class ThreadUtil {
     }
 
     public static void StopTimer(Timer timer) {
-        Launch.LOGGER.info("Stopping timer:" + timer.toString());
+        Launch.LOGGER.info("Stopping timer:{}", timer.toString());
         Thread t = (Thread) Unsafe.instance.getObjectVolatile(timer, EarlyFields.TimerThread_offset);
         try {
             StopThread(t);
@@ -36,7 +36,7 @@ public class ThreadUtil {
     }
 
     public static void StopThreadPool(ThreadPoolImpl pool) {
-        Launch.LOGGER.info("Stopping threadPool:" + pool.getName());
+        Launch.LOGGER.info("Stopping threadPool:{}", pool.getName());
         List<?> workers = (List<?>) Unsafe.instance.getObjectVolatile(pool, EarlyFields.ThreadPoolWorkers_offset);
         for (Object object : workers) {
             ThreadUtil.StopThread((Thread) object);
@@ -49,7 +49,7 @@ public class ThreadUtil {
         if (group.getName().equals("main")) {
             return;
         }
-        Launch.LOGGER.info("Stopping threadGroup:" + group.getName());
+        Launch.LOGGER.info("Stopping threadGroup:{}", group.getName());
         /*ThreadGroup[] additional = (ThreadGroup[]) Unsafe.instance.getObjectVolatile(group,EarlyFields.ThreadGroupGroups_offset);
         if(additional != null){
             for(ThreadGroup g : additional){
@@ -78,10 +78,10 @@ public class ThreadUtil {
         Launch.LOGGER.info("Printing threads");
         Launch.LOGGER.info("------------------------------------------------------------------------");
         for (Thread t : Thread.getAllStackTraces().keySet()) {
-            Launch.LOGGER.info("Thread:" + t.getName());
-            Launch.LOGGER.info("class:" + MemoryHelper.getClassName(t.getClass()));
-            Launch.LOGGER.info("Group:" + t.getThreadGroup().getName());
-            Launch.LOGGER.info("HaveTag:" + NativeMethods.HaveTag(t, 25L));
+            Launch.LOGGER.info("Thread:{}", t.getName());
+            Launch.LOGGER.info("class:{}", MemoryHelper.getClassName(t.getClass()));
+            Launch.LOGGER.info("Group:{}", t.getThreadGroup().getName());
+            Launch.LOGGER.info("HaveTag:{}", NativeMethods.HaveTag(t, 25L));
             Launch.LOGGER.info("------------------------------------------------------------------------");
         }
     }
@@ -95,7 +95,7 @@ public class ThreadUtil {
             if (!ObjectUtil.ModClass(MemoryHelper.getClassName(t.getClass())) || NativeMethods.HaveTag(t, 9)) {
                 continue;
             }
-            Launch.LOGGER.info("Killing thread:" + t.getName());
+            Launch.LOGGER.info("Killing thread:{}", t.getName());
             StopThread(t);
             i++;
         }

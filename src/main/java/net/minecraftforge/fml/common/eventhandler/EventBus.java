@@ -40,7 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class EventBus implements IEventExceptionHandler {
     public static int maxID = 0;
 
-    public ConcurrentHashMap<Object, ArrayList<IEventListener>> listeners = new ConcurrentHashMap<Object, ArrayList<IEventListener>>();
+    public ConcurrentHashMap<Object, ArrayList<IEventListener>> listeners = new ConcurrentHashMap<>();
     public Map<Object, ModContainer> listenerOwners = new MapMaker().weakKeys().weakValues().makeMap();
     public final int busID = maxID++;
     public IEventExceptionHandler exceptionHandler;
@@ -99,7 +99,7 @@ public class EventBus implements IEventExceptionHandler {
                         break;
                     }
                 } catch (NoSuchMethodException e) {
-                    ; // Eat the error, this is not unexpected
+                    // Eat the error, this is not unexpected
                 }
             }
         }

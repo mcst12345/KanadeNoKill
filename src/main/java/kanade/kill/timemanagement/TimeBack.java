@@ -47,7 +47,7 @@ public class TimeBack {
         sdf.applyPattern("yyyy-MM-dd--HH:mm:ss");
         Date date = new Date();
         String time = sdf.format(date);
-        Launch.LOGGER.info("Saving time point at " + time);
+        Launch.LOGGER.info("Saving time point at {}", time);
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         server.getPlayerList().saveAllPlayerData();
         for (WorldServer worldserver : server.Worlds) {

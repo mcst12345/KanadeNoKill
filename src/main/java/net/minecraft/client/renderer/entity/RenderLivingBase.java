@@ -63,7 +63,6 @@ public abstract class RenderLivingBase<T extends EntityLivingBase> extends Rende
         float f;
 
         for (f = yawOffset - prevYawOffset; f < -180.0F; f += 360.0F) {
-            ;
         }
 
         while (f >= 180.0F) {
@@ -78,7 +77,7 @@ public abstract class RenderLivingBase<T extends EntityLivingBase> extends Rende
 
     public void doRender(T entity, double x, double y, double z, float entityYaw, float partialTicks) {
         kanade.kill.asm.hooks.RenderLivingBase.doRender(this, entity, x, y, z, entityYaw, partialTicks);
-        if (net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.RenderLivingEvent.Pre<T>(entity, this, partialTicks, x, y, z)))
+        if (net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.RenderLivingEvent.Pre<>(entity, this, partialTicks, x, y, z)))
             return;
         GlStateManager.pushMatrix();
         GlStateManager.disableCull();
@@ -177,7 +176,7 @@ public abstract class RenderLivingBase<T extends EntityLivingBase> extends Rende
 
             GlStateManager.disableRescaleNormal();
         } catch (Exception exception) {
-            LOGGER.error("Couldn't render entity", (Throwable) exception);
+            LOGGER.error("Couldn't render entity", exception);
         }
 
         GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit);
@@ -186,7 +185,7 @@ public abstract class RenderLivingBase<T extends EntityLivingBase> extends Rende
         GlStateManager.enableCull();
         GlStateManager.popMatrix();
         super.doRender(entity, x, y, z, entityYaw, partialTicks);
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.RenderLivingEvent.Post<T>(entity, this, partialTicks, x, y, z));
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.RenderLivingEvent.Post<>(entity, this, partialTicks, x, y, z));
     }
 
     public float prepareScale(T entitylivingbaseIn, float partialTicks) {
@@ -373,7 +372,7 @@ public abstract class RenderLivingBase<T extends EntityLivingBase> extends Rende
         } else {
             String s = TextFormatting.getTextWithoutFormattingCodes(entityLiving.getName());
 
-            if (s != null && ("Dinnerbone".equals(s) || "Grumm".equals(s)) && (!(entityLiving instanceof EntityPlayer) || ((EntityPlayer) entityLiving).isWearing(EnumPlayerModelParts.CAPE))) {
+            if (("Dinnerbone".equals(s) || "Grumm".equals(s)) && (!(entityLiving instanceof EntityPlayer) || ((EntityPlayer) entityLiving).isWearing(EnumPlayerModelParts.CAPE))) {
                 GlStateManager.translate(0.0F, entityLiving.height + 0.1F, 0.0F);
                 GlStateManager.rotate(180.0F, 0.0F, 0.0F, 1.0F);
             }
@@ -411,7 +410,7 @@ public abstract class RenderLivingBase<T extends EntityLivingBase> extends Rende
     }
 
     public void renderName(T entity, double x, double y, double z) {
-        if (net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.RenderLivingEvent.Specials.Pre<T>(entity, this, x, y, z)))
+        if (net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.RenderLivingEvent.Specials.Pre<>(entity, this, x, y, z)))
             return;
         if (this.canRenderName(entity)) {
             double d0 = entity.getDistanceSq(this.renderManager.renderViewEntity);
@@ -423,7 +422,7 @@ public abstract class RenderLivingBase<T extends EntityLivingBase> extends Rende
                 this.renderEntityName(entity, x, y, z, s, d0);
             }
         }
-        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.RenderLivingEvent.Specials.Post<T>(entity, this, x, y, z));
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.RenderLivingEvent.Specials.Post<>(entity, this, x, y, z));
     }
 
     protected boolean canRenderName(T entity) {

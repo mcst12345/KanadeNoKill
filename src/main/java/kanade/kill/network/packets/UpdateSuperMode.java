@@ -32,7 +32,7 @@ public class UpdateSuperMode implements IMessage {
 
         @Override
         public IMessage onMessage(UpdateSuperMode message, MessageContext ctx) {
-            Launch.LOGGER.info((message.value ? "Enabling" : "Disabling") + " SuperMode.");
+            Launch.LOGGER.info("{} SuperMode.", message.value ? "Enabling" : "Disabling");
             Config.SuperMode = message.value;
             if (message.value) {
                 ClassUtil.FuckModMethods();

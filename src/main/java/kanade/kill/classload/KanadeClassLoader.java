@@ -133,7 +133,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
                 basicClass = transformer.transform(name, transformedName, basicClass);
             } catch (ClassCircularityError ignored) {
             } catch (Throwable t) {
-                Launch.LOGGER.warn("Catch exception when running transformers:" + transformedName + ":", t);
+                Launch.LOGGER.warn("Catch exception when running transformers:{}:", transformedName, t);
             }
         }
         for (final IClassTransformer transformer : Transformers) {
@@ -141,7 +141,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
                 basicClass = transformer.transform(name, transformedName, basicClass);
             } catch (ClassCircularityError ignored) {
             } catch (Throwable t) {
-                Launch.LOGGER.warn("Catch exception when running transformers:" + transformedName + ":", t);
+                Launch.LOGGER.warn("Catch exception when running transformers:{}:", transformedName, t);
             }
         }
         return basicClass;
@@ -152,7 +152,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
         if(transformerClassName.equals("net.minecraftforge.fml.common.asm.transformers.PatchingTransformer")){
             return;
         }
-        Launch.LOGGER.info("Register transformer:" + transformerClassName);
+        Launch.LOGGER.info("Register transformer:{}", transformerClassName);
         try {
             IClassTransformer transformer = (IClassTransformer) loadClass(transformerClassName).newInstance();
             if (goodTransformer(transformerClassName)) {
@@ -328,7 +328,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
     @Override
     public Class<?> findClass(String name) throws ClassNotFoundException {
         if (name.startsWith("kanade.kill.")) {
-            Launch.LOGGER.info("Kanade class wants to load:" + name);
+            Launch.LOGGER.info("Kanade class wants to load:{}", name);
         }
         ClassLoader parent = (ClassLoader) Unsafe.instance.getObjectVolatile(this, EarlyFields.parent_offset);
         if (exclusions.contains(name)) {
@@ -418,8 +418,8 @@ public class KanadeClassLoader extends LaunchClassLoader {
             }
 
             if (bytes == null) {
-                Launch.LOGGER.warn("Failed to get bytes of class:" + name);
-                Launch.LOGGER.warn("Untransformed name:" + untransformedName);
+                Launch.LOGGER.warn("Failed to get bytes of class:{}", name);
+                Launch.LOGGER.warn("Untransformed name:{}", untransformedName);
             }
 
             for (IClassTransformer t : NecessaryTransformers) {

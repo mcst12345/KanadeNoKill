@@ -93,7 +93,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     protected boolean scheduledUpdatesAreImmediate;
     protected int updateLCG = (new Random()).nextInt();
     protected PathWorldListener pathListener = new PathWorldListener();
-    protected IChunkProvider chunkProvider;
+    public IChunkProvider chunkProvider;
     protected boolean findingSpawnPoint;
     protected MapStorage mapStorage;
     protected LootTableManager lootTable;
@@ -2565,16 +2565,14 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
                 } else {
                     j2 = Math.max(j2, this.getStrongPower(pos.south(), EnumFacing.SOUTH));
 
-                    if (j2 >= 15) {
-                        return j2;
-                    } else {
+                    if (j2 < 15) {
                         j2 = Math.max(j2, this.getStrongPower(pos.west(), EnumFacing.WEST));
 
                         if (j2 < 15) {
                             j2 = Math.max(j2, this.getStrongPower(pos.east(), EnumFacing.EAST));
                         }
-                        return j2;
                     }
+                    return j2;
                 }
             }
         }

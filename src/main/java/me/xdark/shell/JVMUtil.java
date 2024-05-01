@@ -67,7 +67,7 @@ public final class JVMUtil {
     private static abstract class NativeLibraryLoader {
 
         protected static final Class<?> CL_NATIVE_LIBRARY;
-        protected static final Constructor CNSTR_NATIVE_LIBRARY;
+        protected static final Constructor<?> CNSTR_NATIVE_LIBRARY;
 
         static {
             try {

@@ -41,7 +41,8 @@ public class RenderLivingBase {
 
         return prevYawOffset + partialTicks * f;
     }
-    public static void doRender(net.minecraft.client.renderer.entity.RenderLivingBase renderer, EntityLivingBase entity, double x, double y, double z, float entityYaw, float partialTicks) {
+
+    public static void doRender(net.minecraft.client.renderer.entity.RenderLivingBase<?> renderer, EntityLivingBase entity, double x, double y, double z, float entityYaw, float partialTicks) {
         if (entity instanceof EntityPlayer) {
             /*if(KillItem.inList(entity)){
                 float f = interpolateRotation(entity.prevRenderYawOffset, entity.renderYawOffset, partialTicks);
@@ -185,7 +186,7 @@ public class RenderLivingBase {
         GlStateManager.popMatrix();
     }
 
-    private static void renderSwing(Render render,EntityLivingBase entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale){
+    private static void renderSwing(Render<?> render, EntityLivingBase entitylivingbaseIn, float limbSwing, float limbSwingAmount, float partialTicks, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);

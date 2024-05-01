@@ -10,7 +10,6 @@ import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.particle.ParticleFirework;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
-import net.minecraft.crash.ICrashReportDetail;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.entity.player.EntityPlayer;
@@ -44,12 +43,12 @@ import java.util.Set;
 
 @SideOnly(Side.CLIENT)
 public class WorldClient extends World {
-    public final Set<Entity> EntityList = Sets.<Entity>newHashSet();
+    public final Set<Entity> EntityList = Sets.newHashSet();
     public Set<Entity> entityList = Sets.newHashSet();
-    public final Set<Entity> entitySpawnQueue = Sets.<Entity>newHashSet();
+    public final Set<Entity> entitySpawnQueue = Sets.newHashSet();
     private final NetHandlerPlayClient connection;
     private final Minecraft mc = Minecraft.getMinecraft();
-    private final Set<ChunkPos> previousActiveChunkSet = Sets.<ChunkPos>newHashSet();
+    private final Set<ChunkPos> previousActiveChunkSet = Sets.newHashSet();
     protected Set<ChunkPos> visibleChunks;
     private ChunkProviderClient clientChunkProvider;
     private int ambienceTicks;
@@ -57,7 +56,7 @@ public class WorldClient extends World {
     public WorldClient(NetHandlerPlayClient netHandler, WorldSettings settings, int dimension, EnumDifficulty difficulty, Profiler profilerIn) {
         super(new SaveHandlerMP(), new WorldInfo(settings, "MpServer"), net.minecraftforge.common.DimensionManager.createProviderFor(dimension), profilerIn, true);
         this.ambienceTicks = this.rand.nextInt(12000);
-        this.visibleChunks = Sets.<ChunkPos>newHashSet();
+        this.visibleChunks = Sets.newHashSet();
         this.connection = netHandler;
         this.getWorldInfo().setDifficulty(difficulty);
         this.provider.setWorld(this);
@@ -189,9 +188,7 @@ public class WorldClient extends World {
     public void onEntityAdded(Entity entityIn) {
         super.onEntityAdded(entityIn);
 
-        if (this.entitySpawnQueue.contains(entityIn)) {
-            this.entitySpawnQueue.remove(entityIn);
-        }
+        this.entitySpawnQueue.remove(entityIn);
     }
 
     public void onEntityRemoved(Entity entityIn) {
@@ -225,7 +222,7 @@ public class WorldClient extends World {
 
     @Nullable
     public Entity getEntityByID(int id) {
-        return (Entity) (id == this.mc.player.getEntityId() ? this.mc.player : super.getEntityByID(id));
+        return id == this.mc.player.getEntityId() ? this.mc.player : super.getEntityByID(id);
     }
 
     public Entity removeEntityFromWorld(int entityID) {
@@ -302,15 +299,14 @@ public class WorldClient extends World {
         iblockstate.getBlock().randomDisplayTick(iblockstate, this, pos, random);
 
         if (holdingBarrier && iblockstate.getBlock() == Blocks.BARRIER) {
-            this.spawnParticle(EnumParticleTypes.BARRIER, (double) ((float) i + 0.5F), (double) ((float) j + 0.5F), (double) ((float) k + 0.5F), 0.0D, 0.0D, 0.0D, new int[0]);
+            this.spawnParticle(EnumParticleTypes.BARRIER, (float) i + 0.5F, (float) j + 0.5F, (float) k + 0.5F, 0.0D, 0.0D, 0.0D);
         }
     }
 
     public void removeAllEntities() {
         this.loadedEntityList.removeAll(this.unloadedEntityList);
 
-        for (int i = 0; i < this.unloadedEntityList.size(); ++i) {
-            Entity entity = this.unloadedEntityList.get(i);
+        for (Entity entity : this.unloadedEntityList) {
             int j = entity.chunkCoordX;
             int k = entity.chunkCoordZ;
 
@@ -319,8 +315,8 @@ public class WorldClient extends World {
             }
         }
 
-        for (int i1 = 0; i1 < this.unloadedEntityList.size(); ++i1) {
-            this.onEntityRemoved(this.unloadedEntityList.get(i1));
+        for (Entity entity : this.unloadedEntityList) {
+            this.onEntityRemoved(entity);
         }
 
         this.unloadedEntityList.clear();
@@ -353,26 +349,10 @@ public class WorldClient extends World {
 
     public CrashReportCategory addWorldInfoToCrashReport(CrashReport report) {
         CrashReportCategory crashreportcategory = super.addWorldInfoToCrashReport(report);
-        crashreportcategory.addDetail("Forced entities", new ICrashReportDetail<String>() {
-            public String call() {
-                return WorldClient.this.EntityList.size() + " total; " + WorldClient.this.EntityList;
-            }
-        });
-        crashreportcategory.addDetail("Retry entities", new ICrashReportDetail<String>() {
-            public String call() {
-                return WorldClient.this.entitySpawnQueue.size() + " total; " + WorldClient.this.entitySpawnQueue;
-            }
-        });
-        crashreportcategory.addDetail("Server brand", new ICrashReportDetail<String>() {
-            public String call() throws Exception {
-                return WorldClient.this.mc.player.getServerBrand();
-            }
-        });
-        crashreportcategory.addDetail("Server type", new ICrashReportDetail<String>() {
-            public String call() throws Exception {
-                return WorldClient.this.mc.getIntegratedServer() == null ? "Non-integrated multiplayer server" : "Integrated singleplayer server";
-            }
-        });
+        crashreportcategory.addDetail("Forced entities", () -> WorldClient.this.EntityList.size() + " total; " + WorldClient.this.EntityList);
+        crashreportcategory.addDetail("Retry entities", () -> WorldClient.this.entitySpawnQueue.size() + " total; " + WorldClient.this.entitySpawnQueue);
+        crashreportcategory.addDetail("Server brand", () -> WorldClient.this.mc.player.getServerBrand());
+        crashreportcategory.addDetail("Server type", () -> WorldClient.this.mc.getIntegratedServer() == null ? "Non-integrated multiplayer server" : "Integrated singleplayer server");
         return crashreportcategory;
     }
 

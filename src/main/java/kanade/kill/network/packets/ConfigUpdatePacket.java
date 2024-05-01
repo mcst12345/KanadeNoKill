@@ -69,7 +69,7 @@ public class ConfigUpdatePacket implements IMessage {
 
         @Override
         public IMessage onMessage(ConfigUpdatePacket message, MessageContext ctx) {
-            Launch.LOGGER.info("Update " + message.clazz + " " + message.config + " " + message.value);
+            Launch.LOGGER.info("Update {} {} {}", message.clazz, message.config, message.value);
             try {
                 Class.forName(message.clazz).getField(message.config).set(null, message.value);
             } catch (IllegalAccessException | NoSuchFieldException | ClassNotFoundException e) {

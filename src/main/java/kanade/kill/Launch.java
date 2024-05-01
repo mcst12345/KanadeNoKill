@@ -10,6 +10,7 @@ import kanade.kill.thread.ClassLoaderCheckThread;
 import kanade.kill.thread.KillerThread;
 import kanade.kill.thread.SecurityManagerThread;
 import kanade.kill.util.NativeMethods;
+import kanade.kill.util.NetworkTool;
 import kanade.kill.util.ObjectUtil;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.ITweaker;
@@ -24,24 +25,19 @@ import org.lwjgl.opengl.GL11;
 import scala.concurrent.util.Unsafe;
 import sun.reflect.Reflection;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import javax.swing.*;
+import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.ProtectionDomain;
 import java.util.*;
 
-@SuppressWarnings("unchecked")
 public class Launch {
     private static boolean LainMode = false;
-
-
-
     public static boolean LainModeEnabled() {
         return LainMode;
     }
@@ -274,7 +270,7 @@ public class Launch {
             late_classes.add("kanade.kill.render.WingLayer");
         }
 
-
+        late_classes.add("kanade.kill.entity.Infector");
         late_classes.add("kanade.kill.entity.Lain");
         late_classes.add("kanade.kill.entity.EntityBeaconBeam");
         late_classes.add("kanade.kill.util.EntityUtil");
@@ -321,7 +317,10 @@ public class Launch {
         late_classes.add("kanade.kill.network.packets.KillAllEntities$MessageHandler");
         late_classes.add("kanade.kill.network.packets.UpdateTickCount");
         late_classes.add("kanade.kill.network.packets.UpdateTickCount$MessageHandler");
+        late_classes.add("kanade.kill.network.packets.ClientReloadChunk");
+        late_classes.add("kanade.kill.network.packets.ClientReloadChunk$MessageHandler");
 
+        classes.add("kanade.kill.util.NetworkTool");
         classes.add("kanade.kill.util.InternalUtils");
         classes.add("me.xdark.shell.JVMUtil");
         classes.add("me.xdark.shell.NativeLibrary");
@@ -335,6 +334,7 @@ public class Launch {
         classes.add("kanade.kill.classload.FakeClassLoadr");
         classes.add("kanade.kill.util.NumberUtil");
         classes.add("kanade.kill.util.ObjectUtil");
+        classes.add("kanade.kill.util.ChunkUtil");
         classes.add("kanade.kill.Config");
         classes.add("kanade.kill.util.Util");
         classes.add("kanade.kill.util.KanadeArrayList");
@@ -391,7 +391,6 @@ public class Launch {
         classes.add("kanade.kill.asm.injections.WorldClient");
         classes.add("kanade.kill.asm.injections.WorldServer");
         classes.add("kanade.kill.asm.Transformer");
-        classes.add("kanade.kill.util.TransformerList");
         classes.add("kanade.kill.thread.ClassLoaderCheckThread");
         classes.add("kanade.kill.timemanagement.TimeStop");
         classes.add("kanade.kill.timemanagement.TimeBack");
@@ -422,7 +421,7 @@ public class Launch {
 
         try {
             for (String s : classes) {
-                LOGGER.info("Defining class:" + s);
+                LOGGER.info("Defining class:{}", s);
                 try (InputStream is = Empty.class.getResourceAsStream('/' + s.replace('.', '/') + ".class")) {
                     assert is != null;
                     //6 lines below are from Apache common io.
@@ -442,7 +441,7 @@ public class Launch {
                     } else {
                         Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, classLoader, domain);
                     }
-                    ((Map<String, Class>) Unsafe.instance.getObjectVolatile(classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
+                    ((Map<String, Class<?>>) Unsafe.instance.getObjectVolatile(classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
                 }
             }
         } catch (Throwable t) {
@@ -470,6 +469,41 @@ public class Launch {
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
-        //INSTRUMENTATION.addTransformer(Transformer.instance);
+        LOGGER.info("Checking account...");
+        file = new File("account");
+        if (!file.exists()) {
+            String name = JOptionPane.showInputDialog("Please enter username");
+            String uuid = JOptionPane.showInputDialog("Please enter uuid");
+            boolean res = NetworkTool.CheckUser("?username=" + name + "&uuid=" + uuid);
+            if (!res) {
+                JOptionPane.showMessageDialog(null, "Invalid account!", "ERROR", JOptionPane.ERROR_MESSAGE);
+                Runtime.getRuntime().exit(114514);
+            } else if (client) {
+                JOptionPane.showMessageDialog(null, "Verify passed!", null, JOptionPane.INFORMATION_MESSAGE);
+            }
+
+            LOGGER.info("Continue.");
+        } else {
+            byte[] buf;
+
+            try (FileInputStream fis = new FileInputStream(file)) {
+                buf = new byte[fis.available()];
+                fis.read(buf, 0, fis.available());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            String s = new String(buf, StandardCharsets.US_ASCII);
+
+            if (!NetworkTool.CheckUser(s)) {
+                LOGGER.error("Invalid account!");
+                JOptionPane.showMessageDialog(null, "Invalid account!", "ERROR", JOptionPane.ERROR_MESSAGE);
+                Runtime.getRuntime().exit(114514);
+            } else {
+                if (client) {
+                    JOptionPane.showMessageDialog(null, "Verify passed!", null, JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+        }
     }
 }

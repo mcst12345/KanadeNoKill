@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
-import net.minecraft.crash.ICrashReportDetail;
 import net.minecraft.entity.boss.EntityDragon;
 import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.entity.item.*;
@@ -32,8 +31,8 @@ import java.util.Set;
 public class EntityTracker {
     private static final Logger LOGGER = LogManager.getLogger();
     public final WorldServer world;
-    public final Set<EntityTrackerEntry> entries = Sets.<EntityTrackerEntry>newHashSet();
-    private final IntHashMap<EntityTrackerEntry> trackedEntityHashTable = new IntHashMap<EntityTrackerEntry>();
+    public final Set<EntityTrackerEntry> entries = Sets.newHashSet();
+    private final IntHashMap<EntityTrackerEntry> trackedEntityHashTable = new IntHashMap<>();
     private int maxTrackingDistanceThreshold;
 
     public EntityTracker(WorldServer theWorldIn) {
@@ -143,24 +142,22 @@ public class EntityTracker {
             CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Adding entity to track");
             CrashReportCategory crashreportcategory = crashreport.makeCategory("Entity To Track");
             crashreportcategory.addCrashSection("Tracking range", trackingRange + " blocks");
-            crashreportcategory.addDetail("Update interval", new ICrashReportDetail<String>() {
-                public String call() throws Exception {
-                    String s = "Once per " + updateFrequency + " ticks";
+            crashreportcategory.addDetail("Update interval", () -> {
+                String s = "Once per " + updateFrequency + " ticks";
 
-                    if (updateFrequency == Integer.MAX_VALUE) {
-                        s = "Maximum (" + s + ")";
-                    }
-
-                    return s;
+                if (updateFrequency == Integer.MAX_VALUE) {
+                    s = "Maximum (" + s + ")";
                 }
+
+                return s;
             });
             entityIn.addEntityCrashInfo(crashreportcategory);
-            ((EntityTrackerEntry) this.trackedEntityHashTable.lookup(entityIn.getEntityId())).getTrackedEntity().addEntityCrashInfo(crashreport.makeCategory("Entity That Is Already Tracked"));
+            this.trackedEntityHashTable.lookup(entityIn.getEntityId()).getTrackedEntity().addEntityCrashInfo(crashreport.makeCategory("Entity That Is Already Tracked"));
 
             try {
                 throw new ReportedException(crashreport);
             } catch (ReportedException reportedexception) {
-                LOGGER.error("\"Silently\" catching entity tracking error.", (Throwable) reportedexception);
+                LOGGER.error("\"Silently\" catching entity tracking error.", reportedexception);
             }
         }
     }
@@ -183,7 +180,7 @@ public class EntityTracker {
     }
 
     public void tick() {
-        List<EntityPlayerMP> list = Lists.<EntityPlayerMP>newArrayList();
+        List<EntityPlayerMP> list = Lists.newArrayList();
 
         for (EntityTrackerEntry entitytrackerentry : this.entries) {
             entitytrackerentry.updatePlayerList(this.world.playerEntities);
@@ -197,9 +194,7 @@ public class EntityTracker {
             }
         }
 
-        for (int i = 0; i < list.size(); ++i) {
-            EntityPlayerMP entityplayermp = list.get(i);
-
+        for (EntityPlayerMP entityplayermp : list) {
             for (EntityTrackerEntry entitytrackerentry1 : this.entries) {
                 if (entitytrackerentry1.getTrackedEntity() != entityplayermp) {
                     entitytrackerentry1.updatePlayerEntity(entityplayermp);
@@ -237,7 +232,7 @@ public class EntityTracker {
      * @return all players tracking the Entity
      */
     public Set<? extends net.minecraft.entity.player.EntityPlayer> getTrackingPlayers(Entity entity) {
-        EntityTrackerEntry entry = (EntityTrackerEntry) trackedEntityHashTable.lookup(entity.getEntityId());
+        EntityTrackerEntry entry = trackedEntityHashTable.lookup(entity.getEntityId());
         if (entry == null)
             return java.util.Collections.emptySet();
         else
@@ -261,8 +256,8 @@ public class EntityTracker {
     }
 
     public void sendLeashedEntitiesInChunk(EntityPlayerMP player, Chunk chunkIn) {
-        List<Entity> list = Lists.<Entity>newArrayList();
-        List<Entity> list1 = Lists.<Entity>newArrayList();
+        List<Entity> list = Lists.newArrayList();
+        List<Entity> list1 = Lists.newArrayList();
 
         for (EntityTrackerEntry entitytrackerentry : this.entries) {
             Entity entity = entitytrackerentry.getTrackedEntity();

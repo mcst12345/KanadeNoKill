@@ -2,20 +2,23 @@ package kanade.kill;
 
 import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.entity.EntityBeaconBeam;
+import kanade.kill.entity.Infector;
 import kanade.kill.entity.Lain;
 import kanade.kill.item.SuperModeToggle;
+import kanade.kill.network.NetworkHandler;
+import kanade.kill.network.packets.KillEntity;
 import kanade.kill.reflection.EarlyFields;
+import kanade.kill.reflection.LateFields;
 import kanade.kill.render.RenderBeaconBeam;
 import kanade.kill.render.RenderLain;
-import kanade.kill.util.ShaderHelper;
+import kanade.kill.thread.DisplayGui;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
@@ -34,66 +37,34 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.Display;
 import scala.concurrent.util.Unsafe;
 
-import javax.annotation.Nonnull;
+import javax.swing.*;
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.ProtectionDomain;
-import java.util.Map;
-import java.util.Objects;
+import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 import static kanade.kill.Launch.late_classes;
 
-@Mod(modid = "kanade")
+@Mod(modid = "kanade", acceptedMinecraftVersions = "1.12.2",version = "4.7.2")
 @Mod.EventBusSubscriber
-@SuppressWarnings("unchecked")
 public class ModMain {
     public static final ResourceLocation Kanade = new ResourceLocation("kanade", "textures/misc/kanade.png");
     public static Object listeners;
     public static Object listenerOwners;
-    @SideOnly(Side.CLIENT)
-    public static TextureAtlasSprite[] COSMIC;
     public static final Item EMPTY = new Item();
     public static final Item kill_item;
     public static final Item death_item;
     public static int tooltip = 0;
-    @SideOnly(Side.CLIENT)
-    public static TextureAtlasSprite COSMIC_0;
-    @SideOnly(Side.CLIENT)
-    public static TextureAtlasSprite COSMIC_1;
-    @SideOnly(Side.CLIENT)
-    public static TextureAtlasSprite COSMIC_2;
-    @SideOnly(Side.CLIENT)
-    public static TextureAtlasSprite COSMIC_3;
-    @SideOnly(Side.CLIENT)
-    public static TextureAtlasSprite COSMIC_4;
-    @SideOnly(Side.CLIENT)
-    public static TextureAtlasSprite COSMIC_5;
-    @SideOnly(Side.CLIENT)
-    public static TextureAtlasSprite COSMIC_6;
-    @SideOnly(Side.CLIENT)
-    public static TextureAtlasSprite COSMIC_7;
-    @SideOnly(Side.CLIENT)
-    public static TextureAtlasSprite COSMIC_8;
-    @SideOnly(Side.CLIENT)
-    public static TextureAtlasSprite COSMIC_9;
-    @SideOnly(Side.CLIENT)
-    private static TextureMap map;
-
     static {
         try {
-            kanade.kill.Launch.LOGGER.info("Defining classes.");
-
+            Launch.LOGGER.info("Defining classes.");
             ProtectionDomain domain = Loader.class.getProtectionDomain();
-
-
-
-
-
             for (String s : late_classes) {
-                kanade.kill.Launch.LOGGER.info("Defining class:" + s);
+                Launch.LOGGER.info("Defining class:{}", s);
                 try (InputStream is = Empty.class.getResourceAsStream('/' + s.replace('.', '/') + ".class")) {
                     assert is != null;
                     //6 lines below are from Apache common io.
@@ -110,7 +81,7 @@ public class ModMain {
                     }
                     try {
                         Class<?> Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, Launch.classLoader, domain);
-                        ((Map<String, Class>) Unsafe.instance.getObjectVolatile(Launch.classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
+                        ((Map<String, Class<?>>) Unsafe.instance.getObjectVolatile(Launch.classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
                     } catch (Throwable t) {
                         if (t.getMessage().contains("attempted duplicate class definition") || t.getLocalizedMessage().contains("attempted duplicate class definition")) {
                             continue;
@@ -129,6 +100,42 @@ public class ModMain {
 
             if (Launch.client) {
                 Display.setTitle("Kanade's Kill MC1.12.2");
+
+                JFrame frame = new JFrame("Kanade");
+                frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+                frame.setSize(400, 500);
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.gridx = 0;
+                gbc.insets = new Insets(5, 5, 5, 5);
+                JPanel panel = new JPanel(new GridBagLayout());
+                List<Component> components = new ArrayList<>();
+                JButton kill = new JButton("自杀");
+                kill.addActionListener((e) -> {
+                    EntityPlayerSP player = Minecraft.getMinecraft().PLAYER;
+                    if(player != null){
+                        NetworkHandler.INSTANCE.sendMessageToAll(new KillEntity(player.entityId, false));
+                        if (Config.forceRender || Config.outScreenRender) {
+                            Minecraft.dead = true;
+                        }
+                        Minecraft.getMinecraft().isGamePaused = true;
+                        if (Minecraft.getMinecraft().PLAYER != null) {
+                            Unsafe.instance.putBooleanVolatile(Minecraft.getMinecraft().PLAYER, LateFields.HatedByLife_offset, true);
+                        }
+                        Minecraft.getMinecraft().skipRenderWorld = true;
+                        Minecraft.getMinecraft().pointedEntity = null;
+                        Minecraft.getMinecraft().scheduledTasks.clear();
+                        if (Config.forceRender || Config.outScreenRender) {
+                            DisplayGui.display();
+                        }
+                    }
+                });
+                kill.setSize(50,50);
+                components.add(kill);
+                for(Component c : components){
+                    panel.add(c,gbc);
+                }
+                frame.add(panel);
+                frame.setVisible(true);
             }
         } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             throw new RuntimeException(e);
@@ -147,49 +154,6 @@ public class ModMain {
         }
     }
 
-    @SideOnly(Side.CLIENT)
-    private static TextureAtlasSprite register(String sprite) {
-
-        return map.registerSprite(new ResourceLocation(sprite));
-    }
-
-    @SideOnly(Side.CLIENT)
-    public static void loadShader(TextureMap map) {
-        ModMain.map = map;
-        if (Launch.client) {
-            String SHADER_ = "kanade:shader/";
-            COSMIC_0 = register(SHADER_ + "cosmic_0");
-            COSMIC_1 = register(SHADER_ + "cosmic_1");
-            COSMIC_2 = register(SHADER_ + "cosmic_2");
-            COSMIC_3 = register(SHADER_ + "cosmic_3");
-            COSMIC_4 = register(SHADER_ + "cosmic_4");
-            COSMIC_5 = register(SHADER_ + "cosmic_5");
-            COSMIC_6 = register(SHADER_ + "cosmic_6");
-            COSMIC_7 = register(SHADER_ + "cosmic_7");
-            COSMIC_8 = register(SHADER_ + "cosmic_8");
-            COSMIC_9 = register(SHADER_ + "cosmic_9");
-            COSMIC = new TextureAtlasSprite[]{
-                    COSMIC_0,
-                    COSMIC_1,
-                    COSMIC_2,
-                    COSMIC_3,
-                    COSMIC_4,
-                    COSMIC_5,
-                    COSMIC_6,
-                    COSMIC_7,
-                    COSMIC_8,
-                    COSMIC_9
-            };
-        }
-    }
-
-    public static final CreativeTabs KanadeTab = new CreativeTabs("Kanade") {
-        @Override
-        @Nonnull
-        public ItemStack createIcon() {
-            return new ItemStack(kill_item);
-        }
-    };
     public static final Item SuperMode = new SuperModeToggle();
 
     @SubscribeEvent
@@ -209,6 +173,13 @@ public class ModMain {
                         id(new ResourceLocation("kanade", "beacon_beam"), 1).
                         name("BeaconBeam").
                         build());
+        event.getRegistry().register(
+                EntityEntryBuilder.create().
+                        entity(Infector.class).
+                        tracker(100, 100, true).
+                        id(new ResourceLocation("kanade", "infector"), 2).
+                        name("Infector").
+                        build());
     }
 
     @Mod.EventHandler
@@ -219,8 +190,6 @@ public class ModMain {
             Launch.LOGGER.info("Registering renderers.");
             RenderingRegistry.registerEntityRenderingHandler(Lain.class, manager -> new RenderLain(manager, new ModelPlayer(1, true), 0.0f));
             RenderingRegistry.registerEntityRenderingHandler(EntityBeaconBeam.class, RenderBeaconBeam::new);
-            Launch.LOGGER.info("Init shaders.");
-            ShaderHelper.initShaders();
         }
     }
 
@@ -243,9 +212,9 @@ public class ModMain {
 
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event) {
-        kill_item.setCreativeTab(KanadeTab);
-        death_item.setCreativeTab(KanadeTab);
-        SuperMode.setCreativeTab(KanadeTab);
+        kill_item.setCreativeTab(CreativeTabs.COMBAT);
+        death_item.setCreativeTab(CreativeTabs.COMBAT);
+        SuperMode.setCreativeTab(CreativeTabs.COMBAT);
         if (event.getSide() == Side.CLIENT) {
             RenderGlobal.SUN_TEXTURES = Kanade;
             RenderGlobal.CLOUDS_TEXTURES = Kanade;

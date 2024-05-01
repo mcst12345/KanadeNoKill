@@ -14,7 +14,7 @@ public class Config {
     public static boolean allPlayerProtect = false;
     public static boolean disableParticle = true;
     public static boolean renderProtection = false;
-    public static boolean fieldReset = true;
+    public static boolean fieldReset = false;
     public static boolean AllowAttach = Boolean.parseBoolean(System.getProperty("AllowAttach"));
     public static boolean redefineAttack = false;
     public static boolean outScreenRender = false;

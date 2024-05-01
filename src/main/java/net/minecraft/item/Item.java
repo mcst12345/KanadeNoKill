@@ -70,7 +70,7 @@ public class Item extends net.minecraftforge.registries.IForgeRegistryEntry.Impl
         }
     };
     protected static Random itemRand = new Random();
-    private final IRegistry<ResourceLocation, IItemPropertyGetter> properties = new RegistrySimple<ResourceLocation, IItemPropertyGetter>();
+    private final IRegistry<ResourceLocation, IItemPropertyGetter> properties = new RegistrySimple<>();
     protected int maxStackSize = 64;
     protected boolean bFull3D;
     protected boolean hasSubtypes;
@@ -79,7 +79,7 @@ public class Item extends net.minecraftforge.registries.IForgeRegistryEntry.Impl
     private int maxDamage;
     private Item containerItem;
     private String translationKey;
-    private java.util.Map<String, Integer> toolClasses = new java.util.HashMap<String, Integer>();
+    private java.util.Map<String, Integer> toolClasses = new java.util.HashMap<>();
     @SideOnly(Side.CLIENT)
     @Nullable
     private net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer teisr;
@@ -109,8 +109,7 @@ public class Item extends net.minecraftforge.registries.IForgeRegistryEntry.Impl
         if (item == null) {
             try {
                 return getItemById(Integer.parseInt(id));
-            } catch (NumberFormatException var3) {
-                ;
+            } catch (NumberFormatException ignored) {
             }
         }
 
@@ -119,64 +118,28 @@ public class Item extends net.minecraftforge.registries.IForgeRegistryEntry.Impl
 
     public static void registerItems() {
         registerItemBlock(Blocks.AIR, new ItemAir(Blocks.AIR));
-        registerItemBlock(Blocks.STONE, (new ItemMultiTexture(Blocks.STONE, Blocks.STONE, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockStone.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey();
-            }
-        })).setTranslationKey("stone"));
+        registerItemBlock(Blocks.STONE, (new ItemMultiTexture(Blocks.STONE, Blocks.STONE, p_apply_1_ -> BlockStone.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey())).setTranslationKey("stone"));
         registerItemBlock(Blocks.GRASS, new ItemColored(Blocks.GRASS, false));
-        registerItemBlock(Blocks.DIRT, (new ItemMultiTexture(Blocks.DIRT, Blocks.DIRT, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockDirt.DirtType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey();
-            }
-        })).setTranslationKey("dirt"));
+        registerItemBlock(Blocks.DIRT, (new ItemMultiTexture(Blocks.DIRT, Blocks.DIRT, p_apply_1_ -> BlockDirt.DirtType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey())).setTranslationKey("dirt"));
         registerItemBlock(Blocks.COBBLESTONE);
-        registerItemBlock(Blocks.PLANKS, (new ItemMultiTexture(Blocks.PLANKS, Blocks.PLANKS, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockPlanks.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey();
-            }
-        })).setTranslationKey("wood"));
-        registerItemBlock(Blocks.SAPLING, (new ItemMultiTexture(Blocks.SAPLING, Blocks.SAPLING, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockPlanks.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey();
-            }
-        })).setTranslationKey("sapling"));
+        registerItemBlock(Blocks.PLANKS, (new ItemMultiTexture(Blocks.PLANKS, Blocks.PLANKS, p_apply_1_ -> BlockPlanks.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey())).setTranslationKey("wood"));
+        registerItemBlock(Blocks.SAPLING, (new ItemMultiTexture(Blocks.SAPLING, Blocks.SAPLING, p_apply_1_ -> BlockPlanks.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey())).setTranslationKey("sapling"));
         registerItemBlock(Blocks.BEDROCK);
-        registerItemBlock(Blocks.SAND, (new ItemMultiTexture(Blocks.SAND, Blocks.SAND, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockSand.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey();
-            }
-        })).setTranslationKey("sand"));
+        registerItemBlock(Blocks.SAND, (new ItemMultiTexture(Blocks.SAND, Blocks.SAND, p_apply_1_ -> BlockSand.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey())).setTranslationKey("sand"));
         registerItemBlock(Blocks.GRAVEL);
         registerItemBlock(Blocks.GOLD_ORE);
         registerItemBlock(Blocks.IRON_ORE);
         registerItemBlock(Blocks.COAL_ORE);
-        registerItemBlock(Blocks.LOG, (new ItemMultiTexture(Blocks.LOG, Blocks.LOG, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockPlanks.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey();
-            }
-        })).setTranslationKey("log"));
-        registerItemBlock(Blocks.LOG2, (new ItemMultiTexture(Blocks.LOG2, Blocks.LOG2, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockPlanks.EnumType.byMetadata(p_apply_1_.getMetadata() + 4).getTranslationKey();
-            }
-        })).setTranslationKey("log"));
+        registerItemBlock(Blocks.LOG, (new ItemMultiTexture(Blocks.LOG, Blocks.LOG, p_apply_1_ -> BlockPlanks.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey())).setTranslationKey("log"));
+        registerItemBlock(Blocks.LOG2, (new ItemMultiTexture(Blocks.LOG2, Blocks.LOG2, p_apply_1_ -> BlockPlanks.EnumType.byMetadata(p_apply_1_.getMetadata() + 4).getTranslationKey())).setTranslationKey("log"));
         registerItemBlock(Blocks.LEAVES, (new ItemLeaves(Blocks.LEAVES)).setTranslationKey("leaves"));
         registerItemBlock(Blocks.LEAVES2, (new ItemLeaves(Blocks.LEAVES2)).setTranslationKey("leaves"));
-        registerItemBlock(Blocks.SPONGE, (new ItemMultiTexture(Blocks.SPONGE, Blocks.SPONGE, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return (p_apply_1_.getMetadata() & 1) == 1 ? "wet" : "dry";
-            }
-        })).setTranslationKey("sponge"));
+        registerItemBlock(Blocks.SPONGE, (new ItemMultiTexture(Blocks.SPONGE, Blocks.SPONGE, p_apply_1_ -> (p_apply_1_.getMetadata() & 1) == 1 ? "wet" : "dry")).setTranslationKey("sponge"));
         registerItemBlock(Blocks.GLASS);
         registerItemBlock(Blocks.LAPIS_ORE);
         registerItemBlock(Blocks.LAPIS_BLOCK);
         registerItemBlock(Blocks.DISPENSER);
-        registerItemBlock(Blocks.SANDSTONE, (new ItemMultiTexture(Blocks.SANDSTONE, Blocks.SANDSTONE, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockSandStone.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey();
-            }
-        })).setTranslationKey("sandStone"));
+        registerItemBlock(Blocks.SANDSTONE, (new ItemMultiTexture(Blocks.SANDSTONE, Blocks.SANDSTONE, p_apply_1_ -> BlockSandStone.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey())).setTranslationKey("sandStone"));
         registerItemBlock(Blocks.NOTEBLOCK);
         registerItemBlock(Blocks.GOLDEN_RAIL);
         registerItemBlock(Blocks.DETECTOR_RAIL);
@@ -186,16 +149,8 @@ public class Item extends net.minecraftforge.registries.IForgeRegistryEntry.Impl
         registerItemBlock(Blocks.DEADBUSH);
         registerItemBlock(Blocks.PISTON, new ItemPiston(Blocks.PISTON));
         registerItemBlock(Blocks.WOOL, (new ItemCloth(Blocks.WOOL)).setTranslationKey("cloth"));
-        registerItemBlock(Blocks.YELLOW_FLOWER, (new ItemMultiTexture(Blocks.YELLOW_FLOWER, Blocks.YELLOW_FLOWER, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockFlower.EnumFlowerType.getType(BlockFlower.EnumFlowerColor.YELLOW, p_apply_1_.getMetadata()).getTranslationKey();
-            }
-        })).setTranslationKey("flower"));
-        registerItemBlock(Blocks.RED_FLOWER, (new ItemMultiTexture(Blocks.RED_FLOWER, Blocks.RED_FLOWER, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockFlower.EnumFlowerType.getType(BlockFlower.EnumFlowerColor.RED, p_apply_1_.getMetadata()).getTranslationKey();
-            }
-        })).setTranslationKey("rose"));
+        registerItemBlock(Blocks.YELLOW_FLOWER, (new ItemMultiTexture(Blocks.YELLOW_FLOWER, Blocks.YELLOW_FLOWER, p_apply_1_ -> BlockFlower.EnumFlowerType.getType(BlockFlower.EnumFlowerColor.YELLOW, p_apply_1_.getMetadata()).getTranslationKey())).setTranslationKey("flower"));
+        registerItemBlock(Blocks.RED_FLOWER, (new ItemMultiTexture(Blocks.RED_FLOWER, Blocks.RED_FLOWER, p_apply_1_ -> BlockFlower.EnumFlowerType.getType(BlockFlower.EnumFlowerColor.RED, p_apply_1_.getMetadata()).getTranslationKey())).setTranslationKey("rose"));
         registerItemBlock(Blocks.BROWN_MUSHROOM);
         registerItemBlock(Blocks.RED_MUSHROOM);
         registerItemBlock(Blocks.GOLD_BLOCK);
@@ -249,16 +204,8 @@ public class Item extends net.minecraftforge.registries.IForgeRegistryEntry.Impl
         registerItemBlock(Blocks.GLOWSTONE);
         registerItemBlock(Blocks.LIT_PUMPKIN);
         registerItemBlock(Blocks.TRAPDOOR);
-        registerItemBlock(Blocks.MONSTER_EGG, (new ItemMultiTexture(Blocks.MONSTER_EGG, Blocks.MONSTER_EGG, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockSilverfish.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey();
-            }
-        })).setTranslationKey("monsterStoneEgg"));
-        registerItemBlock(Blocks.STONEBRICK, (new ItemMultiTexture(Blocks.STONEBRICK, Blocks.STONEBRICK, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockStoneBrick.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey();
-            }
-        })).setTranslationKey("stonebricksmooth"));
+        registerItemBlock(Blocks.MONSTER_EGG, (new ItemMultiTexture(Blocks.MONSTER_EGG, Blocks.MONSTER_EGG, p_apply_1_ -> BlockSilverfish.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey())).setTranslationKey("monsterStoneEgg"));
+        registerItemBlock(Blocks.STONEBRICK, (new ItemMultiTexture(Blocks.STONEBRICK, Blocks.STONEBRICK, p_apply_1_ -> BlockStoneBrick.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey())).setTranslationKey("stonebricksmooth"));
         registerItemBlock(Blocks.BROWN_MUSHROOM_BLOCK);
         registerItemBlock(Blocks.RED_MUSHROOM_BLOCK);
         registerItemBlock(Blocks.IRON_BARS);
@@ -295,11 +242,7 @@ public class Item extends net.minecraftforge.registries.IForgeRegistryEntry.Impl
         registerItemBlock(Blocks.JUNGLE_STAIRS);
         registerItemBlock(Blocks.COMMAND_BLOCK);
         registerItemBlock(Blocks.BEACON);
-        registerItemBlock(Blocks.COBBLESTONE_WALL, (new ItemMultiTexture(Blocks.COBBLESTONE_WALL, Blocks.COBBLESTONE_WALL, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockWall.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey();
-            }
-        })).setTranslationKey("cobbleWall"));
+        registerItemBlock(Blocks.COBBLESTONE_WALL, (new ItemMultiTexture(Blocks.COBBLESTONE_WALL, Blocks.COBBLESTONE_WALL, p_apply_1_ -> BlockWall.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey())).setTranslationKey("cobbleWall"));
         registerItemBlock(Blocks.WOODEN_BUTTON);
         registerItemBlock(Blocks.ANVIL, (new ItemAnvilBlock(Blocks.ANVIL)).setTranslationKey("anvil"));
         registerItemBlock(Blocks.TRAPPED_CHEST);
@@ -325,24 +268,12 @@ public class Item extends net.minecraftforge.registries.IForgeRegistryEntry.Impl
         registerItemBlock(Blocks.DARK_OAK_STAIRS);
         registerItemBlock(Blocks.SLIME_BLOCK);
         registerItemBlock(Blocks.GRASS_PATH);
-        registerItemBlock(Blocks.DOUBLE_PLANT, (new ItemMultiTexture(Blocks.DOUBLE_PLANT, Blocks.DOUBLE_PLANT, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockDoublePlant.EnumPlantType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey();
-            }
-        })).setTranslationKey("doublePlant"));
+        registerItemBlock(Blocks.DOUBLE_PLANT, (new ItemMultiTexture(Blocks.DOUBLE_PLANT, Blocks.DOUBLE_PLANT, p_apply_1_ -> BlockDoublePlant.EnumPlantType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey())).setTranslationKey("doublePlant"));
         registerItemBlock(Blocks.STAINED_GLASS, (new ItemCloth(Blocks.STAINED_GLASS)).setTranslationKey("stainedGlass"));
         registerItemBlock(Blocks.STAINED_GLASS_PANE, (new ItemCloth(Blocks.STAINED_GLASS_PANE)).setTranslationKey("stainedGlassPane"));
-        registerItemBlock(Blocks.PRISMARINE, (new ItemMultiTexture(Blocks.PRISMARINE, Blocks.PRISMARINE, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockPrismarine.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey();
-            }
-        })).setTranslationKey("prismarine"));
+        registerItemBlock(Blocks.PRISMARINE, (new ItemMultiTexture(Blocks.PRISMARINE, Blocks.PRISMARINE, p_apply_1_ -> BlockPrismarine.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey())).setTranslationKey("prismarine"));
         registerItemBlock(Blocks.SEA_LANTERN);
-        registerItemBlock(Blocks.RED_SANDSTONE, (new ItemMultiTexture(Blocks.RED_SANDSTONE, Blocks.RED_SANDSTONE, new ItemMultiTexture.Mapper() {
-            public String apply(ItemStack p_apply_1_) {
-                return BlockRedSandstone.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey();
-            }
-        })).setTranslationKey("redSandStone"));
+        registerItemBlock(Blocks.RED_SANDSTONE, (new ItemMultiTexture(Blocks.RED_SANDSTONE, Blocks.RED_SANDSTONE, p_apply_1_ -> BlockRedSandstone.EnumType.byMetadata(p_apply_1_.getMetadata()).getTranslationKey())).setTranslationKey("redSandStone"));
         registerItemBlock(Blocks.RED_SANDSTONE_STAIRS);
         registerItemBlock(Blocks.STONE_SLAB2, (new ItemSlab(Blocks.STONE_SLAB2, Blocks.STONE_SLAB2, Blocks.DOUBLE_STONE_SLAB2)).setTranslationKey("stoneSlab2"));
         registerItemBlock(Blocks.REPEATING_COMMAND_BLOCK);
@@ -556,7 +487,7 @@ public class Item extends net.minecraftforge.registries.IForgeRegistryEntry.Impl
         registerItem(419, "diamond_horse_armor", (new Item()).setTranslationKey("horsearmordiamond").setMaxStackSize(1).setCreativeTab(CreativeTabs.MISC));
         registerItem(420, "lead", (new ItemLead()).setTranslationKey("leash"));
         registerItem(421, "name_tag", (new ItemNameTag()).setTranslationKey("nameTag"));
-        registerItem(422, "command_block_minecart", (new ItemMinecart(EntityMinecart.Type.COMMAND_BLOCK)).setTranslationKey("minecartCommandBlock").setCreativeTab((CreativeTabs) null));
+        registerItem(422, "command_block_minecart", (new ItemMinecart(EntityMinecart.Type.COMMAND_BLOCK)).setTranslationKey("minecartCommandBlock").setCreativeTab(null));
         registerItem(423, "mutton", (new ItemFood(2, 0.3F, true)).setTranslationKey("muttonRaw"));
         registerItem(424, "cooked_mutton", (new ItemFood(6, 0.8F, true)).setTranslationKey("muttonCooked"));
         registerItem(425, "banner", (new ItemBanner()).setTranslationKey("banner"));
@@ -864,7 +795,7 @@ public class Item extends net.minecraftforge.registries.IForgeRegistryEntry.Impl
 
     @Deprecated // Use ItemStack sensitive version below.
     public Multimap<String, AttributeModifier> getItemAttributeModifiers(EntityEquipmentSlot equipmentSlot) {
-        return HashMultimap.<String, AttributeModifier>create();
+        return HashMultimap.create();
     }
 
     /**
@@ -1503,11 +1434,7 @@ public class Item extends net.minecraftforge.registries.IForgeRegistryEntry.Impl
         com.google.common.collect.ImmutableMap.Builder<String, net.minecraftforge.common.animation.ITimeValue> builder = com.google.common.collect.ImmutableMap.builder();
         for (ResourceLocation location : properties.getKeys()) {
             final IItemPropertyGetter parameter = properties.getObject(location);
-            builder.put(location.toString(), new net.minecraftforge.common.animation.ITimeValue() {
-                public float apply(float input) {
-                    return parameter.apply(stack, world, entity);
-                }
-            });
+            builder.put(location.toString(), input -> parameter.apply(stack, world, entity));
         }
         return builder.build();
     }

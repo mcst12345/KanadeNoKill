@@ -2,16 +2,14 @@ package kanade.kill.item;
 
 import kanade.kill.Config;
 import kanade.kill.Launch;
-import kanade.kill.entity.Lain;
+import kanade.kill.entity.EntityProtected;
 import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.UpdatePlayerProtectedState;
-import kanade.kill.util.EntityUtil;
-import kanade.kill.util.KanadeFontRender;
-import kanade.kill.util.NativeMethods;
-import kanade.kill.util.Util;
+import kanade.kill.util.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumAction;
@@ -49,6 +47,41 @@ public class KillItem extends ItemSword {
         super(Objects.requireNonNull(TOOL_MATERIAL));
         this.setRegistryName("kanade:kill");
         this.setMaxStackSize(1);
+        this.setMaxDamage(-1);
+    }
+
+    public static boolean inList(Object obj) {
+        if (obj instanceof Entity) {
+            if (obj instanceof EntityProtected) {
+                return true;
+            }
+            if (Config.allPlayerProtect) {
+                if (obj instanceof EntityPlayer) {
+                    return true;
+                }
+            }
+            UUID uuid = ((Entity) obj).getUniqueID();
+            return list.contains(uuid) || (uuid != null && NativeMethods.ProtectContain(uuid.hashCode())) || (obj instanceof EntityItem && Util.NoRemove(((EntityItem) obj).getItem()));
+        } else if (Launch.client) {
+            if (obj instanceof Minecraft) {
+                EntityPlayer player = ((Minecraft) obj).PLAYER;
+                if (player != null) {
+                    return list.contains(player.getUniqueID());
+                }
+            }
+        } else if (obj instanceof UUID) {
+            UUID uuid = (UUID) obj;
+            return list.contains(uuid) || NativeMethods.ProtectContain(uuid.hashCode());
+        }
+        return false;
+    }
+
+    @Override
+    public int getMaxItemUseDuration(@Nonnull ItemStack stack) {
+        if (mode == 2) {
+            return 72000;
+        }
+        return super.getMaxItemUseDuration(stack);
     }
 
     @Override
@@ -132,30 +165,13 @@ public class KillItem extends ItemSword {
         return true;
     }
 
-    public static boolean inList(Object obj) {
-        if (obj instanceof Entity) {
-            if (obj instanceof Lain) {
-                return true;
-            }
-            if (Config.allPlayerProtect) {
-                if (obj instanceof EntityPlayer) {
-                    return true;
-                }
-            }
-            UUID uuid = ((Entity) obj).getUniqueID();
-            return list.contains(uuid) || (uuid != null && NativeMethods.ProtectContain(uuid.hashCode())) || (obj instanceof EntityItem && Util.NoRemove(((EntityItem) obj).getItem()));
-        } else if (Launch.client) {
-            if (obj instanceof Minecraft) {
-                EntityPlayer player = ((Minecraft) obj).PLAYER;
-                if (player != null) {
-                    return list.contains(player.getUniqueID());
-                }
-            }
-        } else if (obj instanceof UUID) {
-            UUID uuid = (UUID) obj;
-            return list.contains(uuid) || NativeMethods.ProtectContain(uuid.hashCode());
+    @Override
+    @Nonnull
+    public ItemStack onItemUseFinish(@Nonnull ItemStack stack, @Nonnull World worldIn, @Nonnull EntityLivingBase entityLiving) {
+        if (mode == 2) {
+            ChunkUtil.reloadChunk(worldIn, worldIn.getChunk(entityLiving.chunkCoordX, entityLiving.chunkCoordZ));
         }
-        return false;
+        return super.onItemUseFinish(stack, worldIn, entityLiving);
     }
 
     @Override
@@ -164,9 +180,6 @@ public class KillItem extends ItemSword {
         if(entityIn instanceof EntityPlayer){
             entityIn.WORLD.protects.add(entityIn);
             list.add(entityIn.getUniqueID());
-        }
-        if (shiftRightClickCount > 0) {
-            shiftRightClickCount--;
         }
     }
 

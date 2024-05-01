@@ -159,7 +159,7 @@ public class ListenerList {
          * @return ArrayList containing listeners
          */
         public ArrayList<IEventListener> getListeners(EventPriority priority) {
-            ArrayList<IEventListener> ret = new ArrayList<IEventListener>(priorities.get(priority.ordinal()));
+            ArrayList<IEventListener> ret = new ArrayList<>(priorities.get(priority.ordinal()));
             if (parent != null) {
                 ret.addAll(parent.getListeners(priority));
             }

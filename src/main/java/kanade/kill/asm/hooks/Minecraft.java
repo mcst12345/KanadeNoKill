@@ -35,7 +35,7 @@ import static net.minecraft.client.Minecraft.*;
 
 public class Minecraft {
     public static int tickCount = 0;
-    public static final ResourceLocation BlackAndWhite = new ResourceLocation("shaders/post/desaturate.json");
+    public static final ResourceLocation BlackAndWhite = new ResourceLocation("shaders/post/sobel.json");
     static final boolean optifineInstalled;
 
     static {
@@ -91,12 +91,19 @@ public class Minecraft {
     }
     public static final Queue<Runnable> tasks = new LinkedBlockingQueue<>();
     private static long lastTime;
+    private static long time = 0;
 
     public static void runTickKeyboard(net.minecraft.client.Minecraft minecraft) {
         if (Keys.SWITCH_TIME_POINT.isKeyDown()) {
             NetworkHandler.INSTANCE.sendMessageToServer(new SwitchTimePoint(minecraft.PLAYER.getUniqueID()));
         } else if (Keys.SAVE.isKeyDown()) {
             NetworkHandler.INSTANCE.sendMessageToServer(new SaveTimePoint(minecraft.PLAYER.getUniqueID()));
+        } else if (Keys.TIMESTOP.isKeyDown()) {
+            if (System.nanoTime() - time < 5000) {
+                return;
+            }
+            time = System.nanoTime();
+            NetworkHandler.INSTANCE.sendMessageToServer(new ServerTimeStop(!TimeStop.isTimeStop()));
         }
     }
 
@@ -113,8 +120,6 @@ public class Minecraft {
                         NetworkHandler.INSTANCE.sendMessageToServer(new Annihilation(mc.PLAYER.dimension, (int) mc.PLAYER.X, (int) mc.PLAYER.Y, (int) mc.PLAYER.Z));
                     } else if (!Core.demo) {
                         if (mode == 1) {
-                            NetworkHandler.INSTANCE.sendMessageToServer(new ServerTimeStop(!TimeStop.isTimeStop()));
-                        } else if (mode == 2) {
                             NetworkHandler.INSTANCE.sendMessageToServer(new TimeBack());
                         }
                     } else {
@@ -213,7 +218,7 @@ public class Minecraft {
         long l = System.nanoTime();
         mc.Profiler.startSection("tick");
 
-        int ticks = !stop ? (tickCount > 0 ? tickCount : Math.min(mc.timer.elapsedTicks, 10)) : 5;
+        int ticks = !stop ? (tickCount > 0 ? tickCount : Math.min(mc.timer.elapsedTicks, 10)) : 1;
 
         for (int j = 0; j < ticks; ++j) {
             if (kanade.kill.util.Util.killing) {

@@ -1,14 +1,50 @@
 package kanade.kill;
 
-import com.wzz.death.ItemDeath;
 import org.objectweb.asm.Opcodes;
 import sun.misc.Unsafe;
+
+import javax.crypto.Cipher;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
 
 public class Test implements Opcodes {
     static Unsafe unsafe;
 
-    public static void main(String[] args) throws Throwable {
-        System.out.println(ItemDeath.ALLATORIxDEMO("V\u0003{\u0015^\u0014"));
+    ///root/.gradle/caches/modules-2/files-2.1/software.amazon.eventstream/eventstream/1.0.1/6ff8649dffc5190366ada897ba8525a836297784/eventstream-1.0.1.jar
+    public static byte[] encrypt(byte[] data, Key key) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        return cipher.doFinal(data);
+    }
+
+    public static byte[] decrypt(byte[] encryptedData, Key key) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.DECRYPT_MODE, key);
+        return cipher.doFinal(encryptedData);
+    }
+
+    public static void main(String[] args) throws IOException {
+        String s = "wnwiowe";
+        s = Character.toUpperCase(s.charAt(0)) + s.substring(1);
+        System.out.println(s);
+    }
+
+    /*请求url获取返回的内容*/
+    public static String getReturn(HttpURLConnection connection) throws IOException {
+        StringBuilder buffer = new StringBuilder();
+        //将返回的输入流转换成字符串
+        try (InputStream inputStream = connection.getInputStream();
+             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+             BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
+            String str;
+            while ((str = bufferedReader.readLine()) != null) {
+                buffer.append(str);
+            }
+            return buffer.toString();
+        }
     }
 
     private static class A {
@@ -22,5 +58,36 @@ public class Test implements Opcodes {
         public void test() {
             System.out.println("456");
         }
+    }
+
+    //处理http请求  requestUrl为请求地址  requestMethod请求方式，值为"GET"或"POST"
+    public static String httpRequest(String requestUrl, String requestMethod, String outputStr) {
+        StringBuilder buffer = null;
+        try {
+            URL url = new URL(requestUrl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+            conn.setRequestMethod(requestMethod);
+            conn.connect();
+            //往服务器端写内容 也就是发起http请求需要带的参数
+            if (null != outputStr) {
+                OutputStream os = conn.getOutputStream();
+                os.write(outputStr.getBytes(StandardCharsets.UTF_8));
+                os.close();
+            }
+
+            //读取服务器端返回的内容
+            InputStream is = conn.getInputStream();
+            InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8);
+            BufferedReader br = new BufferedReader(isr);
+            buffer = new StringBuilder();
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                buffer.append(line);
+            }
+        } catch (Exception ignored) {
+        }
+        return buffer.toString();
     }
 }

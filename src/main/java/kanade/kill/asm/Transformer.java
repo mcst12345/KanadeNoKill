@@ -53,7 +53,7 @@ public class Transformer implements Opcodes {
 
     private static boolean RedirectAndExamine(ClassNode cn, boolean goodClass, String transformedName) {
         if (Debug) {
-            Launch.LOGGER.info("Examine class:" + cn.name + "  good:" + goodClass);
+            Launch.LOGGER.info("Examine class:{}  good:{}", cn.name, goodClass);
         }
         boolean changed = false;
         for (MethodNode mn : cn.methods) {
@@ -79,7 +79,7 @@ public class Transformer implements Opcodes {
                 mn.maxStack += 3;
                 changed = true;
                 if (Debug) {
-                    Launch.LOGGER.info("Inject into constructor of " + cn.name);
+                    Launch.LOGGER.info("Inject into constructor of {}", cn.name);
                 }
             }
             while (iterator.hasNext()) {
@@ -179,30 +179,21 @@ public class Transformer implements Opcodes {
                             break;
                         }
                         case "field_151002_e": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "ITEM";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "ITEM";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_175618_aM": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "BlockRenderDispatcher";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "BlockRenderDispatcher";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_71466_p": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "FontRenderer";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "FontRenderer";
                                 changed = true;
                             }
@@ -223,70 +214,49 @@ public class Transformer implements Opcodes {
                             break;
                         }
                         case "field_71464_q": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "StandardGalacticFontRenderer";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "StandardGalacticFontRenderer";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_175620_Y": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "ItemRenderer";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "ItemRenderer";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_71442_b": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "PlayerController";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "PlayerController";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_71446_o": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "RenderEngine";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "RenderEngine";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_71438_f": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "RenderGlobal";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "RenderGlobal";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_175621_X": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "itemRenderer";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "itemRenderer";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_70170_p": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "WORLD";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "WORLD";
                                 changed = true;
                             }
@@ -300,60 +270,42 @@ public class Transformer implements Opcodes {
                             break;
                         }
                         case "field_70128_L": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "HatedByLife";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "HatedByLife";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_70725_aQ": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "Death_Time";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "Death_Time";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_70718_bc": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "RecentlyHIT";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "RecentlyHIT";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_70165_t": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "X";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "X";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_70163_u": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "Y";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "Y";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_70161_v": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "Z";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "Z";
                                 changed = true;
                             }
@@ -361,10 +313,7 @@ public class Transformer implements Opcodes {
                         }
                         case "EVENT_BUS": {
                             if (fin.owner.equals("net/minecraftforge/common/MinecraftForge")) {
-                                if (fin.getOpcode() == GETSTATIC) {
-                                    fin.name = "Event_bus";
-                                    changed = true;
-                                } else if (goodClass) {
+                                if (fin.getOpcode() == GETSTATIC || goodClass) {
                                     fin.name = "Event_bus";
                                     changed = true;
                                 }
@@ -373,10 +322,7 @@ public class Transformer implements Opcodes {
                         }
                         case "eventBus": {
                             if (fin.owner.equals("net/minecraftforge/fml/common/FMLCommonHandler")) {
-                                if (fin.getOpcode() == GETFIELD) {
-                                    fin.name = "EventBus";
-                                    changed = true;
-                                } else if (goodClass) {
+                                if (fin.getOpcode() == GETFIELD || goodClass) {
                                     fin.name = "EventBus";
                                     changed = true;
                                 }
@@ -424,40 +370,28 @@ public class Transformer implements Opcodes {
                             break;
                         }
                         case "field_71439_g": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "PLAYER";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "PLAYER";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_70181_x": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "mY";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "mY";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_70159_w": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "mX";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "mX";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_70179_y": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "mZ";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "mZ";
                                 changed = true;
                             }
@@ -466,30 +400,21 @@ public class Transformer implements Opcodes {
                         case "field_71304_b":
                         case "field_72984_F":
                         case "field_71424_I": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "Profiler";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "Profiler";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_71460_t": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "EntityRenderer";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "EntityRenderer";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_73007_j": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "weathers";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "weathers";
                                 changed = true;
                             }
@@ -504,60 +429,42 @@ public class Transformer implements Opcodes {
                         }
                         case "field_175616_W":
                         case "field_175010_j": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "renderManager";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "renderManager";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_71456_v": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "IngameGUI";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "IngameGUI";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_71462_r": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "CurrentScreen";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "CurrentScreen";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_71417_B": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "mouseHelper";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "mouseHelper";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_71441_e": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "WORLD";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "WORLD";
                                 changed = true;
                             }
                             break;
                         }
                         case "field_71071_by": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "Inventory";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "Inventory";
                                 changed = true;
                             }
@@ -571,10 +478,7 @@ public class Transformer implements Opcodes {
                             break;
                         }
                         case "field_72997_g": {
-                            if (fin.getOpcode() == GETFIELD) {
-                                fin.name = "unloads";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETFIELD || goodClass) {
                                 fin.name = "unloads";
                                 changed = true;
                             }
@@ -590,10 +494,7 @@ public class Transformer implements Opcodes {
                         }
                         case "INSTANCE": {
                             if (fin.owner.equals("net/minecraftforge/fml/client/FMLClientHandler")) {
-                                if (fin.getOpcode() == GETSTATIC) {
-                                    fin.name = "instance";
-                                    changed = true;
-                                } else if (goodClass) {
+                                if (fin.getOpcode() == GETSTATIC || goodClass) {
                                     fin.name = "instance";
                                     changed = true;
                                 }
@@ -601,10 +502,7 @@ public class Transformer implements Opcodes {
                             }
                         }
                         if (fin.owner.equals("net/minecraft/launchwrapper/Launch")) {
-                            if (fin.getOpcode() == GETSTATIC) {
-                                fin.owner = "kanade/kill/Launch";
-                                changed = true;
-                            } else if (goodClass) {
+                            if (fin.getOpcode() == GETSTATIC || goodClass) {
                                 fin.owner = "kanade/kill/Launch";
                                 changed = true;
                             }
@@ -617,6 +515,14 @@ public class Transformer implements Opcodes {
                         changed = true;
                     }
                     switch (min.name) {
+                        case "nanoTime": {
+                            if (min.desc.endsWith("J") && min.getOpcode() == INVOKESTATIC) {
+                                min.owner = "kanade/kill/util/Util";
+                                min.desc = "()J";
+                            }
+                            changed = true;
+                            break;
+                        }
                         case "func_71381_h": {
                             if (goodClass) {
                                 min.name = "SetIngameFocus";
@@ -693,7 +599,7 @@ public class Transformer implements Opcodes {
                     for (LocalVariableNode lvn : mn.localVariables) {
                         if (lvn.desc.startsWith("Lnet/minecraftforge/") && lvn.desc.contains("/event/")) {
                             if(Debug){
-                                Launch.LOGGER.info("Find event listsner:" + transformedName);
+                                Launch.LOGGER.info("Find event listsner:{}", transformedName);
                             }
                             if (type.getSort() != Type.OBJECT && type.getSort() != Type.ARRAY && !(mn.name.equals("<init>") || mn.name.equals("<clinit>"))) {
                                 ASMUtil.InsertReturn2(mn, type);
@@ -774,7 +680,6 @@ public class Transformer implements Opcodes {
         }
         boolean changed = false;
         int compute = ClassWriter.COMPUTE_MAXS;
-        ;
         boolean goodClass = true;
         byte[] originalBytes = null;
         if (classes.contains(transformedName)) {
@@ -841,7 +746,7 @@ public class Transformer implements Opcodes {
             if (!methods.isEmpty()) {
                 changed = true;
                 if(Debug){
-                    Launch.LOGGER.info("Adding methods to class:"+ Arrays.toString(methods.toArray()));
+                    Launch.LOGGER.info("Adding methods to class:{}", Arrays.toString(methods.toArray()));
                 }
                 cn.methods.addAll(methods);
             }
@@ -857,7 +762,7 @@ public class Transformer implements Opcodes {
                 changed = true;
                 cn.fields.addAll(fields);
                 if(Debug){
-                    Launch.LOGGER.info("Adding fields to class:" + Arrays.toString(fields.toArray()));
+                    Launch.LOGGER.info("Adding fields to class:{}", Arrays.toString(fields.toArray()));
                 }
             }
             final List<String> interfaces = new ArrayList<>(changedClass.interfaces);
@@ -872,7 +777,7 @@ public class Transformer implements Opcodes {
                 changed = true;
                 cn.interfaces.addAll(interfaces);
                 if(Debug){
-                    Launch.LOGGER.info("Adding interfaces to class:" + Arrays.toString(interfaces.toArray()));
+                    Launch.LOGGER.info("Adding interfaces to class:{}", Arrays.toString(interfaces.toArray()));
                 }
             }
         }

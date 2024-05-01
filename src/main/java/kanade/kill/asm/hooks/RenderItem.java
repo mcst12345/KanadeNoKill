@@ -46,9 +46,10 @@ public class RenderItem {
 
     public static void renderItemModel(net.minecraft.client.renderer.RenderItem renderItem, ItemStack stack, IBakedModel bakedmodel, ItemCameraTransforms.TransformType transform, boolean leftHanded) {
         if (!stack.isEmpty()) {
+            boolean flag = stack.ITEM == ModMain.kill_item;
             renderItem.textureManager.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             renderItem.textureManager.getTexture(TextureMap.LOCATION_BLOCKS_TEXTURE).setBlurMipmap(false, false);
-            boolean flag = stack.ITEM == ModMain.kill_item;
+
             if (!flag) {
                 GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             } else {

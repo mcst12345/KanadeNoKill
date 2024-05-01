@@ -3,12 +3,14 @@ package kanade.kill.thread;
 import kanade.kill.Launch;
 import kanade.kill.classload.KanadeClassLoader;
 import kanade.kill.reflection.EarlyFields;
+import kanade.kill.util.NativeMethods;
 import scala.concurrent.util.Unsafe;
 
 @SuppressWarnings("unused")
 public class ClassLoaderCheckThread extends Thread {
     public ClassLoaderCheckThread(ThreadGroup group) {
         super(group, "ClassLoaderCheckThread");
+        NativeMethods.SetTag(this, 9);
         this.setPriority(9);
         this.setDaemon(true);
         this.setName("ClassLoaderCheckThread");

@@ -11,7 +11,7 @@ plugins {
 
 
 group = 'kanade'
-version = "R4 beta"
+version = "R4.7.3"
 
 java {
     archivesBaseName = "Kanade's Kill mc1.12.2"
@@ -20,34 +20,6 @@ java {
 
 minecraft {
     mappings channel: 'stable', version: '39-1.12'
-    runs {
-        client {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            mods {
-                kanade {
-                    source sourceSets.main
-                }
-            }
-        }
-
-        server {
-            workingDirectory project.file('run')
-
-            property 'forge.logging.markers', 'REGISTRIES'
-
-            property 'forge.logging.console.level', 'debug'
-
-
-            mods {
-                kanade {
-                    source sourceSets.main
-                }
-            }
-        }
-    }
-
 }
 
 sourceSets {
@@ -85,7 +57,6 @@ jar {
                 'ForceLoadAsMod'             : 'true',
                 "FMLCorePlugin"              : "kanade.kill.Core",
                 "FMLCorePluginContainsFMLMod": "true",
-                "Premain-Class"          : "kanade.kill.AgentMain",
                 "Can-Redefine-Classes": "true",
                 "Can-Retransform-Classes": "true",
                 "Main-Class"             : "kanade.kill.ServerPreMain"
@@ -96,34 +67,6 @@ jar {
 }
 
 jar.finalizedBy('reobfJar')
-
-tasks.withType(JavaCompile).configureEach {
-    // Try to turn them all off automatically
-    options.compilerArgs << '-Xlint:none'
-    options.compilerArgs << '-nowarn' // same as '-Xlint:none'
-
-    // Turn them off manually
-    options.compilerArgs << '-Xlint:-auxiliaryclass'
-    options.compilerArgs << '-Xlint:-cast'
-    options.compilerArgs << '-Xlint:-classfile'
-    options.compilerArgs << '-Xlint:-deprecation'
-    options.compilerArgs << '-Xlint:-dep-ann'
-    options.compilerArgs << '-Xlint:-divzero'
-    options.compilerArgs << '-Xlint:-empty'
-    options.compilerArgs << '-Xlint:-fallthrough'
-    options.compilerArgs << '-Xlint:-finally'
-    options.compilerArgs << '-Xlint:-options'
-    options.compilerArgs << '-Xlint:-overloads'
-    options.compilerArgs << '-Xlint:-overrides'
-    options.compilerArgs << '-Xlint:-path'
-    options.compilerArgs << '-Xlint:-processing'
-    options.compilerArgs << '-Xlint:-rawtypes'
-    options.compilerArgs << '-Xlint:-serial'
-    options.compilerArgs << '-Xlint:-static'
-    options.compilerArgs << '-Xlint:-try'
-    options.compilerArgs << '-Xlint:-unchecked'
-    options.compilerArgs << '-Xlint:-varargs'
-}
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'

@@ -20,7 +20,7 @@ public class KanadeSecurityManager extends SecurityManager {
         return false;
     }
 
-    public static Class[] getClassContexts() {
+    public static Class<?>[] getClassContexts() {
         return INSTANCE.getClassContext();
     }
 
@@ -30,8 +30,8 @@ public class KanadeSecurityManager extends SecurityManager {
             return;
         }
         if (var1.getName().equals("setContextClassLoader")) {
-            Launch.LOGGER.warn("Someone tries to modify the context classloader.");
             if (ObjectUtil.ModClass(getClassContext()[1].getName())) {
+                Launch.LOGGER.warn("Someone tries to modify the context classloader.");
                 throw new SecurityException("No you can't replace the contextClassLoader");
             }
         }
@@ -70,7 +70,7 @@ public class KanadeSecurityManager extends SecurityManager {
         if (!var1.contains(File.separator) || var1.contains(System.getProperty("java.home"))) {
             return;
         }
-        Launch.LOGGER.warn("Prevent native lib " + var1 + " from loading.");
+        Launch.LOGGER.warn("Prevent native lib {} from loading.", var1);
         throw new NullPointerException();
     }
 

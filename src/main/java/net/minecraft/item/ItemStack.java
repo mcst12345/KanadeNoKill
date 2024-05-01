@@ -145,7 +145,7 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
         if (stackA.isEmpty() && stackB.isEmpty()) {
             return true;
         } else {
-            return !stackA.isEmpty() && !stackB.isEmpty() ? stackA.isItemStackEqual(stackB) : false;
+            return !stackA.isEmpty() && !stackB.isEmpty() && stackA.isItemStackEqual(stackB);
         }
     }
 
@@ -153,7 +153,7 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
         if (stackA == stackB) {
             return true;
         } else {
-            return !stackA.isEmpty() && !stackB.isEmpty() ? stackA.isItemEqual(stackB) : false;
+            return !stackA.isEmpty() && !stackB.isEmpty() && stackA.isItemEqual(stackB);
         }
     }
 
@@ -161,7 +161,7 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
         if (stackA == stackB) {
             return true;
         } else {
-            return !stackA.isEmpty() && !stackB.isEmpty() ? stackA.isItemEqualIgnoreDurability(stackB) : false;
+            return !stackA.isEmpty() && !stackB.isEmpty() && stackA.isItemEqualIgnoreDurability(stackB);
         }
     }
 
@@ -188,7 +188,7 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
         if (shareTagA == null)
             return shareTagB == null;
         else
-            return shareTagB != null && shareTagA.equals(shareTagB);
+            return shareTagA.equals(shareTagB);
     }
 
     private void updateEmptyState() {
@@ -547,7 +547,7 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
 
     @SideOnly(Side.CLIENT)
     public List<String> getTooltip(@Nullable EntityPlayer playerIn, ITooltipFlag advanced) {
-        List<String> list = Lists.<String>newArrayList();
+        List<String> list = Lists.newArrayList();
         String s = this.getDisplayName();
 
         if (this.hasDisplayName()) {
@@ -657,12 +657,12 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
                     }
 
                     if (flag) {
-                        list.add(" " + I18n.translateToLocalFormatted("attribute.modifier.equals." + attributemodifier.getOperation(), DECIMALFORMAT.format(d1), I18n.translateToLocal("attribute.name." + (String) entry.getKey())));
+                        list.add(" " + I18n.translateToLocalFormatted("attribute.modifier.equals." + attributemodifier.getOperation(), DECIMALFORMAT.format(d1), I18n.translateToLocal("attribute.name." + entry.getKey())));
                     } else if (d0 > 0.0D) {
-                        list.add(TextFormatting.BLUE + " " + I18n.translateToLocalFormatted("attribute.modifier.plus." + attributemodifier.getOperation(), DECIMALFORMAT.format(d1), I18n.translateToLocal("attribute.name." + (String) entry.getKey())));
+                        list.add(TextFormatting.BLUE + " " + I18n.translateToLocalFormatted("attribute.modifier.plus." + attributemodifier.getOperation(), DECIMALFORMAT.format(d1), I18n.translateToLocal("attribute.name." + entry.getKey())));
                     } else if (d0 < 0.0D) {
                         d1 = d1 * -1.0D;
-                        list.add(TextFormatting.RED + " " + I18n.translateToLocalFormatted("attribute.modifier.take." + attributemodifier.getOperation(), DECIMALFORMAT.format(d1), I18n.translateToLocal("attribute.name." + (String) entry.getKey())));
+                        list.add(TextFormatting.RED + " " + I18n.translateToLocalFormatted("attribute.modifier.take." + attributemodifier.getOperation(), DECIMALFORMAT.format(d1), I18n.translateToLocal("attribute.name." + entry.getKey())));
                     }
                 }
             }
@@ -715,7 +715,7 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
                 list.add(I18n.translateToLocalFormatted("item.durability", this.getMaxDamage() - this.getItemDamage(), this.getMaxDamage()));
             }
 
-            list.add(TextFormatting.DARK_GRAY + ((ResourceLocation) Item.REGISTRY.getNameForObject(this.item)).toString());
+            list.add(TextFormatting.DARK_GRAY + Item.REGISTRY.getNameForObject(this.item).toString());
 
             if (this.hasTagCompound()) {
                 list.add(TextFormatting.DARK_GRAY + I18n.translateToLocalFormatted("item.nbt_tags", this.getTagCompound().getKeySet().size()));
@@ -756,7 +756,7 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
         NBTTagList nbttaglist = this.stackTagCompound.getTagList("ench", 10);
         NBTTagCompound nbttagcompound = new NBTTagCompound();
         nbttagcompound.setShort("id", (short) Enchantment.getEnchantmentID(ench));
-        nbttagcompound.setShort("lvl", (short) ((byte) level));
+        nbttagcompound.setShort("lvl", (byte) level);
         nbttaglist.appendTag(nbttagcompound);
     }
 
@@ -809,7 +809,7 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
         Multimap<String, AttributeModifier> multimap;
 
         if (this.hasTagCompound() && this.stackTagCompound.hasKey("AttributeModifiers", 9)) {
-            multimap = HashMultimap.<String, AttributeModifier>create();
+            multimap = HashMultimap.create();
             NBTTagList nbttaglist = this.stackTagCompound.getTagList("AttributeModifiers", 10);
 
             for (int i = 0; i < nbttaglist.tagCount(); ++i) {
@@ -851,7 +851,7 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
         TextComponentString textcomponentstring = new TextComponentString(this.getDisplayName());
 
         if (this.hasDisplayName()) {
-            textcomponentstring.getStyle().setItalic(Boolean.valueOf(true));
+            textcomponentstring.getStyle().setItalic(Boolean.TRUE);
         }
 
         ITextComponent itextcomponent = (new TextComponentString("[")).appendSibling(textcomponentstring).appendText("]");
@@ -940,7 +940,7 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
 
     @Override
     public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability, @Nullable net.minecraft.util.EnumFacing facing) {
-        return this.isEmpty || this.capabilities == null ? false : this.capabilities.hasCapability(capability, facing);
+        return !this.isEmpty && this.capabilities != null && this.capabilities.hasCapability(capability, facing);
     }
 
     @Override

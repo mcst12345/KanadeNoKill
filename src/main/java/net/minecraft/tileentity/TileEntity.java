@@ -4,7 +4,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.crash.CrashReportCategory;
-import net.minecraft.crash.ICrashReportDetail;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
@@ -28,7 +27,7 @@ public abstract class TileEntity implements net.minecraftforge.common.capabiliti
      */
     public static final net.minecraft.util.math.AxisAlignedBB INFINITE_EXTENT_AABB = new net.minecraft.util.math.AxisAlignedBB(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>> REGISTRY = new RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>>();
+    private static final RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>> REGISTRY = new RegistryNamespaced<>();
 
     static {
         register("furnace", TileEntityFurnace.class);
@@ -87,7 +86,7 @@ public abstract class TileEntity implements net.minecraftforge.common.capabiliti
         Class<? extends TileEntity> oclass = null;
 
         try {
-            oclass = (Class) REGISTRY.getObject(new ResourceLocation(s));
+            oclass = REGISTRY.getObject(new ResourceLocation(s));
 
             if (oclass != null) {
                 tileentity = oclass.newInstance();
@@ -109,7 +108,7 @@ public abstract class TileEntity implements net.minecraftforge.common.capabiliti
                 tileentity = null;
             }
         } else {
-            LOGGER.warn("Skipping BlockEntity with id {}", (Object) s);
+            LOGGER.warn("Skipping BlockEntity with id {}", s);
         }
 
         return tileentity;
@@ -239,36 +238,28 @@ public abstract class TileEntity implements net.minecraftforge.common.capabiliti
     }
 
     public void addInfoToCrashReport(CrashReportCategory reportCategory) {
-        reportCategory.addDetail("Name", new ICrashReportDetail<String>() {
-            public String call() throws Exception {
-                return TileEntity.REGISTRY.getNameForObject(TileEntity.this.getClass()) + " // " + TileEntity.this.getClass().getCanonicalName();
-            }
-        });
+        reportCategory.addDetail("Name", () -> TileEntity.REGISTRY.getNameForObject(TileEntity.this.getClass()) + " // " + TileEntity.this.getClass().getCanonicalName());
 
         if (this.world != null) {
             CrashReportCategory.addBlockInfo(reportCategory, this.pos, this.getBlockType(), this.getBlockMetadata());
-            reportCategory.addDetail("Actual block type", new ICrashReportDetail<String>() {
-                public String call() throws Exception {
-                    int i = Block.getIdFromBlock(TileEntity.this.world.getBlockState(TileEntity.this.pos).getBlock());
+            reportCategory.addDetail("Actual block type", () -> {
+                int i = Block.getIdFromBlock(TileEntity.this.world.getBlockState(TileEntity.this.pos).getBlock());
 
-                    try {
-                        return String.format("ID #%d (%s // %s // %s)", i, Block.getBlockById(i).getTranslationKey(), Block.getBlockById(i).getClass().getName(), Block.getBlockById(i).getRegistryName());
-                    } catch (Throwable var3) {
-                        return "ID #" + i;
-                    }
+                try {
+                    return String.format("ID #%d (%s // %s // %s)", i, Block.getBlockById(i).getTranslationKey(), Block.getBlockById(i).getClass().getName(), Block.getBlockById(i).getRegistryName());
+                } catch (Throwable var3) {
+                    return "ID #" + i;
                 }
             });
-            reportCategory.addDetail("Actual block data value", new ICrashReportDetail<String>() {
-                public String call() throws Exception {
-                    IBlockState iblockstate = TileEntity.this.world.getBlockState(TileEntity.this.pos);
-                    int i = iblockstate.getBlock().getMetaFromState(iblockstate);
+            reportCategory.addDetail("Actual block data value", () -> {
+                IBlockState iblockstate = TileEntity.this.world.getBlockState(TileEntity.this.pos);
+                int i = iblockstate.getBlock().getMetaFromState(iblockstate);
 
-                    if (i < 0) {
-                        return "Unknown? (Got " + i + ")";
-                    } else {
-                        String s = String.format("%4s", Integer.toBinaryString(i)).replace(" ", "0");
-                        return String.format("%1$d / 0x%1$X / 0b%2$s", i, s);
-                    }
+                if (i < 0) {
+                    return "Unknown? (Got " + i + ")";
+                } else {
+                    String s = String.format("%4s", Integer.toBinaryString(i)).replace(" ", "0");
+                    return String.format("%1$d / 0x%1$X / 0b%2$s", i, s);
                 }
             });
         }
@@ -429,7 +420,7 @@ public abstract class TileEntity implements net.minecraftforge.common.capabiliti
 
     @Override
     public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability, @Nullable net.minecraft.util.EnumFacing facing) {
-        return capabilities == null ? false : capabilities.hasCapability(capability, facing);
+        return capabilities != null && capabilities.hasCapability(capability, facing);
     }
 
     @Override

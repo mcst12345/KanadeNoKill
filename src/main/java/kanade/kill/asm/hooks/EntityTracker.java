@@ -23,7 +23,6 @@ public class EntityTracker {
 
                     if (entitytrackerentry.playerEntitiesUpdated) {
                         Entity entity = entitytrackerentry.getTrackedEntity();
-
                         if (entity instanceof EntityPlayerMP) {
                             list.add((EntityPlayerMP) entity);
                         }

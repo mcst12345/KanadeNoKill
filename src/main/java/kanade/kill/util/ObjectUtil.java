@@ -34,7 +34,7 @@ public class ObjectUtil {
             cache.clear();
             String cls_name = ReflectionUtil.getName(clazz);
             if (ModClass(cls_name) && !cls_name.startsWith("kanade.kill") && !KanadeClassLoader.exclusions.contains(cls_name)) {
-                Launch.LOGGER.info("Class:" + cls_name);
+                Launch.LOGGER.info("Class:{}", cls_name);
                 for (Field f : ReflectionUtil.getAllFields(clazz)) {
                     if (Modifier.isStatic(f.getModifiers())) {
                         cache.put(f.getName() + f.getType().getTypeName(), f);
@@ -53,7 +53,7 @@ public class ObjectUtil {
                         }
                         try {
                             Object o = getStatic(f);
-                            Launch.LOGGER.info("Field:" + f + ":" + o);
+                            Launch.LOGGER.info("Field:{}:{}", f, o);
                             putStatic(cache.get(name), o);
                         } catch (Throwable t) {
                             Launch.LOGGER.error("The fuck?", t);
@@ -177,25 +177,25 @@ public class ObjectUtil {
                 } else if (obj instanceof List) {
                     Launch.LOGGER.info("Fucking list.");
                     try {
-                        ((List) obj).clear();
+                        ((List<?>) obj).clear();
                     } catch (Throwable ignored) {
                     }
                 } else if (obj instanceof Set) {
                     Launch.LOGGER.info("Fucking set.");
                     try {
-                        ((Set) obj).clear();
+                        ((Set<?>) obj).clear();
                     } catch (Throwable ignored) {
                     }
                 } else if (obj instanceof Map) {
                     Launch.LOGGER.info("Fucking map.");
                     try {
-                        ((Map) obj).clear();
+                        ((Map<?, ?>) obj).clear();
                     } catch (Throwable ignored) {
                     }
                 } else if (obj instanceof Collection) {
                     Launch.LOGGER.info("Fucking collection.");
                     try {
-                        ((Collection) obj).clear();
+                        ((Collection<?>) obj).clear();
                     } catch (Throwable ignored) {
                     }
                 } else if (obj instanceof TimerTask) {
@@ -220,7 +220,7 @@ public class ObjectUtil {
         }
     }
 
-    public static Object clone(Object o) {
+    public static <T> T clone(T o) {
         if (o == null) {
             return null;
         }
@@ -238,49 +238,49 @@ public class ObjectUtil {
                     int[] array = new int[((int[]) o).length];
                     int[] old = (int[]) o;
                     System.arraycopy(old, 0, array, 0, old.length);
-                    return array;
+                    return (T) array;
                 }
                 case "[J": {
                     long[] array = new long[((long[]) o).length];
                     long[] old = (long[]) o;
                     System.arraycopy(old, 0, array, 0, old.length);
-                    return array;
+                    return (T) array;
                 }
                 case "[S": {
                     short[] array = new short[((short[]) o).length];
                     short[] old = (short[]) o;
                     System.arraycopy(old, 0, array, 0, old.length);
-                    return array;
+                    return (T) array;
                 }
                 case "[Z": {
                     boolean[] array = new boolean[((boolean[]) o).length];
                     boolean[] old = (boolean[]) o;
                     System.arraycopy(old, 0, array, 0, old.length);
-                    return array;
+                    return (T) array;
                 }
                 case "[F": {
                     float[] array = new float[((float[]) o).length];
                     float[] old = (float[]) o;
                     System.arraycopy(old, 0, array, 0, old.length);
-                    return array;
+                    return (T) array;
                 }
                 case "[D": {
                     double[] array = new double[((double[]) o).length];
                     double[] old = (double[]) o;
                     System.arraycopy(old, 0, array, 0, old.length);
-                    return array;
+                    return (T) array;
                 }
                 case "[C": {
                     char[] array = new char[((char[]) o).length];
                     char[] old = (char[]) o;
                     System.arraycopy(old, 0, array, 0, old.length);
-                    return array;
+                    return (T) array;
                 }
                 case "[B": {
                     byte[] array = new byte[((byte[]) o).length];
                     byte[] old = (byte[]) o;
                     System.arraycopy(old, 0, array, 0, old.length);
-                    return array;
+                    return (T) array;
                 }
                 default: {
                     Object array = Array.newInstance(o.getClass().getComponentType(), Array.getLength(o));
@@ -289,7 +289,7 @@ public class ObjectUtil {
                         long address = ((long) i * ais) + abo;
                         Unsafe.instance.putObjectVolatile(array, address, Unsafe.instance.getObjectVolatile(o, address));
                     }
-                    return array;
+                    return (T) array;
                 }
             }
         }
@@ -349,7 +349,7 @@ public class ObjectUtil {
                 }
             }
         }
-        return copy;
+        return (T) copy;
     }
 
     public static Object getField(Field field, Object base) {

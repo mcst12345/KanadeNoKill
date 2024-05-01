@@ -77,7 +77,7 @@ public class FontRenderer {
             int j = (i >> 3 & 1) * 85;
             int k = (i >> 2 & 1) * 170 + j;
             int l = (i >> 1 & 1) * 170 + j;
-            int i1 = (i >> 0 & 1) * 170 + j;
+            int i1 = (i & 1) * 170 + j;
             if (i == 6) {
                 k += 85;
             }
@@ -157,18 +157,11 @@ public class FontRenderer {
     }
 
     private void readGlyphSizes() {
-        InputStream iresource = Empty.class.getResourceAsStream("/assets/kanade/textures/glyph_sizes.bin");
 
-        try {
+        try (InputStream iresource = Empty.class.getResourceAsStream("/assets/kanade/textures/glyph_sizes.bin")) {
             iresource.read(this.glyphWidth);
         } catch (IOException var10) {
             throw new RuntimeException(var10);
-        } finally {
-            try {
-                iresource.close();
-            } catch (IOException ignored) {
-            }
-
         }
 
     }
@@ -538,8 +531,8 @@ public class FontRenderer {
     }
 
     private void renderSplitString(String str, int x, int y, int wrapWidth) {
-        for (Iterator var6 = this.listFormattedStringToWidth(str, wrapWidth).iterator(); var6.hasNext(); y += this.FONT_HEIGHT) {
-            String s = (String) var6.next();
+        for (Iterator<String> var6 = this.listFormattedStringToWidth(str, wrapWidth).iterator(); var6.hasNext(); y += this.FONT_HEIGHT) {
+            String s = var6.next();
             this.renderStringAligned(s, x, y, wrapWidth, this.textColor, false);
         }
 
@@ -651,8 +644,8 @@ public class FontRenderer {
 
         try {
             ImageInputStream stream = ImageIO.createImageInputStream(imageStream);
-            Iterator iter = ImageIO.getImageReaders(stream);
-            ImageReader reader = (ImageReader) iter.next();
+            Iterator<ImageReader> iter = ImageIO.getImageReaders(stream);
+            ImageReader reader = iter.next();
             ImageReadParam param = reader.getDefaultReadParam();
             reader.setInput(stream, true, true);
             BufferedImage bufferedimage = reader.read(0, param);
@@ -660,11 +653,11 @@ public class FontRenderer {
             try {
                 reader.dispose();
                 stream.close();
-            } catch (IOException var18) {
+            } catch (IOException ignored) {
             }
 
             IntBuffer textures = OpenGLHelper.getBufferInt(GLOffsets.caps);
-            OpenGLHelper.nglGenTextures(1, MemoryUtil.getAddress0(textures) + (long) (textures.position() << 2), GLOffsets.glGenTextures);
+            OpenGLHelper.nglGenTextures(1, MemoryUtil.getAddress0(textures) + (long) ((long) textures.position() << 2), GLOffsets.glGenTextures);
             int textureId = textures.get(0);
             OpenGLHelper.nglBindTexture(3553, textureId, GLOffsets.glBindTexture);
             OpenGLHelper.nglTexParameteri(3553, 33085, 0, GLOffsets.glTexParameteri);
@@ -690,14 +683,14 @@ public class FontRenderer {
                 DATA_BUFFER.clear();
                 DATA_BUFFER.put(aint, 0, k1);
                 DATA_BUFFER.position(0).limit(k1);
-                OpenGLHelper.nglTexSubImage2D(3553, 0, 0, i1, i, j1, 32993, 33639, MemoryUtil.getAddress0(DATA_BUFFER) + (long) (DATA_BUFFER.position() << 2), GLOffsets.glTexSubImage2D);
+                OpenGLHelper.nglTexSubImage2D(3553, 0, 0, i1, i, j1, 32993, 33639, MemoryUtil.getAddress0(DATA_BUFFER) + (long) ((long) DATA_BUFFER.position() << 2), GLOffsets.glTexSubImage2D);
             }
 
             OpenGLHelper.nglBindTexture(3553, textureId, GLOffsets.glBindTexture);
             this.loadedTextures[this.textureIndex][0] = location;
             this.loadedTextures[this.textureIndex][1] = String.valueOf(textureId);
             ++textureId;
-        } catch (NumberFormatException | IOException var19) {
+        } catch (NumberFormatException | IOException ignored) {
         }
 
     }
