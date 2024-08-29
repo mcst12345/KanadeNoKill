@@ -1,6 +1,8 @@
 package net.minecraft.client.renderer.entity;
 
 import com.google.common.collect.Maps;
+import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.culling.ICamera;
@@ -10,6 +12,7 @@ import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 
 @SideOnly(Side.CLIENT)
@@ -52,5 +55,10 @@ public class RenderManager {
     }
 
     public void setRenderOutlines(boolean b) {
+    }
+
+    @Nullable
+    public <T extends Entity> Render<T> getEntityRenderObject(Entity entityIn) {
+        return null;
     }
 }

@@ -1,6 +1,5 @@
 package kanade.kill.asm.hooks;
 
-import kanade.kill.Core;
 import kanade.kill.Keys;
 import kanade.kill.Launch;
 import kanade.kill.ModMain;
@@ -14,6 +13,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.client.settings.GameSettings;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
@@ -21,7 +21,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.lwjgl.Sys;
@@ -93,6 +92,30 @@ public class Minecraft {
     private static long lastTime;
     private static long time = 0;
 
+    public static void SetIngameFocus(net.minecraft.client.Minecraft mc) {
+        {
+            if (Display.isActive()) {
+                if (!mc.inGameHasFocus) {
+                    if (!IS_RUNNING_ON_MAC) {
+                        KeyBinding.updateKeyBindState();
+                    }
+
+                    mc.inGameHasFocus = true;
+                    mc.MouseHelper.grabMouseCursor();
+                    mc.displayGuiScreen(null);
+                    mc.leftClickCounter = 10000;
+                }
+            }
+        }
+    }
+
+    public static void SetIngameNotInFocus(net.minecraft.client.Minecraft mc) {
+        if (mc.inGameHasFocus) {
+            mc.inGameHasFocus = false;
+            mc.MouseHelper.ungrabMouseCursor();
+        }
+    }
+
     public static void runTickKeyboard(net.minecraft.client.Minecraft minecraft) {
         if (Keys.SWITCH_TIME_POINT.isKeyDown()) {
             NetworkHandler.INSTANCE.sendMessageToServer(new SwitchTimePoint(minecraft.PLAYER.getUniqueID()));
@@ -118,12 +141,10 @@ public class Minecraft {
                     mc.rightClickDelayTimer = 8;
                     if (mode == 0) {
                         NetworkHandler.INSTANCE.sendMessageToServer(new Annihilation(mc.PLAYER.dimension, (int) mc.PLAYER.X, (int) mc.PLAYER.Y, (int) mc.PLAYER.Z));
-                    } else if (!Core.demo) {
+                    } else {
                         if (mode == 1) {
                             NetworkHandler.INSTANCE.sendMessageToServer(new TimeBack());
                         }
-                    } else {
-                        mc.PLAYER.sendMessage(new TextComponentString("当前版本为试用版，完整版请至#QQ2981196615购买。"));
                     }
                 } else {
                     if (mc.PLAYER.getHeldItem(EnumHand.MAIN_HAND).getITEM() == ModMain.kill_item) {
@@ -349,20 +370,4 @@ public class Minecraft {
         lastTime = ret;
         return ret;
     }
-
-    /*private static FloatBuffer cosmicUVs = BufferUtils.createFloatBuffer(4 * 10);
-
-    private static void onRenderTick(){
-        cosmicUVs = BufferUtils.createFloatBuffer(4 * ModMain.COSMIC.length);
-        TextureAtlasSprite icon;
-        for (TextureAtlasSprite cosmicIcon : ModMain.COSMIC) {
-            icon = cosmicIcon;
-
-            cosmicUVs.put(icon.getMinU());
-            cosmicUVs.put(icon.getMinV());
-            cosmicUVs.put(icon.getMaxU());
-            cosmicUVs.put(icon.getMaxV());
-        }
-        cosmicUVs.flip();
-    }*/
 }

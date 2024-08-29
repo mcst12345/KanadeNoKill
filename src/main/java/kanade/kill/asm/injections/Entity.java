@@ -17,6 +17,7 @@ public class Entity implements Opcodes {
         cn.fields.add(new FieldNode(ACC_PUBLIC, "Z", "D", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "RecentlyHIT", "I", null, null));
         cn.fields.add(new FieldNode(ACC_PUBLIC, "WORLD", "Lnet/minecraft/world/World;", null, null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "uuid", "Ljava/util/UUID;", null, null));
     }
 
     public static void OverwriteWriteToNBT(MethodNode mn) {
@@ -39,5 +40,16 @@ public class Entity implements Opcodes {
         mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/Entity", "readFromNBT", "(Lnet/minecraft/entity/Entity;Lnet/minecraft/nbt/NBTTagCompound;)V", false));
         mn.instructions.add(new InsnNode(RETURN));
         Launch.LOGGER.info("Overwrite readFromNBT().");
+    }
+
+    public static void OverwriteSetUniqueId(MethodNode mn) {
+        mn.instructions.clear();
+        mn.localVariables.clear();
+        mn.tryCatchBlocks.clear();
+        mn.instructions.add(new VarInsnNode(ALOAD, 0));
+        mn.instructions.add(new VarInsnNode(ALOAD, 1));
+        mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/Entity", "setUniqueId", "(Lnet/minecraft/entity/Entity;Ljava/util/UUID;)V", false));
+        mn.instructions.add(new InsnNode(RETURN));
+        Launch.LOGGER.info("Overwrite setUniqueId().");
     }
 }

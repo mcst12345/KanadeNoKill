@@ -11,7 +11,7 @@ plugins {
 
 
 group = 'kanade'
-version = "R4.7.3"
+version = "R4.7.4.3"
 
 java {
     archivesBaseName = "Kanade's Kill mc1.12.2"
@@ -59,7 +59,8 @@ jar {
                 "FMLCorePluginContainsFMLMod": "true",
                 "Can-Redefine-Classes": "true",
                 "Can-Retransform-Classes": "true",
-                "Main-Class"             : "kanade.kill.ServerPreMain"
+                "Main-Class"   : "kanade.kill.ServerPreMain",
+                "Premain-Class": "Agent"
         ])
     }
     from{

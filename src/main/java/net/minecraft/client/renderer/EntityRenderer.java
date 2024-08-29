@@ -1,5 +1,7 @@
 package net.minecraft.client.renderer;
 
+import codechicken.lib.render.item.map.IMapRenderer;
+import net.minecraft.client.gui.MapItemRenderer;
 import net.minecraft.client.shader.ShaderGroup;
 import net.minecraft.util.ResourceLocation;
 
@@ -32,5 +34,13 @@ public class EntityRenderer {
     }
 
     public void disableLightmap() {
+    }
+
+    public void setupFogColor(boolean b) {
+
+    }
+
+    public MapItemRenderer getMapItemRenderer() {
+        return null;
     }
 }

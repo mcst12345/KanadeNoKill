@@ -11,14 +11,7 @@ import java.util.List;
 
 public class ReflectionUtil {
     public static Field[] getFields(Class<?> clazz) {
-        if (clazz == null) {
-            return new Field[0];
-        }
-        try {
-            return (Field[]) EarlyMethods.getDeclaredFields0.invoke(clazz, false);
-        } catch (IllegalAccessException | InvocationTargetException | NullPointerException e) {
-            return new Field[0];
-        }
+        return clazz.getDeclaredFields0(false);
     }
 
     @Nonnull
@@ -55,11 +48,7 @@ public class ReflectionUtil {
     }
 
     public static Constructor<?>[] getConstructors(Class<?> clazz) {
-        try {
-            return (Constructor<?>[]) EarlyMethods.getDeclaredConstructors0.invoke(clazz, false);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            return new Constructor[0];
-        }
+        return clazz.getDeclaredConstructors0(false);
     }
 
     public static Field[] getAllFields(Class<?> clazz) {
@@ -92,22 +81,12 @@ public class ReflectionUtil {
     }
 
     private static Method[] getMethods(Class<?> clazz) {
-        try {
-            return (Method[]) EarlyMethods.getDeclaredMethods0.invoke(clazz, false);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            return new Method[0];
-        }
+        return clazz.getDeclaredMethods0(false);
     }
 
     public static Object invoke(Method method, @Nullable Object obj, @Nullable Object... args) {
-        EarlyMethods.invoke0.setAccessible(true);
-        method.setAccessible(true);
         boolean Static = Modifier.isStatic(method.getModifiers());
-        try {
-            return EarlyMethods.invoke0.invoke(null, method, Static ? null : obj, args != null ? args : new Object[0]);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
+        return sun.reflect.NativeMethodAccessorImpl.invoke0(method, Static ? null : obj, args != null ? args : new Object[0]);
     }
 
     public static String getName(Class<?> clazz) {

@@ -54,6 +54,9 @@ public class ASMUtil implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
+        if (mn.maxStack < 1) {
+            mn.maxStack = 1;
+        }
         if(Debug){
             Launch.LOGGER.info("Insert return in {}", mn.name);
         }
@@ -98,6 +101,9 @@ public class ASMUtil implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
+        if (mn.maxStack < 1) {
+            mn.maxStack = 1;
+        }
         if(Debug){
             Launch.LOGGER.info("Insert return in {}", mn.name);
         }
@@ -153,6 +159,9 @@ public class ASMUtil implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
+        if (mn.maxStack < 1) {
+            mn.maxStack = 1;
+        }
         if(Debug){
             Launch.LOGGER.info("Insert return in {},type:1.", mn.name);
         }
@@ -208,6 +217,9 @@ public class ASMUtil implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
+        if (mn.maxStack < 1) {
+            mn.maxStack = 1;
+        }
         if(Debug){
             Launch.LOGGER.info("Insert return in {},type:2.", mn.name);
         }
@@ -267,6 +279,9 @@ public class ASMUtil implements Opcodes {
         list.add(label);
         list.add(new FrameNode(F_SAME, 0, null, 0, null));
         mn.instructions.insert(list);
+        if (mn.maxStack < 1) {
+            mn.maxStack = 1;
+        }
         if(Debug){
             Launch.LOGGER.info("Insert return in {},type:3.", mn.name);
         }
@@ -278,7 +293,6 @@ public class ASMUtil implements Opcodes {
         } else {
             mn.localVariables.clear();
         }
-        mn.instructions.add(new InsnNode(RETURN));
         if(Debug){
             Launch.LOGGER.info("Clear method:{}.", mn.name);
         }
@@ -388,6 +402,7 @@ public class ASMUtil implements Opcodes {
         mn.tryCatchBlocks.clear();
         mn.instructions.clear();
         mn.localVariables.clear();
+        mn.maxStack = 1;
         switch (type.getSort()) {
             case Type.VOID: {
                 mn.instructions.add(new InsnNode(RETURN));
@@ -417,12 +432,33 @@ public class ASMUtil implements Opcodes {
                 mn.instructions.add(new InsnNode(DRETURN));
                 break;
             }
-            case Type.OBJECT: {
-                mn.instructions.add(new InsnNode(ACONST_NULL));
+            case Type.ARRAY: {
+                String s = type.toString();
+                if (s.startsWith("[L")) {
+                    s = s.substring(2, s.length() - 1);
+                } else {
+                    s = s.substring(1);
+                }
+                mn.instructions.add(new InsnNode(ICONST_0));
+                mn.instructions.add(new TypeInsnNode(ANEWARRAY, s));
                 mn.instructions.add(new InsnNode(ARETURN));
                 break;
             }
+            case Type.OBJECT: {
+                Launch.LOGGER.info("desc:{}", mn.desc);
+                if (mn.desc.endsWith("Ljava/lang/String;")) {
+                    Launch.LOGGER.info("return string.");
+                    mn.instructions.add(new LdcInsnNode("YoisakiKanade"));
+                    mn.instructions.add(new InsnNode(ARETURN));
+                } else {
+                    Launch.LOGGER.warn("return null.");
+                    mn.instructions.add(new InsnNode(ACONST_NULL));
+                    mn.instructions.add(new InsnNode(ARETURN));
+                }
+                break;
+            }
             default: {
+                Launch.LOGGER.info(type.toString());
                 throw new IllegalStateException("The fuck?");
             }
         }

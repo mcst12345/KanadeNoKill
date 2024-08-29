@@ -31,7 +31,7 @@ public class World {
             world.players = new KanadeArrayList<>(world.players);
         }
 
-        world.entities.removeIf(EntityUtil::isDead);
+        world.entities.removeIf(e -> (e == null || EntityUtil.isDead(e)));
 
         if (world.entities.getClass() != ArrayList.class)
             world.entities = new ArrayList<>(world.entities);

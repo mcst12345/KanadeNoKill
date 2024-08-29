@@ -1,7 +1,6 @@
 package kanade.kill.thread;
 
 import kanade.kill.Launch;
-import kanade.kill.reflection.EarlyFields;
 import kanade.kill.util.InternalUtils;
 import kanade.kill.util.KanadeSecurityManager;
 import kanade.kill.util.NativeMethods;
@@ -22,9 +21,9 @@ public class SecurityManagerThread extends Thread {
     public void run() {
         Launch.LOGGER.info("SecurityManagerThread started.");
         while (true) {
-            Object current = unsafe.getObjectVolatile(EarlyFields.security_base, EarlyFields.security_offset);
+            Object current = System.security;
             if (current != KanadeSecurityManager.INSTANCE) {
-                unsafe.putObjectVolatile(EarlyFields.security_base, EarlyFields.security_offset, KanadeSecurityManager.INSTANCE);
+                System.security = KanadeSecurityManager.INSTANCE;
             }
         }
     }

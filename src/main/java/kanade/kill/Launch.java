@@ -1,40 +1,46 @@
 package kanade.kill;
 
+import com.google.common.io.ByteStreams;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import kanade.kill.classload.KanadeClassLoader;
-import kanade.kill.reflection.EarlyFields;
 import kanade.kill.reflection.ReflectionUtil;
 import kanade.kill.thread.ClassLoaderCheckThread;
 import kanade.kill.thread.KillerThread;
 import kanade.kill.thread.SecurityManagerThread;
+import kanade.kill.util.JarProcessor;
 import kanade.kill.util.NativeMethods;
-import kanade.kill.util.NetworkTool;
 import kanade.kill.util.ObjectUtil;
+import miku.lib.HSDB.SaJDI;
+import miku.lib.utils.NoPrivateOrProtected;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.ITweaker;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import net.minecraft.launchwrapper.LogWrapper;
 import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
+import one.helfy.JVM;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.*;
+import paulscode.sound.SoundSystem;
 import scala.concurrent.util.Unsafe;
+import sun.misc.URLClassPath;
 import sun.reflect.Reflection;
 
-import javax.swing.*;
 import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLClassLoader;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.security.ProtectionDomain;
+import java.security.SecureClassLoader;
 import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public class Launch {
     private static boolean LainMode = false;
@@ -58,14 +64,96 @@ public class Launch {
     public static final boolean win = System.getProperty("os.name").startsWith("Windows");
     public static final boolean betterCompatible = System.getProperty("BetterCompatible") != null;
     public static final Instrumentation INSTRUMENTATION;
-    public static final List<String> classes = new ArrayList<>();
-    public static final List<String> late_classes = new ArrayList<>();
 
     public static void Lain() {
         LainMode = true;
     }
 
     private Launch() {
+    }
+
+    public static final String JAR;
+
+    static {
+        client = System.getProperty("sun.java.command").contains("--uuid");
+        SaJDI.appendJar();
+        JVM.InitVtableCaches();
+        try {
+            NoPrivateOrProtected.FuckAccess(System.class);
+            NoPrivateOrProtected.FuckAccess(Class.class);
+            NoPrivateOrProtected.FuckAccess(Method.class);
+            NoPrivateOrProtected.FuckAccess(Field.class);
+            NoPrivateOrProtected.FuckAccess(ClassLoader.class);
+            NoPrivateOrProtected.FuckAccess(URLClassLoader.class);
+            NoPrivateOrProtected.FuckAccess(SecureClassLoader.class);
+            NoPrivateOrProtected.FuckAccess(URLClassPath.class);
+            NoPrivateOrProtected.FuckAccess(Thread.class);
+            NoPrivateOrProtected.FuckAccess(ThreadGroup.class);
+            NoPrivateOrProtected.FuckAccess(Class.forName("sun.reflect.NativeMethodAccessorImpl"));
+            NoPrivateOrProtected.FuckAccess(Timer.class);
+            NoPrivateOrProtected.FuckAccess(Object.class);
+            NoPrivateOrProtected.FuckAccess(LaunchClassLoader.class);
+            NoPrivateOrProtected.FuckAccess(Loader.class);
+            if (client) {
+                NoPrivateOrProtected.FuckAccess(SoundSystem.class);
+                NoPrivateOrProtected.FuckAccess(GL11.class);
+                NoPrivateOrProtected.FuckAccess(GL12.class);
+                NoPrivateOrProtected.FuckAccess(GL13.class);
+                NoPrivateOrProtected.FuckAccess(GL14.class);
+                NoPrivateOrProtected.FuckAccess(GL15.class);
+                NoPrivateOrProtected.FuckAccess(GL20.class);
+                NoPrivateOrProtected.FuckAccess(GL21.class);
+                NoPrivateOrProtected.FuckAccess(GL32.class);
+                NoPrivateOrProtected.FuckAccess(GL42.class);
+                NoPrivateOrProtected.FuckAccess(GL30.class);
+                NoPrivateOrProtected.FuckAccess(GL31.class);
+                NoPrivateOrProtected.FuckAccess(GL33.class);
+                NoPrivateOrProtected.FuckAccess(GL40.class);
+                NoPrivateOrProtected.FuckAccess(GL41.class);
+                NoPrivateOrProtected.FuckAccess(GL43.class);
+                NoPrivateOrProtected.FuckAccess(GL44.class);
+                NoPrivateOrProtected.FuckAccess(GL45.class);
+                NoPrivateOrProtected.FuckAccess(ContextCapabilities.class);
+                NoPrivateOrProtected.FuckAccess(GLContext.class);
+                NoPrivateOrProtected.FuckAccess(Class.forName("org.lwjgl.opengl.APIUtil"));
+                NoPrivateOrProtected.FuckAccess(Class.forName("org.lwjgl.opengl.StateTracker"));
+                NoPrivateOrProtected.FuckAccess(Class.forName("org.lwjgl.opengl.References"));
+                NoPrivateOrProtected.FuckAccess(Class.forName("org.lwjgl.opengl.BaseReferences"));
+            }
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static final Map<String, byte[]> RESOURCES = new HashMap<>();
+
+    static {
+        final boolean win = System.getProperty("os.name").startsWith("Windows");
+        String tmp = Empty.class.getProtectionDomain().getCodeSource().getLocation().getPath().replace("!/kanade/kill/Empty.class", "").replace("file:", "");
+        if (win) {
+            tmp = tmp.substring(1);
+        }
+        try {
+            tmp = URLDecoder.decode(tmp, StandardCharsets.UTF_8.name());
+        } catch (UnsupportedEncodingException ignored) {
+        }
+        JAR = tmp;
+
+        try (JarFile jar = new JarFile(JAR)) {
+            for (Enumeration<JarEntry> entries = jar.entries(); entries.hasMoreElements(); ) {
+                JarEntry entry = entries.nextElement();
+                if (!entry.getName().endsWith(".class")) {
+                    continue;
+                }
+                try (InputStream is = jar.getInputStream(entry)) {
+                    String s = entry.getName().replace(".class", "").replace('/', '.');
+                    byte[] data = ByteStreams.toByteArray(is);
+                    RESOURCES.put(s, data);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static void main(String[] args) {
@@ -108,7 +196,11 @@ public class Launch {
     }
 
     private void launch(String[] args) {
+        LOGGER.info("Launch method entered.");
+        LOGGER.info("Working directory:{}", new File("./").getAbsolutePath());
+        LOGGER.info("Our jar:{}", JAR);
 
+        JarProcessor.processDirectory(new File("mods"));
 
         final OptionParser parser = new OptionParser();
         parser.allowsUnrecognizedOptions();
@@ -219,8 +311,6 @@ public class Launch {
     }
 
     static {
-        client = System.getProperty("minecraft.client.jar") != null;
-        System.out.println(FMLDeobfuscatingRemapper.class.getClassLoader().getClass().getName());
         if (client) {
             try (InputStream is = Empty.class.getResourceAsStream("/KanadeDeath.png")) {
                 assert is != null;
@@ -245,208 +335,10 @@ public class Launch {
 
         final URLClassLoader ucl = (URLClassLoader) Loader.class.getClassLoader();
         classLoader = new KanadeClassLoader(ucl.getURLs());
+
         blackboard = new HashMap<>();
         Thread.currentThread().setContextClassLoader(classLoader);
 
-
-        ProtectionDomain domain = Loader.class.getProtectionDomain();
-        ProtectionDomain gl = client ? GL11.class.getProtectionDomain() : null;
-        ClassLoader appClassLoader = client ? GL11.class.getClassLoader() : null;
-
-        if (Launch.client) {
-            late_classes.add("kanade.kill.util.ParticleUtil");
-            late_classes.add("kanade.kill.util.BufferBuilder");
-            late_classes.add("kanade.kill.util.DefaultVertexFormats");
-            late_classes.add("kanade.kill.util.FontRenderer");
-            late_classes.add("kanade.kill.util.VertexFormat");
-            late_classes.add("kanade.kill.util.VertexFormatElement");
-            late_classes.add("kanade.kill.util.ClientFakeObjects");
-            late_classes.add("kanade.kill.Keys");
-            late_classes.add("kanade.kill.render.RenderBeaconBeam");
-            late_classes.add("kanade.kill.util.KanadeFontRender");
-            late_classes.add("kanade.kill.util.VertexFormatElement$EnumType");
-            late_classes.add("kanade.kill.util.VertexFormatElement$EnumUsage");
-            late_classes.add("kanade.kill.util.VertexFormat$1");
-            late_classes.add("kanade.kill.render.WingLayer");
-        }
-
-        late_classes.add("kanade.kill.entity.Infector");
-        late_classes.add("kanade.kill.entity.Lain");
-        late_classes.add("kanade.kill.entity.EntityBeaconBeam");
-        late_classes.add("kanade.kill.util.EntityUtil");
-        late_classes.add("kanade.kill.item.KillItem");
-        late_classes.add("kanade.kill.item.DeathItem");
-        late_classes.add("kanade.kill.reflection.LateFields");
-        late_classes.add("kanade.kill.network.NetworkHandler");
-        late_classes.add("kanade.kill.network.packets.Annihilation");
-        late_classes.add("kanade.kill.network.packets.Annihilation$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.ClientTimeStop");
-        late_classes.add("kanade.kill.network.packets.ClientTimeStop$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.CoreDump");
-        late_classes.add("kanade.kill.network.packets.CoreDump$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.KillCurrentPlayer");
-        late_classes.add("kanade.kill.network.packets.KillCurrentPlayer$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.KillEntity");
-        late_classes.add("kanade.kill.network.packets.KillEntity$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.ServerTimeStop");
-        late_classes.add("kanade.kill.network.packets.ServerTimeStop$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.SwitchTimePoint");
-        late_classes.add("kanade.kill.network.packets.SwitchTimePoint$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.SaveTimePoint$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.SaveTimePoint");
-        late_classes.add("kanade.kill.network.packets.TimeBack$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.TimeBack");
-        late_classes.add("kanade.kill.network.packets.ClientReload$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.ClientReload");
-        late_classes.add("kanade.kill.network.packets.BlackHole");
-        late_classes.add("kanade.kill.network.packets.BlackHole$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.ConfigUpdatePacket");
-        late_classes.add("kanade.kill.network.packets.ConfigUpdatePacket$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.UpdatePlayerProtectedState");
-        late_classes.add("kanade.kill.network.packets.UpdatePlayerProtectedState$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.KillAll");
-        late_classes.add("kanade.kill.network.packets.KillAll$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.UpdateSuperMode");
-        late_classes.add("kanade.kill.network.packets.UpdateSuperMode$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.Reset");
-        late_classes.add("kanade.kill.network.packets.Reset$MessageHandler");
-        late_classes.add("kanade.kill.command.KanadeKillCommand");
-        late_classes.add("kanade.kill.command.DebugCommand");
-        late_classes.add("kanade.kill.command.KanadeReflection");
-        late_classes.add("kanade.kill.network.packets.KillAllEntities");
-        late_classes.add("kanade.kill.network.packets.KillAllEntities$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.UpdateTickCount");
-        late_classes.add("kanade.kill.network.packets.UpdateTickCount$MessageHandler");
-        late_classes.add("kanade.kill.network.packets.ClientReloadChunk");
-        late_classes.add("kanade.kill.network.packets.ClientReloadChunk$MessageHandler");
-
-        classes.add("kanade.kill.util.NetworkTool");
-        classes.add("kanade.kill.util.InternalUtils");
-        classes.add("me.xdark.shell.JVMUtil");
-        classes.add("me.xdark.shell.NativeLibrary");
-        classes.add("me.xdark.shell.ShellcodeRunner");
-        classes.add("one.helfy.Field");
-        classes.add("one.helfy.JVM");
-        classes.add("one.helfy.JVMException");
-        classes.add("one.helfy.Type");
-        classes.add("kanade.kill.util.memory.MemoryHelper");
-        classes.add("kanade.kill.util.UnsafeFucker");
-        classes.add("kanade.kill.classload.FakeClassLoadr");
-        classes.add("kanade.kill.util.NumberUtil");
-        classes.add("kanade.kill.util.ObjectUtil");
-        classes.add("kanade.kill.util.ChunkUtil");
-        classes.add("kanade.kill.Config");
-        classes.add("kanade.kill.util.Util");
-        classes.add("kanade.kill.util.KanadeArrayList");
-        classes.add("kanade.kill.reflection.EarlyMethods");
-        classes.add("kanade.kill.reflection.ReflectionUtil");
-        classes.add("kanade.kill.reflection.EarlyFields");
-        classes.add("kanade.kill.util.ClassUtil");
-        classes.add("kanade.kill.util.UnsafeAccessor");
-        classes.add("kanade.kill.asm.ASMUtil");
-        classes.add("kanade.kill.asm.hooks.ClassInheritanceMultiMap");
-        classes.add("kanade.kill.asm.hooks.DimensionManager");
-        classes.add("kanade.kill.asm.hooks.Entity");
-        classes.add("kanade.kill.asm.hooks.EntityTracker");
-        classes.add("kanade.kill.asm.hooks.EventBus");
-        classes.add("kanade.kill.asm.hooks.FMLModContainer");
-        classes.add("kanade.kill.asm.hooks.ItemStack");
-        classes.add("kanade.kill.asm.hooks.MinecraftServer");
-        classes.add("kanade.kill.asm.hooks.ModClassLoader");
-        classes.add("kanade.kill.asm.hooks.SimpleChannelHandlerWrapper");
-        classes.add("kanade.kill.asm.hooks.World");
-        classes.add("kanade.kill.asm.hooks.WorldServer");
-        classes.add("kanade.kill.asm.injections.Chunk");
-        classes.add("kanade.kill.asm.injections.ClassInheritanceMultiMap");
-        classes.add("kanade.kill.asm.injections.DimensionManager");
-        classes.add("kanade.kill.asm.injections.Entity");
-        classes.add("kanade.kill.asm.injections.EntityLivingBase");
-        classes.add("kanade.kill.asm.injections.EntityPlayer");
-        classes.add("kanade.kill.asm.injections.EntityRenderer");
-        classes.add("kanade.kill.asm.injections.EntityTracker");
-        classes.add("kanade.kill.asm.injections.Event");
-        classes.add("kanade.kill.asm.injections.EventBus");
-        classes.add("kanade.kill.asm.injections.FMLClientHandler");
-        classes.add("kanade.kill.asm.injections.FMLModContainer");
-        classes.add("kanade.kill.asm.injections.ForgeHooksClient");
-        classes.add("kanade.kill.asm.injections.GuiMainMenu");
-        classes.add("kanade.kill.asm.injections.ItemStack");
-        classes.add("kanade.kill.asm.injections.KeyBinding");
-        classes.add("kanade.kill.asm.injections.Minecraft");
-        classes.add("kanade.kill.asm.injections.MinecraftForge");
-        classes.add("kanade.kill.asm.injections.MinecraftServer");
-        classes.add("kanade.kill.asm.injections.ModClassLoader");
-        classes.add("kanade.kill.asm.injections.MouseHelper");
-        classes.add("kanade.kill.asm.injections.NetHandlerPlayServer");
-        classes.add("kanade.kill.asm.injections.NonNullList");
-        classes.add("kanade.kill.asm.injections.RenderGlobal");
-        classes.add("kanade.kill.asm.injections.RenderItem");
-        classes.add("kanade.kill.asm.injections.RenderLivingBase");
-        classes.add("kanade.kill.asm.injections.RenderManager");
-        classes.add("kanade.kill.asm.injections.RenderPlayer");
-        classes.add("kanade.kill.asm.injections.ServerCommandManager");
-        classes.add("kanade.kill.asm.injections.SimpleChannelHandlerWrapper");
-        classes.add("kanade.kill.asm.injections.Timer");
-        classes.add("kanade.kill.asm.injections.World");
-        classes.add("kanade.kill.asm.injections.WorldClient");
-        classes.add("kanade.kill.asm.injections.WorldServer");
-        classes.add("kanade.kill.asm.Transformer");
-        classes.add("kanade.kill.thread.ClassLoaderCheckThread");
-        classes.add("kanade.kill.timemanagement.TimeStop");
-        classes.add("kanade.kill.timemanagement.TimeBack");
-        classes.add("kanade.kill.util.FileUtils");
-        classes.add("kanade.kill.util.KanadeSecurityManager");
-        classes.add("kanade.kill.thread.KillerThread");
-        classes.add("kanade.kill.thread.SecurityManagerThread");
-        classes.add("kanade.kill.ModMain");
-        classes.add("kanade.kill.ModMain$1");
-
-        if (client) {
-            classes.add("kanade.kill.ClientMain");
-            classes.add("kanade.kill.asm.hooks.Timer");
-            classes.add("kanade.kill.asm.hooks.RenderItem");
-            classes.add("kanade.kill.asm.hooks.GuiMainMenu");
-            classes.add("kanade.kill.asm.hooks.ItemStackClient");
-            classes.add("kanade.kill.asm.hooks.Minecraft");
-            classes.add("kanade.kill.asm.hooks.Minecraft$1");
-            classes.add("kanade.kill.asm.hooks.MouseHelper");
-            classes.add("kanade.kill.asm.hooks.RenderLivingBase");
-            classes.add("kanade.kill.thread.DisplayGui");
-            classes.add("org.lwjgl.opengl.GLOffsets");
-            classes.add("org.lwjgl.opengl.OpenGLHelper");
-            classes.add("kanade.kill.asm.hooks.SoundSystemStarterThread");
-            classes.add("kanade.kill.util.superRender.ImagePanel");
-            classes.add("kanade.kill.util.superRender.DeathWindow");
-        }
-
-        try {
-            for (String s : classes) {
-                LOGGER.info("Defining class:{}", s);
-                try (InputStream is = Empty.class.getResourceAsStream('/' + s.replace('.', '/') + ".class")) {
-                    assert is != null;
-                    //6 lines below are from Apache common io.
-                    final ByteArrayOutputStream output = new ByteArrayOutputStream();
-                    final byte[] buffer = new byte[8024];
-                    int n;
-                    while (-1 != (n = is.read(buffer))) {
-                        output.write(buffer, 0, n);
-                    }
-                    byte[] bytes = output.toByteArray();
-                    Class<?> Clazz;
-                    if (s.startsWith("org.lwjgl")) {
-                        Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, appClassLoader, gl);
-                    } else if (s.startsWith("net.minecraftforge.fml.relauncher")) {
-                        Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, appClassLoader, domain);
-                        Unsafe.instance.defineClass(s, bytes, 0, bytes.length, classLoader, domain);
-                    } else {
-                        Clazz = Unsafe.instance.defineClass(s, bytes, 0, bytes.length, classLoader, domain);
-                    }
-                    ((Map<String, Class<?>>) Unsafe.instance.getObjectVolatile(classLoader, EarlyFields.cachedClasses_offset)).put(s, Clazz);
-                }
-            }
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
-        }
 
         Thread thread = new ClassLoaderCheckThread(Kanade);
         thread.start();
@@ -469,41 +361,60 @@ public class Launch {
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
-        LOGGER.info("Checking account...");
-        file = new File("account");
-        if (!file.exists()) {
-            String name = JOptionPane.showInputDialog("Please enter username");
-            String uuid = JOptionPane.showInputDialog("Please enter uuid");
-            boolean res = NetworkTool.CheckUser("?username=" + name + "&uuid=" + uuid);
-            if (!res) {
-                JOptionPane.showMessageDialog(null, "Invalid account!", "ERROR", JOptionPane.ERROR_MESSAGE);
-                Runtime.getRuntime().exit(114514);
-            } else if (client) {
-                JOptionPane.showMessageDialog(null, "Verify passed!", null, JOptionPane.INFORMATION_MESSAGE);
+
+        LOGGER.info("Fucking CoreModManager");
+        try (InputStream is = Empty.class.getResourceAsStream("/CoreModManager")) {
+            assert is != null;
+            //6 lines below are from Apache common io.
+            final ByteArrayOutputStream output = new ByteArrayOutputStream();
+            final byte[] buffer = new byte[8024];
+            int n;
+            while (-1 != (n = is.read(buffer))) {
+                output.write(buffer, 0, n);
             }
-
-            LOGGER.info("Continue.");
-        } else {
-            byte[] buf;
-
-            try (FileInputStream fis = new FileInputStream(file)) {
-                buf = new byte[fis.available()];
-                fis.read(buf, 0, fis.available());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            String s = new String(buf, StandardCharsets.US_ASCII);
-
-            if (!NetworkTool.CheckUser(s)) {
-                LOGGER.error("Invalid account!");
-                JOptionPane.showMessageDialog(null, "Invalid account!", "ERROR", JOptionPane.ERROR_MESSAGE);
-                Runtime.getRuntime().exit(114514);
-            } else {
-                if (client) {
-                    JOptionPane.showMessageDialog(null, "Verify passed!", null, JOptionPane.INFORMATION_MESSAGE);
-                }
-            }
+            byte[] bytes = output.toByteArray();
+            Class<?> Clazz;
+            Clazz = Unsafe.instance.defineClass("net.minecraftforge.fml.relauncher.CoreModManager", bytes, 0, bytes.length, Launch.class.getClassLoader(), Loader.class.getProtectionDomain());
+            classLoader.cachedClasses.put("net.minecraftforge.fml.relauncher.CoreModManager", Clazz);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+
+//        LOGGER.info("Checking account...");
+//        file = new File("account");
+//        if (!file.exists()) {
+//            String name = JOptionPane.showInputDialog("Please enter username");
+//            String uuid = JOptionPane.showInputDialog("Please enter uuid");
+//            boolean res = NetworkTool.CheckUser("?username=" + name + "&uuid=" + uuid);
+//            if (!res) {
+//                JOptionPane.showMessageDialog(null, "Invalid account!", "ERROR", JOptionPane.ERROR_MESSAGE);
+//                Runtime.getRuntime().exit(114514);
+//            } else if (client) {
+//                JOptionPane.showMessageDialog(null, "Verify passed!", null, JOptionPane.INFORMATION_MESSAGE);
+//            }
+//
+//            LOGGER.info("Continue.");
+//        } else {
+//            byte[] buf;
+//
+//            try (FileInputStream fis = new FileInputStream(file)) {
+//                buf = new byte[fis.available()];
+//                fis.read(buf, 0, fis.available());
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+//
+//            String s = new String(buf, StandardCharsets.US_ASCII);
+//
+//            if (!NetworkTool.CheckUser(s)) {
+//                LOGGER.error("Invalid account!");
+//                JOptionPane.showMessageDialog(null, "Invalid account!", "ERROR", JOptionPane.ERROR_MESSAGE);
+//                Runtime.getRuntime().exit(114514);
+//            } else {
+//                if (client) {
+//                    JOptionPane.showMessageDialog(null, "Verify passed!", null, JOptionPane.INFORMATION_MESSAGE);
+//                }
+//            }
+//        }
     }
 }

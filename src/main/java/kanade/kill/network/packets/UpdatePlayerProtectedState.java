@@ -1,8 +1,10 @@
 package kanade.kill.network.packets;
 
 import io.netty.buffer.ByteBuf;
+import kanade.kill.Launch;
 import kanade.kill.item.KillItem;
 import kanade.kill.util.NativeMethods;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -54,6 +56,11 @@ public class UpdatePlayerProtectedState implements IMessage {
         public IMessage onMessage(UpdatePlayerProtectedState message, MessageContext ctx) {
             KillItem.list.add(message.uuid);
             NativeMethods.ProtectAdd(message.uuid.hashCode());
+            if (Launch.client) {
+                if (message.uuid.equals(Minecraft.getMinecraft().PLAYER.entityUniqueID) && !NativeMethods.HaveTag(Minecraft.getMinecraft(), 10)) {
+                    NativeMethods.SetTag(Minecraft.getMinecraft(), 10);
+                }
+            }
             return null;
         }
     }

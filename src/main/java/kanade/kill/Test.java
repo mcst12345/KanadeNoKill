@@ -7,8 +7,11 @@ import javax.crypto.Cipher;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.Arrays;
 
 public class Test implements Opcodes {
     static Unsafe unsafe;
@@ -26,10 +29,17 @@ public class Test implements Opcodes {
         return cipher.doFinal(encryptedData);
     }
 
+
     public static void main(String[] args) throws IOException {
-        String s = "wnwiowe";
-        s = Character.toUpperCase(s.charAt(0)) + s.substring(1);
-        System.out.println(s);
+        File file = new File("/root/.minecraft/mods");
+        System.out.println(Arrays.toString(file.listFiles()));
+    }
+
+    public static class aaa extends URLStreamHandler {
+        @Override
+        protected URLConnection openConnection(URL u) throws IOException {
+            return null;
+        }
     }
 
     /*请求url获取返回的内容*/

@@ -50,6 +50,7 @@ public class KillEntity implements IMessage {
                     EntityUtil.Kill(entity, message.reset);
                 }
             }
+            Minecraft.getMinecraft().IngameGUI.overlayBoss.clearBossInfos();
             return null;
         }
     }

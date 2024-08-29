@@ -3,6 +3,7 @@ package net.minecraft.item;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import kanade.kill.util.Util;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -53,7 +54,7 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
     public final Item item;
     public NBTTagCompound stackTagCompound;
     public int itemDamage;
-    private int stackSize;
+    public int stackSize;
     public int animationsToGo;
     private boolean isEmpty;
     private EntityItemFrame itemFrame;
@@ -196,6 +197,9 @@ public final class ItemStack implements net.minecraftforge.common.capabilities.I
     }
 
     public boolean isEmpty() {
+        if (Util.NoRemove(this)) {
+            return false;
+        }
         if (this == EMPTY) {
             return true;
         } else if (this.getItemRaw() != null && this.getItemRaw() != Items.AIR) {

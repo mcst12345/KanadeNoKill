@@ -13,7 +13,7 @@ public class SimpleChannelHandlerWrapper implements Opcodes {
         mn.localVariables.clear();
         mn.tryCatchBlocks.clear();
         mn.maxStack = 3;
-        mn.maxLocals = 2;
+        mn.maxLocals = 3;
         mn.instructions.add(new VarInsnNode(ALOAD, 0));
         mn.instructions.add(new VarInsnNode(ALOAD, 1));
         mn.instructions.add(new VarInsnNode(ALOAD, 2));

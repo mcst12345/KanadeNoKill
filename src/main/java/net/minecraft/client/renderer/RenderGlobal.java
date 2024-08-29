@@ -84,7 +84,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
     IRenderChunkFactory renderChunkFactory;
     private WorldClient world;
     private Set<RenderChunk> chunksToUpdate = Sets.newLinkedHashSet();
-    private List<ContainerLocalRenderInformation> renderInfos = Lists.newArrayListWithCapacity(69696);
+    public List<ContainerLocalRenderInformation> renderInfos = Lists.newArrayListWithCapacity(69696);
     private ViewFrustum viewFrustum;
     private int starGLCallList = -1;
     private int glSkyList = -1;
@@ -2169,7 +2169,7 @@ public class RenderGlobal implements IWorldEventListener, IResourceManagerReload
     }
 
     @SideOnly(Side.CLIENT)
-    class ContainerLocalRenderInformation {
+    public class ContainerLocalRenderInformation {
         final RenderChunk renderChunk;
         final EnumFacing facing;
         final int counter;

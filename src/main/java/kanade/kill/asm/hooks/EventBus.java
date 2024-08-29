@@ -73,7 +73,7 @@ public class EventBus {
                         bus.register(eventType, target, real, activeModContainer);
                         break;
                     }
-                } catch (NoSuchMethodException e) {
+                } catch (Throwable e) {
                     // Eat the error, this is not unexpected
                 }
             }

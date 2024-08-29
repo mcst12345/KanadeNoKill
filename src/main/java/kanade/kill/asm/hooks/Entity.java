@@ -6,9 +6,18 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @SuppressWarnings("unused")
 public class Entity {
+    public static void setUniqueId(net.minecraft.entity.Entity entity, UUID uniqueIdIn) {
+        if (entity.entityUniqueID != null) {
+            return;
+        }
+        entity.entityUniqueID = uniqueIdIn;
+        entity.cachedUniqueIdString = entity.entityUniqueID.toString();
+    }
+
     public static NBTTagCompound writeToNBT(net.minecraft.entity.Entity entity, NBTTagCompound compound) {
         try {
             compound.setTag("Pos", entity.newDoubleNBTList(entity.X, entity.Y, entity.Z));

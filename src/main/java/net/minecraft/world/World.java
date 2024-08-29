@@ -60,7 +60,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     public List<Entity> loadedEntityList = Lists.newArrayList();
     public final List<TileEntity> loadedTileEntityList = Lists.newArrayList();
     public final List<TileEntity> tickableTileEntities = Lists.newArrayList();
-    public final List<EntityPlayer> playerEntities = Lists.newArrayList();
+    public List<EntityPlayer> playerEntities = Lists.newArrayList();
     public final List<Entity> weatherEffects = Lists.newArrayList();
     public final List<Entity> unloads = Lists.newArrayList();
     public final Random rand = new Random();
@@ -79,7 +79,7 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
     public final WorldBorder worldBorder;
     public List<Entity> protects = new ArrayList<>();
     public List<Entity> entities = new ArrayList<>();
-    public List<Entity> players = new ArrayList<>();
+    public List<EntityPlayer> players = new ArrayList<>();
     public float prevRainingStrength;
     public float rainingStrength;
     public float prevThunderingStrength;
@@ -3170,6 +3170,10 @@ public abstract class World implements IBlockAccess, net.minecraftforge.common.c
 
     @Nullable
     public BlockPos findNearestStructure(String structureName, BlockPos position, boolean findUnexplored) {
+        return null;
+    }
+
+    public Vec3d getSkyColorBody0(Entity cameraEntity, float partialTicks) {
         return null;
     }
 }

@@ -20,6 +20,12 @@ public class ServerCommandManager implements Opcodes {
         list.add(new MethodInsnNode(INVOKEVIRTUAL, "net/minecraft/command/ServerCommandManager", "func_71560_a", "(Lnet/minecraft/command/ICommand;)Lnet/minecraft/command/ICommand;", false));
         list.add(new InsnNode(POP));
         list.add(new VarInsnNode(ALOAD, 0));
+        list.add(new TypeInsnNode(NEW, "kanade/kill/command/CommandInfo"));
+        list.add(new InsnNode(DUP));
+        list.add(new MethodInsnNode(INVOKESPECIAL, "kanade/kill/command/CommandInfo", "<init>", "()V", false));
+        list.add(new MethodInsnNode(INVOKEVIRTUAL, "net/minecraft/command/ServerCommandManager", "func_71560_a", "(Lnet/minecraft/command/ICommand;)Lnet/minecraft/command/ICommand;", false));
+        list.add(new InsnNode(POP));
+        list.add(new VarInsnNode(ALOAD, 0));
         list.add(new TypeInsnNode(NEW, "kanade/kill/command/DebugCommand"));
         list.add(new InsnNode(DUP));
         list.add(new MethodInsnNode(INVOKESPECIAL, "kanade/kill/command/DebugCommand", "<init>", "()V", false));

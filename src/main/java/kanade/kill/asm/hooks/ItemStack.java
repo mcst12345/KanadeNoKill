@@ -2,16 +2,35 @@ package kanade.kill.asm.hooks;
 
 import kanade.kill.Config;
 import kanade.kill.Launch;
+import kanade.kill.ModMain;
 import kanade.kill.item.KillItem;
 import kanade.kill.timemanagement.TimeStop;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 
 public class ItemStack {
+    public static boolean isEmpty(net.minecraft.item.ItemStack stack) {
+        if (stack.getITEM() == ModMain.kill_item || stack.getITEM() == ModMain.death_item) {
+            return false;
+        }
+        if (stack == net.minecraft.item.ItemStack.EMPTY) {
+            return true;
+        } else if (stack.getITEM() != null && stack.getITEM() != Items.AIR) {
+            if (stack.stackSize <= 0) {
+                return true;
+            } else {
+                return stack.itemDamage < -32768 || stack.itemDamage > 65535;
+            }
+        } else {
+            return true;
+        }
+    }
+
     public static void updateAnimation(net.minecraft.item.ItemStack stack, World worldIn, Entity entityIn, int inventorySlot, boolean isCurrentItem) {
         if (TimeStop.isTimeStop()) {
             return;

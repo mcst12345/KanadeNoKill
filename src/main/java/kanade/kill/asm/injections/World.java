@@ -11,11 +11,11 @@ public class World implements Opcodes {
     public static void AddField(ClassNode cn) {
         Launch.LOGGER.info("Adding field.");
         cn.fields.add(new FieldNode(ACC_PUBLIC, "Profiler", "Lnet/minecraft/profiler/Profiler;", null, null));
-        cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "protects", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
-        cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "entities", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
-        cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "players", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
-        cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "weathers", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
-        cn.fields.add(new FieldNode(ACC_PUBLIC | ACC_FINAL, "unloads", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "protects", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "entities", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "players", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/player/EntityPlayer;>;", null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "weathers", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
+        cn.fields.add(new FieldNode(ACC_PUBLIC, "unloads", "Ljava/util/List;", "Ljava/util/List<Lnet/minecraft/entity/Entity;>;", null));
     }
 
     public static void InjectConstructor(MethodNode mn) {

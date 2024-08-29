@@ -1,6 +1,7 @@
 package kanade.kill;
 
 public class Config {
+    public static boolean skyColor = false;
     public static int particleType;
     public static boolean SuperMode = false;
     public static boolean SuperAttack = false;

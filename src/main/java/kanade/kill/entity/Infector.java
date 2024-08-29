@@ -19,7 +19,7 @@ public class Infector extends EntityProtected {
         this.tasks.addTask(0, new EntityAIAttackMelee(this, 0.5D, true));
         this.tasks.addTask(2, new EntityAIMoveTowardsTarget(this, 0.9D, 128.0F));
         this.tasks.addTask(2, new EntityAIMoveIndoors(this));
-        this.targetTasks.addTask(1, new EntityAINearestAttackableTarget<>(this, EntityLiving.class, 10, false, true, p_apply_1_ -> p_apply_1_ != null && !(p_apply_1_ instanceof EntityProtected)));
+        this.targetTasks.addTask(1, new EntityAINearestAttackableTarget<>(this, EntityLiving.class, 10, false, true, p_apply_1_ -> p_apply_1_ != null && !(p_apply_1_ instanceof EntityProtected) && !p_apply_1_.getEntityData().getBoolean("infected")));
         this.tasks.addTask(2, new EntityAIMoveTowardsRestriction(this, 0.6D));
         this.tasks.addTask(10, new EntityAIWatchClosest(this, EntityLiving.class, 8.0F));
     }
@@ -44,8 +44,9 @@ public class Infector extends EntityProtected {
             living.targetTasks.addTask(1, new EntityAINearestAttackableTarget<>(this, EntityLiving.class, 10, false, true, p_apply_1_ -> p_apply_1_ != null && !(p_apply_1_ instanceof EntityProtected)));
             living.tasks.addTask(2, new EntityAIMoveTowardsRestriction(this, 0.6D));
             living.tasks.addTask(10, new EntityAIWatchClosest(this, EntityLiving.class, 8.0F));
-            living.dataManager.set(HEALTH, living.dataManager.get(HEALTH) - 5.0F);
-            living.hurtTime = 10;
+            living.DataManager.set(HEALTH, living.dataManager.get(HEALTH) - 5.0F);
+            living.hurtTime = 100;
+            living.getEntityData().setBoolean("infected", true);
             return true;
         }
         return super.attackEntityAsMob(entityIn);

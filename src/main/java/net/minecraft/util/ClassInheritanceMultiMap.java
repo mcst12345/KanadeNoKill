@@ -9,11 +9,11 @@ import java.util.*;
 
 public class ClassInheritanceMultiMap<T> extends AbstractSet<T> {
     // Forge: Use concurrent collection to allow creating chunks from multiple threads safely
-    private static final Set<Class<?>> ALL_KNOWN = Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
+    public static final Set<Class<?>> ALL_KNOWN = Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
     public final Map<Class<?>, List<T>> map = Maps.newHashMap();
-    private final Set<Class<?>> knownKeys = Sets.newIdentityHashSet();
-    private final Class<T> baseClass;
-    private final List<T> values = Lists.newArrayList();
+    public final Set<Class<?>> knownKeys = Sets.newIdentityHashSet();
+    public final Class<T> baseClass;
+    public final List<T> values = Lists.newArrayList();
 
     public ClassInheritanceMultiMap(Class<T> baseClassIn) {
         this.baseClass = baseClassIn;

@@ -5,7 +5,6 @@ import kanade.kill.Empty;
 import kanade.kill.Launch;
 import kanade.kill.classload.FakeClassLoadr;
 import kanade.kill.classload.KanadeClassLoader;
-import kanade.kill.reflection.EarlyFields;
 import kanade.kill.reflection.ReflectionUtil;
 import me.xdark.shell.ShellcodeRunner;
 import net.minecraft.launchwrapper.IClassTransformer;
@@ -16,15 +15,16 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 import scala.concurrent.util.Unsafe;
+import sun.reflect.Reflection;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.instrument.ClassDefinition;
 import java.lang.instrument.UnmodifiableClassException;
-import java.lang.ref.SoftReference;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import static me.xdark.shell.ShellcodeRunner.getSymbol;
 
@@ -116,34 +116,29 @@ public class ClassUtil implements Opcodes {
             Util.killing = false;
         }
     }
-    public static void setClassLoader(Class<?> clazz, ClassLoader loader) {
-        Unsafe.instance.putObjectVolatile(clazz, EarlyFields.classLoader_offset, loader);
+
+    public static abstract class Filter<T> {
+        public abstract boolean filter(T object);
     }
 
-    public static void setName(Class<?> clazz, String name) {
-        Unsafe.instance.putObjectVolatile(clazz, EarlyFields.name_offset, name);
-    }
+    public static boolean isCallerFromFilterClass(Filter<Class<?>> filter, int startDeep) {
+        int deep = startDeep;
+        Function<Integer, Class<?>> method = Reflection::getCallerClass;
 
-    public static void setRedefinedCount(Class<?> clazz, int count) {
-        Unsafe.instance.putIntVolatile(clazz, EarlyFields.classRedefinedCount_offset, count);
-    }
+        while (true) {
+            Class<?> clazz = method.apply(deep);
+            if (clazz == null) {
+                break;
+            }
 
-    public static SoftReference<?> getReflectionData(Class<?> clazz) {
-        return (SoftReference<?>) Unsafe.instance.getObjectVolatile(clazz, EarlyFields.reflectionData_offset);
-    }
-
-    public static void setReflectionData(Class<?> clazz, SoftReference<?> sr) {
-        Unsafe.instance.putObjectVolatile(clazz, EarlyFields.reflectionData_offset, sr);
-    }
-
-    public static void setClass(Object obj, Class<?> clazz) {
-        try {
-            int tmp = Unsafe.instance.getIntVolatile(Unsafe.instance.allocateInstance(clazz), 8L);
-            Unsafe.instance.putIntVolatile(obj, 8L, tmp);
-        } catch (InstantiationException e) {
-            Launch.LOGGER.error("Failed to set class of object!", e);
+            if (filter.filter(clazz)) {
+                return true;
+            }
+            deep++;
         }
+        return false;
     }
+
 
     public static void RestoreModMethods() {
         Util.killing = true;

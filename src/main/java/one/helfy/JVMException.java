@@ -1,6 +1,9 @@
 package one.helfy;
 
-public final class JVMException extends RuntimeException {
+public class JVMException extends RuntimeException {
+
+    public JVMException() {
+    }
 
     public JVMException(String message) {
         super(message);

@@ -1,6 +1,7 @@
 package kanade.kill.entity;
 
 import kanade.kill.Launch;
+import kanade.kill.ModMain;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.*;
@@ -8,12 +9,10 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 
 public class Lain extends EntityProtected {
-
-
-
     public Lain(World worldIn) {
         super(worldIn);
         Launch.Lain();
+        ModMain.setLain(this);
     }
 
     @Override

@@ -10,10 +10,14 @@ import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.CoreDump;
 import kanade.kill.network.packets.KillCurrentPlayer;
 import kanade.kill.network.packets.KillEntity;
-import kanade.kill.reflection.LateFields;
 import kanade.kill.reflection.ReflectionUtil;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.toasts.GuiToast;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.statemap.DefaultStateMapper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
@@ -22,16 +26,14 @@ import net.minecraft.entity.effect.EntityLightningBolt;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.inventory.InventoryEnderChest;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.pathfinding.PathWorldListener;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ClassInheritanceMultiMap;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.ITickable;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldEventListener;
 import net.minecraft.world.ServerWorldEventHandler;
@@ -39,11 +41,12 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.storage.WorldInfo;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.eventhandler.IEventListener;
-import scala.concurrent.util.Unsafe;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -53,6 +56,9 @@ import static net.minecraft.entity.Entity.FLAGS;
 
 @SuppressWarnings("unused")
 public class EntityUtil {
+
+    public static final Set<Class<?>> banned = new HashSet<>();
+
     public static synchronized void kill(TileEntity tileEntity) {
         Util.killing = true;
         tileEntity.tileEntityInvalid = true;
@@ -120,10 +126,38 @@ public class EntityUtil {
                 NativeMethods.FuckObjects();
             }
         }
+        if (Launch.client) {
+            if (Minecraft.getMinecraft().toastGui != null && Minecraft.getMinecraft().toastGui.getClass() != GuiToast.class) {
+                Minecraft.getMinecraft().toastGui = new GuiToast(Minecraft.getMinecraft());
+            }
+        }
+        if (Launch.client) {
+            for (WorldServer world : DimensionManager.getWorlds()) {
+                for (Entity player : world.players) {
+                    for (BlockPos pos : BlockPos.getAllInBox(player.getPosition().add(-10, -10, -10), player.getPosition().add(10, 10, 10))) {
+                        if (!world.isAirBlock(pos)) {
+                            IBlockState state = player.WORLD.getBlockState(pos);
+                            if (ObjectUtil.FromModClass(state.getBlock())) {
+                                String propertyString = (new DefaultStateMapper()).getPropertyString(state.getProperties());
+                                ModelResourceLocation modelResourceLocation = new ModelResourceLocation(Block.REGISTRY.getNameForObject(state.getBlock()), propertyString);
+                                try {
+                                    if (ModelLoaderRegistry.getModel(modelResourceLocation).getClass().getName().equals("net.minecraftforge.client.model.ModelLoader$WeightedRandomModel")) {
+                                        world.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
+                                    }
+                                } catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         Util.killing = false;
     }
 
     //Thread safe :)
+    //Maybe ......
     public static synchronized void SafeKill(Object entity, boolean reset) {
         if (!(entity instanceof Entity)) {
             return;
@@ -132,6 +166,7 @@ public class EntityUtil {
             kanade.kill.asm.hooks.MinecraftServer.AddTask(() -> Kill((Entity) entity, reset));
         }
     }
+
 
     @SuppressWarnings("unchecked")
     public static synchronized void Kill(Entity entity, boolean reset) {
@@ -163,13 +198,14 @@ public class EntityUtil {
             }
             World world = entity.WORLD;
             if (world.entities.getClass() != KanadeArrayList.class) {
-                Unsafe.instance.putObjectVolatile(world, LateFields.loadedEntityList_offset, new KanadeArrayList<>(world.entities));
+                world.entities = new KanadeArrayList<>(world.entities);
+                world.loadedEntityList = world.entities;
             }
             world.entities.remove(entity);
             Chunk chunk = world.getChunk(entity.chunkCoordX, entity.chunkCoordZ);
-            ClassInheritanceMultiMap<Entity>[] entityLists = (ClassInheritanceMultiMap<Entity>[]) Unsafe.instance.getObjectVolatile(chunk, LateFields.entities_offset);
+            ClassInheritanceMultiMap<Entity>[] entityLists = chunk.entities;
             for (ClassInheritanceMultiMap<Entity> map : entityLists) {
-                Map<Class<?>, List<?>> MAP = (Map<Class<?>, List<?>>) Unsafe.instance.getObjectVolatile(map, LateFields.map_offset);
+                Map<Class<?>, List<Entity>> MAP = map.map;
                 List<?> list = MAP.get(entity.getClass());
                 if (list != null) {
                     list.remove(entity);
@@ -178,17 +214,18 @@ public class EntityUtil {
             chunk.markDirty();
 
             entity.isDead = true;
-            Unsafe.instance.putObjectVolatile(entity, LateFields.HatedByLife_offset, true);
+            entity.HatedByLife = true;
             entity.addedToChunk = false;
             if (entity instanceof EntityLivingBase) {
-                DataParameter<Float> HEALTH = (DataParameter<Float>) Unsafe.instance.getObjectVolatile(LateFields.HEALTH_base, LateFields.HEALTH_offset);
+                DataParameter<Float> HEALTH = EntityLivingBase.HEALTH;
                 entity.DataManager.set(HEALTH, 0.0f);
                 if (entity instanceof EntityPlayer) {
                     EntityPlayer player = (EntityPlayer) entity;
                     player.Inventory = new InventoryPlayer(player);
                     player.enderChest = new InventoryEnderChest();
                     if (world.players.getClass() != KanadeArrayList.class) {
-                        Unsafe.instance.putObjectVolatile(world, LateFields.playerEntities_offset, new KanadeArrayList<>(world.players));
+                        world.players = new KanadeArrayList<>(world.players);
+                        world.playerEntities = world.players;
                     }
                     world.players.remove(player);
                     if (player instanceof EntityPlayerMP) {
@@ -203,10 +240,10 @@ public class EntityUtil {
                 if (entity instanceof EntityLiving && listener instanceof PathWorldListener) {
                     ((PathWorldListener) listener).navigations.remove(((EntityLiving) entity).getNavigator());
                 }
-                if (world instanceof WorldServer && listener instanceof ServerWorldEventHandler) {
-                    EntityTracker tracker = ((WorldServer) entity.WORLD).getEntityTracker();
-                    tracker.untrack(entity);
-                }
+            }
+            if (world instanceof WorldServer) {
+                EntityTracker tracker = ((WorldServer) entity.WORLD).getEntityTracker();
+                tracker.untrack(entity);
             }
             if (!entity.WORLD.isRemote) {
                 NetworkHandler.INSTANCE.sendMessageToAllPlayer(new KillEntity(entity.entityId, reset));
@@ -260,7 +297,15 @@ public class EntityUtil {
         if (NativeMethods.HaveDeadTag(obj)) {
             return true;
         }
+        if (Launch.client) {
+            if (obj instanceof Gui && Config.renderProtection) {
+                return true;
+            }
+        }
         if (obj instanceof Entity) {
+            if (banned.contains(obj.getClass())) {
+                return true;
+            }
             Entity entity = (Entity) obj;
             return Dead.contains(entity.getUniqueID()) || entity.getUniqueID() != null && NativeMethods.DeadContain(entity.getUniqueID().hashCode()) || NativeMethods.HaveDeadTag(entity);
         } else if (obj instanceof UUID) {
@@ -341,6 +386,10 @@ public class EntityUtil {
                 }
                 case 4: {
                     spawnParticle4(player);
+                    break;
+                }
+                case 5: {
+                    ParticleUtil.drawWing(player);
                     break;
                 }
             }

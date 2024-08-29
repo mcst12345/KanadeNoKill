@@ -46,7 +46,8 @@ public class Chunk implements net.minecraftforge.common.capabilities.ICapability
     private static ChunkPos populating = null; // keep track of cascading chunk generation during chunk population
     public final int x;
     public final int z;
-    public final ClassInheritanceMultiMap<Entity>[] entityLists;
+    public ClassInheritanceMultiMap<Entity>[] entityLists;
+    public ClassInheritanceMultiMap<Entity>[] entities;
     private final ExtendedBlockStorage[] storageArrays;
     private final byte[] blockBiomeArray;
     private final int[] precipitationHeightMap;

@@ -15,6 +15,8 @@ public class ItemStack implements Opcodes {
         MethodNode mn = new MethodNode(ACC_PUBLIC, "getITEM", "()Lnet/minecraft/item/Item;", null, null);
         LabelNode label0 = new LabelNode();
         LabelNode label1 = new LabelNode();
+        mn.maxStack = 1;
+        mn.maxLocals = 1;
         mn.instructions.add(label0);
         mn.instructions.add(new VarInsnNode(ALOAD, 0));
         mn.instructions.add(new FieldInsnNode(GETFIELD, "net/minecraft/item/ItemStack", "ITEM", "Lnet/minecraft/item/Item;"));
@@ -22,6 +24,17 @@ public class ItemStack implements Opcodes {
         mn.instructions.add(label1);
         mn.localVariables.add(new LocalVariableNode("this", "Lnet/minecraft/item/ItemStack;", null, label0, label1, 0));
         cn.methods.add(mn);
+    }
+
+    public static void OverwriteIsEmpty(MethodNode mn) {
+        mn.instructions.clear();
+        mn.localVariables.clear();
+        mn.instructions.add(new VarInsnNode(ALOAD, 0));
+        mn.instructions.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/ItemStack", "isEmpty", "(Lnet/minecraft/item/ItemStack;)Z", false));
+        mn.instructions.add(new InsnNode(IRETURN));
+        mn.maxStack = 1;
+        mn.maxLocals = 1;
+        Launch.LOGGER.info("Overwrite isEmpty.");
     }
 
     public static void OverwriteGetTooltip(MethodNode mn) {

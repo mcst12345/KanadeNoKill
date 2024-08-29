@@ -62,7 +62,7 @@ public class KanadeArrayList<E> extends ArrayList<E> {
         return super.addAll(index, list);
     }
 
-    protected void removeRange(int fromIndex, int toIndex) {
+    public void removeRange(int fromIndex, int toIndex) {
     }
 
     public E set(int index, E e) {

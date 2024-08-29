@@ -2,7 +2,6 @@ package kanade.kill.network.packets;
 
 import io.netty.buffer.ByteBuf;
 import kanade.kill.Launch;
-import kanade.kill.reflection.LateFields;
 import kanade.kill.util.EntityUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -12,10 +11,8 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import scala.concurrent.util.Unsafe;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class KillAllEntities implements IMessage {
@@ -50,10 +47,11 @@ public class KillAllEntities implements IMessage {
             List<Entity> targets = new ArrayList<>();
             targets.addAll(world.entities);
             targets.addAll(world.players);
-            targets.addAll((Collection) Unsafe.instance.getObjectVolatile(world, LateFields.entityLists_offset));
+            targets.addAll(world.EntityList);
             for (Entity e : targets) {
                 EntityUtil.Kill(e, message.reset);
             }
+            Minecraft.getMinecraft().IngameGUI.overlayBoss.clearBossInfos();
             return null;
         }
     }

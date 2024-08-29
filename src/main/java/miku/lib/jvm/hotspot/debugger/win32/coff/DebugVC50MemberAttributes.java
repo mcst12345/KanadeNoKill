@@ -1,0 +1,21 @@
+package miku.lib.jvm.hotspot.debugger.win32.coff;
+
+public interface DebugVC50MemberAttributes {
+    short MEMATTR_ACCESS_MASK = 3;
+    short MEMATTR_ACCESS_NO_PROTECTION = 0;
+    short MEMATTR_ACCESS_PRIVATE = 1;
+    short MEMATTR_ACCESS_PROTECTED = 2;
+    short MEMATTR_ACCESS_PUBLIC = 3;
+    short MEMATTR_MPROP_MASK = 28;
+    short MEMATTR_MPROP_VANILLA = 0;
+    short MEMATTR_MPROP_VIRTUAL = 4;
+    short MEMATTR_MPROP_STATIC = 8;
+    short MEMATTR_MPROP_FRIEND = 12;
+    short MEMATTR_MPROP_INTRODUCING_VIRTUAL = 16;
+    short MEMATTR_MPROP_PURE_VIRTUAL = 20;
+    short MEMATTR_MPROP_PURE_INTRODUCING_VIRTUAL = 24;
+    short MEMATTR_PSEUDO_MASK = 32;
+    short MEMATTR_NOINHERIT_MASK = 64;
+    short MEMATTR_NOCONSTRUCT_MASK = 128;
+    short MEMATTR_COMPGENX_MASK = 256;
+}

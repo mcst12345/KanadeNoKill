@@ -8,12 +8,11 @@ import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import kanade.kill.Launch;
 import kanade.kill.asm.Transformer;
-import kanade.kill.reflection.EarlyFields;
 import kanade.kill.util.NativeMethods;
-import net.minecraft.launchwrapper.IClassNameTransformer;
-import net.minecraft.launchwrapper.IClassTransformer;
-import net.minecraft.launchwrapper.LaunchClassLoader;
-import net.minecraft.launchwrapper.LogWrapper;
+import kanade.kill.util.ObjectUtil;
+import miku.lib.jvm.hotspot.oops.Klass;
+import miku.lib.jvm.hotspot.oops.Oop;
+import net.minecraft.launchwrapper.*;
 import net.minecraftforge.fml.common.FMLLog;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.patcher.ClassPatch;
@@ -22,6 +21,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.repackage.com.nothome.delta.GDiffPatcher;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Level;
+import org.lwjgl.opengl.GL11;
 import scala.concurrent.util.Unsafe;
 
 import java.io.*;
@@ -69,14 +69,6 @@ public class KanadeClassLoader extends LaunchClassLoader {
                 name.equals("net.minecraftforge.fml.common.asm.transformers.ModAPITransformer") ||
                 name.equals("net.minecraftforge.fml.common.asm.transformers.MarkerTransformer");
     }
-    private static void closeSilently(Closeable closeable) {
-        if (closeable != null) {
-            try {
-                closeable.close();
-            } catch (IOException ignored) {
-            }
-        }
-    }
 
     public String untransformName(final String name) {
         if (DeobfuscatingTransformer != null) {
@@ -101,6 +93,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
 
     public KanadeClassLoader(URL[] urls) {
         super(urls);
+        addTransformerExclusion("net.minecraftforge.fml.common.asm");
     }
 
     private static void save(byte[] clazz, String file) {
@@ -110,6 +103,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
         try {
             Files.write(new File("transformedClasses" + File.separator + file + ".class").toPath(), clazz);
         } catch (IOException e) {
+
             throw new RuntimeException(e);
         }
     }
@@ -119,14 +113,14 @@ public class KanadeClassLoader extends LaunchClassLoader {
         return defineClass(name, b, off, len, protectionDomain);
     }
 
-    private byte[] runTransformers(final String name, final String transformedName, byte[] basicClass) {
+    public byte[] runTransformers(final String name, final String transformedName, byte[] basicClass) {
         if(!Launch.betterCompatible){
             return basicClass;
         }
-        List<IClassTransformer> Transformers = (List<IClassTransformer>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformers_offset);
+        List<IClassTransformer> Transformers = this.transformers;
         if (Transformers.getClass() != ArrayList.class) {
             Transformers = new ArrayList<>(Transformers);
-            Unsafe.instance.putObjectVolatile(this, EarlyFields.transformers_offset, Transformers);
+            this.transformers = Transformers;
         }
         for (final IClassTransformer transformer : transformers) {
             try {
@@ -169,23 +163,11 @@ public class KanadeClassLoader extends LaunchClassLoader {
         }
     }
 
-    private String transformName(final String name) {
-        if (DeobfuscatingTransformer != null) {
-            return DeobfuscatingTransformer.remapClassName(name);
-        }
-        return name;
-    }
-
     static {
         exclusions.add("kanade.kill.thread.ClassLoaderCheckThread");
         exclusions.add("net.minecraftforge.fml.common.patcher.ClassPatchManager");
-        exclusions.add("me.xdark.shell.JVMUtil");
-        exclusions.add("me.xdark.shell.NativeLibrary");
-        exclusions.add("me.xdark.shell.ShellcodeRunner");
-        exclusions.add("one.helfy.Field");
-        exclusions.add("one.helfy.JVM");
-        exclusions.add("one.helfy.Type");
-        exclusions.add("one.helfy.JVMException");
+        exclusions.add("me.xdark");
+        exclusions.add("one.helfy");
         exclusions.add("kanade.kill.util.memory.MemoryHelper");
         exclusions.add("kanade.kill.classload.KanadeClassLoader");
         exclusions.add("kanade.kill.asm.Transformer");
@@ -197,21 +179,16 @@ public class KanadeClassLoader extends LaunchClassLoader {
         exclusions.add("org.lwjgl.opengl.OpenGLHelper");
         exclusions.add("kanade.kill.util.NumberUtil");
         exclusions.add("kanade.kill.classload.FakeClassLoadr");
-        exclusions.add("kanade.kill.util.superRender.ImagePanel");
-        exclusions.add("kanade.kill.util.superRender.DeathWindow");
+        exclusions.add("kanade.kill.util.superRender");
         exclusions.add("kanade.kill.util.InternalUtils");
+        exclusions.add("miku.lib");
     }
-
-    //Launch.classLoader.getClass().getDeclaredField("transformerExceptions")
-    //Why don's you use LaunchClassLoader.class ?
-    @SuppressWarnings("unused")
-    public Set<String> transformerExceptions = Collections.EMPTY_SET;
 
     public IClassNameTransformer DeobfuscatingTransformer;
 
     @Override
     public byte[] getClassBytes(String name) throws IOException {
-        Set<String> negativeResourceCache = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.negativeResourceCache_offset);
+        Set<String> negativeResourceCache = this.negativeResourceCache;
         if (negativeResourceCache.contains(name)) {
             return null;
         } else if (resourceCache.containsKey(name)) {
@@ -248,8 +225,8 @@ public class KanadeClassLoader extends LaunchClassLoader {
         }
     }
 
-    private byte[] getOrCreateBuffer() {
-        ThreadLocal<byte[]> loadBuffer = (ThreadLocal<byte[]>) Unsafe.instance.getObjectVolatile(this, EarlyFields.loadBuffer_offset);
+    public byte[] getOrCreateBuffer() {
+        ThreadLocal<byte[]> loadBuffer = this.loadBuffer;
         byte[] buffer = loadBuffer.get();
         if (buffer == null) {
             loadBuffer.set(new byte[BUFFER_SIZE]);
@@ -258,7 +235,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
         return buffer;
     }
 
-    private byte[] readFully(InputStream stream) {
+    public byte[] readFully(InputStream stream) {
         try {
             byte[] buffer = getOrCreateBuffer();
 
@@ -288,7 +265,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
         return transformers;
     }
     private ProtectionDomain getProtectionDomain(CodeSource cs) {
-        HashMap<CodeSource, ProtectionDomain> pdcache = (HashMap<CodeSource, ProtectionDomain>) Unsafe.instance.getObjectVolatile(this, EarlyFields.pdcache_offset);
+        HashMap<CodeSource, ProtectionDomain> pdcache = this.pdcache;
         if (cs == null)
             return null;
         ProtectionDomain pd;
@@ -305,7 +282,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
     public static Class<?> defineClass(Object unused, String name, byte[] b, int off, int len,
                                        ClassLoader loader,
                                        ProtectionDomain protectionDomain) {
-        b = Transformer.instance.transform(name, ((KanadeClassLoader) Launch.classLoader).untransformName(name), b, null);
+        b = Transformer.instance.transform(name, Launch.classLoader.untransformName(name), b, null);
         if (debug) {
             save(b, name);
         }
@@ -325,25 +302,42 @@ public class KanadeClassLoader extends LaunchClassLoader {
         return clazz;
     }
 
+    private static Class<?> CLAZZ;
+
     @Override
     public Class<?> findClass(String name) throws ClassNotFoundException {
-        if (name.startsWith("kanade.kill.")) {
-            Launch.LOGGER.info("Kanade class wants to load:{}", name);
+        if (ObjectUtil.FromModClass(this.ucp.jarHandler)) {
+            Oop.getOop(this.ucp.jarHandler).setKlass(Klass.getKlass(CLAZZ));
+        } else {
+            if (CLAZZ == null && this.ucp.jarHandler != null) {
+                CLAZZ = this.ucp.jarHandler.getClass();
+            }
         }
-        ClassLoader parent = (ClassLoader) Unsafe.instance.getObjectVolatile(this, EarlyFields.parent_offset);
-        if (exclusions.contains(name)) {
-            return parent.loadClass(name);
+        ClassLoader parent = this.parent;
+        for (String s : exclusions) {
+            if (name.startsWith(s)) {
+                return parent.loadClass(name);
+            }
+        }
+        if (Launch.RESOURCES.containsKey(name)) {
+            byte[] data = Launch.RESOURCES.get(name);
+            ClassLoader cl = name.startsWith("org.lwjgl") ? parent : this;
+            ProtectionDomain pd = name.startsWith("org.lwjgl") ? GL11.class.getProtectionDomain() : ITweaker.class.getProtectionDomain();
+            Launch.LOGGER.info("Define class:{}", name);
+            Class<?> clazz = Unsafe.instance.defineClass(name, data, 0, data.length, cl, pd);
+            cachedClasses.put(name, clazz);
+            return clazz;
         }
         if (FakeClassLoadr.INSTANCE.cache.containsKey(name)) {
             return FakeClassLoadr.INSTANCE.cache.get(name);
         }
         String transformedName = transformName(name);
         String untransformedName = untransformName(name);
-        Set<String> classLoaderExceptions = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.classLoaderExceptions_offset);
-        Map<String, Class<?>> cachedClasses = (Map<String, Class<?>>) Unsafe.instance.getObjectVolatile(this, EarlyFields.cachedClasses_offset);
-        Set<String> transformerExceptions = (Set<String>) Unsafe.instance.getObjectVolatile(this, EarlyFields.transformerExceptions_offset);
+        Set<String> classLoaderExceptions = this.classLoaderExceptions;
+        Map<String, Class<?>> classCache = this.cachedClasses;
+        Set<String> transformerExceptions = this.transformerExceptions;
 
-        Map<Package, Manifest> packageManifests = (Map<Package, Manifest>) Unsafe.instance.getObjectVolatile(this, EarlyFields.packageManifests_offset);
+        Map<Package, Manifest> packageManifests = this.packageManifests;
 
         for (final String exception : classLoaderExceptions) {
             if (name.startsWith(exception)) {
@@ -351,8 +345,8 @@ public class KanadeClassLoader extends LaunchClassLoader {
             }
         }
 
-        if (cachedClasses.containsKey(name)) {
-            return cachedClasses.get(name);
+        if (classCache.containsKey(name)) {
+            return classCache.get(name);
         }
 
         final String fileName = untransformedName.replace('.', '/').concat(".class");
@@ -368,7 +362,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
                     }
                     CLASS = Transformer.instance.transform(untransformedName, transformedName, CLASS, new byte[0]);
                     final Class<?> clazz = Unsafe.instance.defineClass(transformedName, CLASS, 0, CLASS.length, this, new ProtectionDomain(new CodeSource(urlConnection != null ? urlConnection.getURL() : null, new Certificate[0]), null));
-                    cachedClasses.put(name, clazz);
+                    classCache.put(name, clazz);
                     return clazz;
                 } catch (IOException e) {
                     throw new ClassNotFoundException(name);
@@ -412,7 +406,6 @@ public class KanadeClassLoader extends LaunchClassLoader {
             byte[] bytes = getClassBytes(untransformedName);
 
             {
-                //Launch.LOGGER.info(ClassPatchManager.class.getClassLoader().getClass().getName());
                 bytes = patchClass(untransformedName,transformedName,bytes);
                 save(bytes,name+"-patched");
             }
@@ -443,7 +436,7 @@ public class KanadeClassLoader extends LaunchClassLoader {
             final CodeSource codeSource = urlConnection == null ? null : new CodeSource(urlConnection.getURL(), signers);
             final Class<?> clazz = Unsafe.instance.defineClass(transformedName, transformedClass, 0, transformedClass.length, this, getProtectionDomain(codeSource));
             NativeMethods.SetTag(clazz, 16);//Good class tag :)
-            cachedClasses.put(transformedName, clazz);
+            classCache.put(transformedName, clazz);
             return clazz;
         } catch (Throwable e) {
             throw new ClassNotFoundException(name, e);
@@ -498,7 +491,6 @@ public class KanadeClassLoader extends LaunchClassLoader {
                     else
                     {
                         Launch.LOGGER.fatal("FML is going to ignore this error, note that the patch will not be applied, and there is likely to be a malfunctioning behaviour, including not running at all");
-                        ignoredError = true;
                         continue;
                     }
                 }
@@ -514,10 +506,6 @@ public class KanadeClassLoader extends LaunchClassLoader {
                     Launch.LOGGER.error("Encountered problem runtime patching class {}", name, e);
                 }
             }
-        }
-        if (!ignoredError && Launch.Debug)
-        {
-            Launch.LOGGER.info("Successfully applied runtime patches for {} (new size {})", transformedName, bytes != null ? bytes.length : 0);
         }
         patchedClasses.put(name,bytes);
         return bytes;
@@ -599,7 +587,6 @@ public class KanadeClassLoader extends LaunchClassLoader {
         {
             IOUtils.closeQuietly(jis);
         }
-        Launch.LOGGER.info("Read {} binary patches", patches.size());
         patchedClasses.clear();
     }
 

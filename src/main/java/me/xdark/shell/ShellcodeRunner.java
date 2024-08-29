@@ -1,5 +1,6 @@
 package me.xdark.shell;
 
+import miku.lib.utils.InternalUtils;
 import one.helfy.JVM;
 import one.helfy.Type;
 import sun.misc.Unsafe;
@@ -7,17 +8,22 @@ import sun.misc.Unsafe;
 import java.nio.charset.StandardCharsets;
 
 public final class ShellcodeRunner {
+    public static final JVM jvm = JVM.getInstance();
 
-    public static final JVM jvm = new JVM();
 
     private ShellcodeRunner() {
+    }
+
+    public static void main(String[] args) throws Throwable {
+        JVM jvm = JVM.getInstance();
+        System.out.println(jvm.intConstant("oopSize"));
     }
 
     public static void inject(Class<?> target, String name, String descriptor, byte[] payload) {
         // Before execution: prepare the method to match the exact size of payload you want to execute
         //  it ~~20000 times let JIT do it's work
         // After injection call the method again
-        Unsafe unsafe = JVMUtil.UNSAFE;
+        Unsafe unsafe = InternalUtils.getUnsafe();
         JVM jvm = ShellcodeRunner.jvm;
         int oopSize = jvm.intConstant("oopSize");
         long klassOffset = jvm.getInt(jvm.type("java_lang_Class").global("_klass_offset"));
@@ -64,7 +70,7 @@ public final class ShellcodeRunner {
         // Before execution: prepare the method to match the exact size of payload you want to execute
         //  it ~~20000 times let JIT do it's work
         // After injection call the method again
-        Unsafe unsafe = JVMUtil.UNSAFE;
+        Unsafe unsafe = InternalUtils.getUnsafe();
         JVM jvm = ShellcodeRunner.jvm;
         int oopSize = jvm.intConstant("oopSize");
         long klassOffset = jvm.getInt(jvm.type("java_lang_Class").global("_klass_offset"));
@@ -111,7 +117,7 @@ public final class ShellcodeRunner {
         // Before execution: prepare the method to match the exact size of payload you want to execute
         //  it ~~20000 times let JIT do it's work
         // After injection call the method again
-        Unsafe unsafe = JVMUtil.UNSAFE;
+        Unsafe unsafe = InternalUtils.getUnsafe();
         JVM jvm = ShellcodeRunner.jvm;
         int oopSize = jvm.intConstant("oopSize");
         long klassOffset = jvm.getInt(jvm.type("java_lang_Class").global("_klass_offset"));
@@ -152,7 +158,7 @@ public final class ShellcodeRunner {
         // Before execution: prepare the method to match the exact size of payload you want to execute
         //  it ~~20000 times let JIT do it's work
         // After injection call the method again
-        Unsafe unsafe = JVMUtil.UNSAFE;
+        Unsafe unsafe = InternalUtils.getUnsafe();
         JVM jvm = ShellcodeRunner.jvm;
         int oopSize = jvm.intConstant("oopSize");
         long klassOffset = jvm.getInt(jvm.type("java_lang_Class").global("_klass_offset"));
@@ -183,7 +189,7 @@ public final class ShellcodeRunner {
             if (name.equals(getSymbol(constantPool + constantPoolType.size + (long) nameIndex * oopSize))
                     && descriptor.equals(getSymbol(
                     constantPool + constantPoolType.size + (long) signatureIndex * oopSize))) {
-                scala.concurrent.util.Unsafe.instance.putAddress(method + _from_compiled_entry, neo);
+                InternalUtils.getUnsafe().putAddress(method + _from_compiled_entry, neo);
                 return;
             }
         }
@@ -191,14 +197,14 @@ public final class ShellcodeRunner {
     }
 
     public static String getSymbol(long symbolAddress) {
-        Type symbolType = jvm.type("Symbol");
-        long symbol = jvm.getAddress(symbolAddress);
+        Type symbolType = JVM.type("Symbol");
+        long symbol = JVM.getAddress(symbolAddress);
         long body = symbol + symbolType.offset("_body");
-        int length = jvm.getShort(symbol + symbolType.offset("_length")) & 0xffff;
+        int length = JVM.getShort(symbol + symbolType.offset("_length")) & 0xffff;
 
         byte[] b = new byte[length];
         for (int i = 0; i < length; i++) {
-            b[i] = jvm.getByte(body + i);
+            b[i] = JVM.getByte(body + i);
         }
         return new String(b, StandardCharsets.UTF_8);
     }

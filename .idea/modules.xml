@@ -11,9 +11,13 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/kanade.lib.main.iml" filepath="$PROJECT_DIR$/.idea/modules/kanade.lib.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/kanade.lib.test.iml" filepath="$PROJECT_DIR$/.idea/modules/kanade.lib.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/kanade.main.iml" filepath="$PROJECT_DIR$/.idea/modules/kanade.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/kanade.main~1.iml" filepath="$PROJECT_DIR$/.idea/modules/kanade.main~1.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/kanade.test.iml" filepath="$PROJECT_DIR$/.idea/modules/kanade.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/kanade.test~1.iml" filepath="$PROJECT_DIR$/.idea/modules/kanade.test~1.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/lib.main.iml" filepath="$PROJECT_DIR$/.idea/modules/lib.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/lib.test.iml" filepath="$PROJECT_DIR$/.idea/modules/lib.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/root.IdeaProjects.KanadeNoKill.kanade.main.iml" filepath="$PROJECT_DIR$/.idea/modules/root.IdeaProjects.KanadeNoKill.kanade.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/root.IdeaProjects.KanadeNoKill.kanade.test.iml" filepath="$PROJECT_DIR$/.idea/modules/root.IdeaProjects.KanadeNoKill.kanade.test.iml" />
     </modules>
   </component>
 </project>

@@ -542,13 +542,21 @@ public class ObjectUtil {
     }
 
     public static boolean FromModClass(Object obj) {
+        if (obj == null) {
+            return false;
+        }
         String name = ReflectionUtil.getName(obj.getClass());
         return ModClass(name);
     }
 
+    private static final Set<String> ModClasses = new HashSet<>();
+
     public static boolean ModClass(String name) {
-        if(Launch.classes.contains(name) || Launch.late_classes.contains(name)){
+        if (Launch.RESOURCES.containsKey(name)) {
             return false;
+        }
+        if (ModClasses.contains(name)) {
+            return true;
         }
         name = ((KanadeClassLoader) Launch.classLoader).untransformName(name);
         final URL res = Launch.classLoader.findResource(name.replace('.', '/').concat(".class"));
@@ -570,7 +578,11 @@ public class ObjectUtil {
                     path = path.substring(1);
                 }
             }
-            return path.contains("/mods/") || path.contains("\\mods\\");
+            boolean ret = path.contains("/mods/") || path.contains("\\mods\\");
+            if (ret) {
+                ModClasses.add(name);
+            }
+            return ret;
         }
         return false;
     }

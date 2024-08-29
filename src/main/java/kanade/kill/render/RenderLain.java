@@ -13,12 +13,13 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class RenderLain extends RenderLiving<Lain> {
-    private static final ResourceLocation TEXTURE = new ResourceLocation("kanade", "textures/entity/lain.png");
+    public static final ResourceLocation TEXTURE = new ResourceLocation("kanade", "textures/entity/lain.png");
     private final ModelPlayer lain;
 
     public RenderLain(RenderManager rendermanagerIn, ModelBase modelbaseIn, float shadowsizeIn) {
         super(rendermanagerIn, modelbaseIn, shadowsizeIn);
         this.lain = new ModelPlayer(1.0f, true);
+        this.layerRenderers.add(new ArmorLayer(this));
     }
 
     @Nullable
@@ -43,6 +44,6 @@ public class RenderLain extends RenderLiving<Lain> {
     }
 
     @Override
-    public void doRenderShadowAndFire(Entity entityIn, double x, double y, double z, float yaw, float partialTicks) {
+    public void doRenderShadowAndFire(@Nonnull Entity entityIn, double x, double y, double z, float yaw, float partialTicks) {
     }
 }

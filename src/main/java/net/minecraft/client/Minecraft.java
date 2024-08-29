@@ -16,10 +16,7 @@ import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.particle.ParticleManager;
-import net.minecraft.client.renderer.BlockRendererDispatcher;
-import net.minecraft.client.renderer.EntityRenderer;
-import net.minecraft.client.renderer.RenderGlobal;
-import net.minecraft.client.renderer.RenderItem;
+import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.color.ItemColors;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -35,6 +32,7 @@ import net.minecraft.profiler.Snooper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.FrameTimer;
+import net.minecraft.util.MouseHelper;
 import net.minecraft.util.Session;
 import net.minecraft.util.Timer;
 import net.minecraft.util.math.RayTraceResult;
@@ -45,6 +43,7 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
@@ -55,6 +54,8 @@ public class Minecraft implements ISnooperInfo {
     public BlockRendererDispatcher BlockRenderDispatcher;
     public TextureManager RenderEngine;
     public RenderGlobal RenderGlobal;
+    public boolean inGameHasFocus;
+    public MouseHelper MouseHelper;
     public final Queue<FutureTask<?>> scheduledTasks = Queues.newArrayDeque();
     public Entity pointedEntity;
     public static Logger LOGGER;
@@ -102,6 +103,7 @@ public class Minecraft implements ISnooperInfo {
     public PlayerControllerMP playerController;
     public GuiScreen currentScreen;
     public WorldClient world;
+    public GuiIngame IngameGUI;
 
     public Minecraft() {
     }
@@ -112,9 +114,15 @@ public class Minecraft implements ISnooperInfo {
     public static Minecraft getMinecraft() {
         return null;
     }
+
+    public ItemRenderer ItemRenderer;
     public ISaveFormat saveLoader;
 
     public static boolean isGuiEnabled() {
+        return false;
+    }
+
+    public static boolean isFancyGraphicsEnabled() {
         return false;
     }
 
@@ -310,5 +318,9 @@ public class Minecraft implements ISnooperInfo {
 
     public float getRenderPartialTicks() {
         return 0;
+    }
+
+    public GuiToast getToastGui() {
+        return null;
     }
 }

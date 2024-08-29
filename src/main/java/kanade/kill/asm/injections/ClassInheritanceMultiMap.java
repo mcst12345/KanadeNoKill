@@ -13,6 +13,6 @@ public class ClassInheritanceMultiMap implements Opcodes {
         list.add(new VarInsnNode(ALOAD, 0));
         list.add(new MethodInsnNode(INVOKESTATIC, "kanade/kill/asm/hooks/ClassInheritanceMultiMap", "preGetByClass", "(Lnet/minecraft/util/ClassInheritanceMultiMap;)V", false));
         mn.instructions.insert(list);
-        Launch.LOGGER.info("Inject int GetByClass().");
+        Launch.LOGGER.info("Inject into GetByClass().");
     }
 }

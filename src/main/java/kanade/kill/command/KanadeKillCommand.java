@@ -5,7 +5,6 @@ import kanade.kill.Launch;
 import kanade.kill.item.KillItem;
 import kanade.kill.network.NetworkHandler;
 import kanade.kill.network.packets.*;
-import kanade.kill.reflection.EarlyFields;
 import kanade.kill.util.ClassUtil;
 import kanade.kill.util.EntityUtil;
 import kanade.kill.util.NativeMethods;
@@ -23,7 +22,6 @@ import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.registry.EntityEntryBuilder;
 import net.minecraftforge.registries.GameData;
-import scala.concurrent.util.Unsafe;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -32,6 +30,7 @@ import java.util.*;
 @SuppressWarnings("unused")
 public class KanadeKillCommand extends CommandBase {
     private static final Set<String> FuckedMods = new HashSet<>();
+
     @Override
     @Nonnull
     @SuppressWarnings("unchecked")
@@ -48,10 +47,12 @@ public class KanadeKillCommand extends CommandBase {
             ret.add("tick");
             ret.add("threads");
             ret.add("killthreads");
+            ret.add("banEntity");
         } else {
             if (args.length == 2) {
                 switch (args[0]) {
                     case "config":
+                        ret.add("skyColor");
                         ret.add("allReturn");
                         ret.add("disableEvent");
                         ret.add("guiProtect");
@@ -75,7 +76,7 @@ public class KanadeKillCommand extends CommandBase {
                         ret.add("reload");
                         break;
                     case "fuckmod":
-                        Map<String, ModContainer> namedMods = (Map<String, ModContainer>) Unsafe.instance.getObjectVolatile(Loader.instance(), EarlyFields.namedMods_offset);
+                        Map<String, ModContainer> namedMods = Loader.instance().namedMods;
                         Launch.LOGGER.info("Find {} mods.", namedMods.keySet().size());
                         ret.addAll(namedMods.keySet());
                         break;
@@ -180,6 +181,11 @@ public class KanadeKillCommand extends CommandBase {
                                 NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
                                 break;
                             }
+                            case "skyColor": {
+                                Config.skyColor = Boolean.parseBoolean(arg2);
+                                NetworkHandler.INSTANCE.sendMessageToAll(new ConfigUpdatePacket(arg1, Boolean.parseBoolean(arg2)));
+                                break;
+                            }
                             case "outScreenRender": {
                                 if (Config.forceRender && Boolean.parseBoolean(arg2)) {
                                     sender.sendMessage(new TextComponentString("outScreenRender is incompatible with forceRender!"));
@@ -198,7 +204,7 @@ public class KanadeKillCommand extends CommandBase {
                                 try {
                                     EntityPlayerMP player = getCommandSenderAsPlayer(sender);
                                     NetworkHandler.INSTANCE.sendMessageToPlayer(new ConfigUpdatePacket(arg1, Integer.parseInt(arg2)), player);
-                                } catch (PlayerNotFoundException e){
+                                } catch (PlayerNotFoundException e) {
                                     sender.sendMessage(new TextComponentString("No player found. Don't use this in server console."));
                                 }
                                 break;
@@ -317,7 +323,7 @@ public class KanadeKillCommand extends CommandBase {
                     if (FuckedMods.contains(modid)) {
                         sender.sendMessage(new TextComponentString("Mod " + modid + " is already fucked."));
                     }
-                    Map<String, ModContainer> namedMods = (Map<String, ModContainer>) Unsafe.instance.getObjectVolatile(Loader.instance(), EarlyFields.namedMods_offset);
+                    Map<String, ModContainer> namedMods = Loader.instance().namedMods;
                     ModContainer mod = namedMods.get(modid);
                     if (mod == null) {
                         sender.sendMessage(new TextComponentString("Mod " + modid + " not found!"));
@@ -346,6 +352,30 @@ public class KanadeKillCommand extends CommandBase {
                     int tick = Integer.parseInt(args[1]);
                     NetworkHandler.INSTANCE.sendMessageToAllPlayer(new UpdateTickCount(tick));
                     break;
+                }
+                case "banEntity": {
+                    if (args.length < 2) {
+                        sender.sendMessage(new TextComponentString("Usage: /KanadeKill banEntity <entity_class_name>"));
+                        break;
+                    }
+                    try {
+                        Class<?> clazz = Launch.classLoader.findClass(args[1]);
+                        EntityUtil.banned.add(clazz);
+                    } catch (ClassNotFoundException e) {
+                        sender.sendMessage(new TextComponentString("Entity not found!"));
+                    }
+                }
+                case "unbanEntity": {
+                    if (args.length < 2) {
+                        sender.sendMessage(new TextComponentString("Usage: /KanadeKill unbanEntity <entity_class_name>"));
+                        break;
+                    }
+                    try {
+                        Class<?> clazz = Launch.classLoader.findClass(args[1]);
+                        EntityUtil.banned.remove(clazz);
+                    } catch (ClassNotFoundException e) {
+                        sender.sendMessage(new TextComponentString("Entity not found!"));
+                    }
                 }
                 default: {
                     sender.sendMessage(new TextComponentString("Unknown command."));

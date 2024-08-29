@@ -5,7 +5,6 @@ import kanade.kill.Config;
 import kanade.kill.Launch;
 import kanade.kill.ModMain;
 import kanade.kill.item.KillItem;
-import kanade.kill.reflection.EarlyMethods;
 import kanade.kill.reflection.ReflectionUtil;
 import kanade.kill.timemanagement.TimeStop;
 import kanade.kill.util.memory.MemoryHelper;
@@ -21,6 +20,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -28,7 +28,7 @@ import net.minecraftforge.fml.common.eventhandler.ASMEventHandler;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.IEventListener;
 import org.apache.commons.lang3.tuple.Pair;
-import org.lwjgl.MemoryUtil;
+import org.lwjgl.Sys;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
 import org.objectweb.asm.tree.ClassNode;
@@ -38,7 +38,6 @@ import org.objectweb.asm.tree.MethodNode;
 import scala.concurrent.util.Unsafe;
 
 import java.lang.reflect.Field;
-import java.nio.ByteBuffer;
 import java.util.Random;
 
 @SuppressWarnings({"unused", "raw"})
@@ -65,12 +64,11 @@ public class Util {
         return (Config.guiProtect && (ObjectUtil.ModClass(name) || gui.getClass().getProtectionDomain() == null || gui.getClass().getProtectionDomain().getCodeSource() == null)) || l.contains("death") || l.contains("over") || l.contains("die") || l.contains("dead");
     }
 
-    public static void DisplayDeathGui() {
-
-    }
     public static boolean shouldPostEvent(Event event) {
         if (Launch.client) {
-            if (event instanceof GuiOpenEvent) {
+            if (event instanceof RenderWorldLastEvent && ModMain.getLain() != null) {
+                RenderUtil.renderLain(Minecraft.getMinecraft(), ModMain.getLain());
+            } else if (event instanceof GuiOpenEvent) {
                 GuiOpenEvent guiOpenEvent = (GuiOpenEvent) event;
                 GuiScreen gui = guiOpenEvent.getGui();
                 return !(gui instanceof GuiGameOver) && !(gui instanceof GuiChat) && !(gui instanceof GuiIngameMenu) && !(gui instanceof GuiMainMenu) && !(gui instanceof GuiContainerCreative) && !(gui instanceof GuiInventory);
@@ -92,15 +90,6 @@ public class Util {
             return !KillItem.inList(entityEvent.getEntity());
         }
         return true;
-    }
-
-    public static long GLAddress(String name) {
-        if (!Launch.client) {
-            return 0;
-        }
-        ByteBuffer buffer = MemoryUtil.encodeASCII(name);
-        long addr = MemoryUtil.getAddress(buffer);
-        return (long) ReflectionUtil.invoke(EarlyMethods.getFunctionAddress, null, new Object[]{addr});
     }
 
     public static void setItemModel(Item item, int meta, ModelResourceLocation model, boolean clear) {
@@ -334,5 +323,14 @@ public class Util {
             last = System.nanoTime();
         }
         return last;
+    }
+
+    private static long last1;
+
+    public static long getTime() {
+        if (!TimeStop.isTimeStop()) {
+            last1 = Sys.getTime();
+        }
+        return last1;
     }
 }
